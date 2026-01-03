@@ -1,0 +1,484 @@
+/* ========================================
+   LAYOUT STYLES
+   Sidebar, Navigation, Topbar, Main Content
+   ======================================== */
+
+
+/* ========================================
+   SIDEBAR
+   ======================================== */
+
+.sidebar {
+    /* Positioning */
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: var(--z-sidebar);
+
+    /* Sizing */
+    width: var(--sidebar-width-collapsed);
+
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border-right: 1px solid var(--color-border-base);
+    overflow: hidden;
+
+    /* Animation */
+    transition: var(--sidebar-transition);
+}
+
+/* Expand on hover (unless pinned) */
+.sidebar:not(.pinned):hover {
+    width: var(--sidebar-width-expanded);
+}
+
+/* Pinned state (stays expanded) */
+.sidebar.pinned {
+    width: var(--sidebar-width-expanded);
+}
+
+/* Adjust main content when sidebar is pinned */
+.sidebar.pinned ~ .main-content {
+    margin-left: var(--sidebar-width-expanded);
+}
+
+/* ========================================
+   SIDEBAR HEADER (Logo & Pin Button)
+   ======================================== */
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    padding: var(--space-4xl) var(--space-3xl);
+    gap: var(--gap-md);
+}
+
+/* Logo Icon (always visible) */
+.sidebar-logo-icon {
+    width: 32px;
+    height: 32px;
+
+    /* Styling */
+    border-radius: var(--radius-md);
+    border: 2px solid var(--color-primary);
+    color: var(--color-primary);
+
+    /* Layout */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Typography */
+    font-weight: var(--font-weight-semibold);
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+/* Logo Text (hidden when collapsed) */
+.sidebar-logo-text {
+    font-family: var(--font-heading);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-md);
+    letter-spacing: 1.2px;
+
+    /* Hidden by default */
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+/* Show logo text when expanded */
+.sidebar:hover .sidebar-logo-text, 
+.sidebar.pinned .sidebar-logo-text {
+    opacity: 1;
+}
+
+/* Pin Button */
+.sidebar-pin-btn {
+    margin-left: auto;
+    width: 20px;
+    height: 20px;
+
+    /* Styling */
+    border-radius: var(--radius-sm);
+    border: 1px solid #232323;
+    background: transparent;
+    color: var(--color-text-medium);
+
+    /* Layout */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+
+    /* Typography */
+    font-size: var(--font-size-xs);
+
+    /* Hidden by default */
+    opacity: 0;
+
+    /* Animation */
+    transition: all 0.18s ease;
+}
+
+/* Show pin button when sidebar expanded */
+.sidebar:hover .sidebar-pin-btn, 
+.sidebar.pinned .sidebar-pin-btn {
+    opacity: 1;
+}
+
+/* Pin button hover */
+.sidebar-pin-btn:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    box-shadow: var(--glow-primary-soft);
+}
+
+/* Pin button active (when pinned) */
+.sidebar.pinned .sidebar-pin-btn {
+    background: var(--color-primary);
+    color: var(--color-text-primary);
+    border-color: var(--color-primary);
+    box-shadow: var(--glow-primary-soft);
+}
+
+/* Rotate icon when pinned */
+.sidebar.pinned .sidebar-pin-btn i {
+    transform: rotate(45deg);
+    transition: transform 0.18s ease;
+}
+
+/* ========================================
+   SIDEBAR NAVIGATION
+   ======================================== */
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    margin-top: var(--space-xs);
+    padding-top: var(--space-base);
+    flex-grow: 1;
+    justify-content: flex-start;
+}
+
+/* Navigation Items */
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-lg);
+    padding: var(--space-lg) var(--space-3xl);
+
+    /* Styling */
+    color: var(--color-text-muted);
+    font-size: var(--font-size-base);
+
+    /* Remove default link/button styles */
+    text-decoration: none;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+
+    /* Animation */
+    transition: all var(--transition-base);
+}
+
+/* Icon sizing */
+.nav-item i {
+    font-size: var(--font-size-md);
+    width: 20px;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* Text (hidden when collapsed */
+.nav-item span {
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+/* Show text when sidebar expanded */
+.sidebar:hover .nav-item span, 
+.sidebar.pinned .nav-item span {
+    opacity: 1;
+}
+
+/* Nav Item Hover & Active States */
+.nav-item:hover, 
+.nav-item.active {
+    background: var(--color-bg-elevated);
+    color: var(--color-text-primary);
+    border-left: 3px solid var(--color-primary);
+}
+
+/* Dropdown Caret Icon */
+.nav-item.has-sub {
+    padding-right: var(--space-2xl);
+}
+
+.nav-item .caret {
+    margin-left: auto;
+    font-size: var(--font-size-xs);
+
+    /* Hidden by default */
+    opacity: 0;
+
+    /* Animation */
+    transition: transform var(--transition-base), opacity var(--transition-base);
+}
+
+/* Show caret when sidebar expanded */
+.sidebar:hover .nav-item .caret, 
+.sidebar.pinned .nav-item .caret {
+    opacity: 1;
+}
+
+/* Rotate caret when submenu open */
+.nav-item.open .caret {
+    transform: rotate(180deg);
+    color: var(--color-primary);
+    text-shadow: var(--glow-primary);
+}
+
+/* Highlight parent when submenu open */
+.nav-item.open {
+    color: var(--color-primary);
+    text-shadow: var(--glow-primary-soft);
+}
+
+.nav-item.open i {
+    color: var(--color-primary);
+}
+
+/* ========================================
+   SUBMENU (Dropdowns)
+   ======================================== */
+
+.submenu {
+    /* Collapsed by default */
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    padding-left: 60px;
+    gap: var(--gap-sm);
+    margin: var(--gap-sm) var(--gap-lg);
+
+    /* Styling */
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-sm);
+
+    /* Animation */
+    transition: max-height 0.25s ease, opacity var(--transition-base);
+}
+
+/* Submenu items */
+.submenu-item {
+    color: #bdbdbd;
+    padding: var(--space-xs) 0;
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-relaxed);
+    letter-spacing: 0.3px;
+    transition: color var(--transition-base), transform var(--transition-base);
+}
+
+.submenu-item:hover {
+    color: var(--color-text-primary);
+    transform: translate(3px);
+}
+
+/* Expand submenu when parent is open */
+.nav-item.open + .submenu {
+    max-height: 200px;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Hide submenu when sidebar collapsed (even if open) */
+.sidebar:not(.pinned):not(:hover) .submenu {
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ========================================
+   SIDEBAR FOOTER (Profile & Logout)
+   ======================================== */
+
+.sidebar-footer {
+    border-top: 1px solid var(--color-border-base);
+    padding: var(--gap-lg) var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-md);
+}
+
+/* Profile Section */
+.profile {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-md);
+}
+
+.profile img {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+}
+
+.profile-name {
+    font-size: var(--font-size-base);
+
+    /* Hidden by default */
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+/* Show profile name when expanded */
+.sidebar:hover .profile-name, 
+.sidebar.pinned .profile-name {
+    opacity: 1;
+}
+
+/* Logout Button */
+.logout-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-md);
+
+    /* Styling */
+    color: var(--color-text-muted);
+    font-size: var(--font-size-base);
+
+    /* Animation */
+    transition: color var(--transition-base);
+}
+
+.logout-btn:hover {
+    color: var(--color-primary);
+}
+
+.logout-btn span {
+    /* Hidden by default */
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+/* Show logout text when expanded */
+.sidebar:hover .logout-btn span, 
+.sidebar.pinned .logout-btn span {
+    opacity: 1;
+}
+
+/* ========================================
+   MAIN CONTENT AREA
+   ======================================== */
+
+.main-content {
+    /* Positioning */
+    margin-left: var(--sidebar-width-collapsed);
+
+    /* Layout */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: auto;
+
+    /* Animation */
+    transition: margin-left var(--transition-slow);
+
+    /* Smooth Scrolling */
+    scroll-behavior: smooth;
+}
+
+/* Push content when sidebar expands on hover */
+.sidebar:hover ~ .main-content {
+    margin-left: var(--sidebar-width-expanded);
+}
+
+/* ========================================
+   TOPBAR
+   ======================================== */
+
+.topbar {
+    /* Positioning */
+    position: sticky;
+    top: 0;
+    z-index: 5;
+
+    /* Layout */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2xl) var(--space-5xl);
+
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border-bottom: 1px solid var(--color-border-base);
+}
+
+.topbar h1 {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-semibold);
+}
+
+/* Topbar Actions (Notifications, Profile) */
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-xl);
+    font-size: 1.1rem;
+    color: #ccc;
+}
+
+/* Notification Button */
+.notification-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-base);
+}
+
+.notification-btn:hover {
+    background: var(--color-bg-elevated);
+    color: var(--color-primary);
+}
+
+/* Topbar Profile Picture */
+.topbar-profile {
+    width: 35px;
+    height: 35px;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: transform var(--transition-base);
+}
+
+.topbar-profile:hover {
+    transform: scale(1.05);
+}
+
+/* ========================================
+   DASHBOARD OVERVIEW CONTAINER
+   ======================================== */
+
+.dashboard-overview {
+    padding: var(--space-5xl) 32px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4xl);
+    padding-bottom: 32px;
+}

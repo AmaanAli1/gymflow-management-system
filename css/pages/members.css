@@ -1,0 +1,281 @@
+/* ============================================
+   MEMBERS PAGE STYLES
+   Member list, filters, search, KPIS
+   ============================================ */
+
+
+/* ============================================
+   PAGE CONTAINER
+   ============================================ */
+
+.members-page {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-xl);
+    padding: var(--space-3xl) var(--space-4xl);
+    padding-bottom: var(--space-5xl);
+}
+
+/* ============================================
+   TOOLBAR (Filters + Search + Actions)
+   ============================================ */
+
+.members-toolbar {
+    /* Layout */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--gap-xl);
+    flex-wrap: wrap;    /* Wraps on smaller screens */
+}
+
+/* Filter Dropdowns Group */
+.members-filters {
+    /* Layout */
+    display: flex;
+    gap: var(--gap-md);
+    flex-wrap: wrap;
+}
+
+.members-filters select {
+    /* Layout */
+    min-width: 150px;
+    padding: var(--space-md) var(--space-lg);
+
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border: 1px solid var(--color-border-base);
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+
+    /* Typography */
+    font-size: 0.85rem;
+
+    /* Animation */
+    transition: all var(--transition-base);
+    cursor: pointer;
+}
+
+.members-filters select:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.members-filters select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(230, 0, 48, 0.1);
+}
+
+/* Action Group (Search + Add Button) */
+.members-actions {
+    /* Layout */
+    display: flex;
+    gap: var(--gap-md);
+    align-items: center;
+}
+
+/* Search Bar */
+.members-search {
+    /* Layout */
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.members.search i {
+    /* Icon positioning */
+    position: absolute;
+    left: var(--space-lg);
+    color: var(--color-text-muted);
+    pointer-events: none;   /* Allows clicking through icon to input */
+}
+
+.members-search-input {
+    /* Layout */
+    padding: var(--space-md) var(--space-lg) var(--space-md) 40px;
+    min-width: 300px;
+
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border: 1px solid var(--color-border-base);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+
+    /* Typography */
+    font-size: 0.85rem;
+
+    /* Animation */
+    transition: all var(--transition-base);
+}
+
+.members-search input::placeholder {
+    color: var(--color-text-dim);
+}
+
+.members-search input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(236, 0, 48, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* ============================================
+   MEMBER MINI KPIS
+   Quick stats row above table
+   ============================================ */
+
+.members-kpi-row {
+    /* Layout */
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--gap-xl);
+}
+
+/* Small KPI Card Variant */
+.kpi-card.small {
+    /* Layout */
+    padding: var(--space-lg);
+
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border-radius: 12px;
+    border: 1px solid #232323;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+
+    /* Animation */
+    transition: all var(--transition-base);
+}
+
+.kpi-card.small:hover {
+    /* Hover glow effect */
+    border-color: rgba(230, 0, 48, 0.3);
+    box-shadow: 0 0 20px rgba(230, 0, 48, 0.15);
+    transform: translateY(-2px);
+}
+
+.kpi-card.small .kpi-label {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.kpi-card.small .kpi_value {
+    font-size: 1.5rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin-bottom: 2px;
+}
+
+.kpi-card.small .kpi-sub {
+    font-size: 0.7rem;
+    color: var(--color-text-dim);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+/* Tablet */
+@media (max-width: 1024px) {
+    .members-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .members-filters, 
+    .members-actions {
+        width: 100%;
+    }
+
+    .members-search input {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .members-kpi-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .members-page {
+        padding: var(--space-2xl) var(--space-xl);
+    }
+
+    .members-kpi-row {
+        grid-template-columns: 1fr;
+    }
+
+    .members-filters {
+        flex-direction: column;
+    }
+
+    .members-filters select {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* ============================================
+   PAGINATION (Future Enhancements)
+   ============================================ */
+
+.members-pagination {
+    /* Layout */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-xl);
+
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border-radius: 14px;
+    border: 1px solid #232323;
+}
+
+.pagination-info {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: var(--gap-sm);
+}
+
+.pagination-btn {
+    padding: var(--space-sm) var(--space-lg);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-border-base);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-text-primary);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.pagination-btn.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+/* Why pagination?
+   Essential for tables with 100+ rows
+   Improves performance (don't load all data at once)
+   Better UX (easier to navigate than infinite scroll)
+   
+   Will implement when connecting to backend */

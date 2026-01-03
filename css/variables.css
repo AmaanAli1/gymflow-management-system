@@ -1,0 +1,155 @@
+/* ============================================
+   CSS VARIABLES (DESIGN TOKENS)
+   These values are used throughout all CSS files
+   ============================================ */
+
+:root {
+    /* ========================================
+       COLORS - Brand & UI
+       ======================================== */
+    
+    /* Primary Brand Color (Red) */
+    --color-primary: #e60030;
+    --color-primary-rgb: 230, 0, 48;
+    --color-primary-hover: #c7002a;
+    --color-primary-light: rgba(230, 0, 48, 0.18);
+    --color-primary-medium: rgba(230, 0, 48, 0.35);
+
+    /* Sucess (Green) */
+    --color-success: #24c063;
+    --color-success-light: rgba(36, 192, 99, 0.2);
+
+    /* Warning (Yellow) */
+    --color-warning: #f1c40f;
+    --color-warning-light: rgba(241, 196, 15, 0.2);
+
+    /* Backgrounds (Dark Theme) */
+    --color-bg-page: #0f0f0f;               /* Main page background */
+    --color-bg-sidebar: #151515;            /* Sidebar background */
+    --color-bg-elevated: #1f1f1f;           /* Hover states, cards */
+    --color-bg-card: #222;                  /* Card backgrounds */
+    --color-bg-input: #262626;              /* Form inputs */
+    --color-bg-modal: #2b2b2b;              /* Modal backgrounds */
+
+    /* Text Colors */
+    --color-text-primary: #fff;             /* Headings, important text */
+    --color-text-secondary: #eee;           /* Body text */
+    --color-text-muted: #aaa;               /* Less important text */
+    --color-text-dim: #888;                 /* Very dim text */
+    --color-text-light: #bbb;               /* Light gray text */
+    --color-text-lighter: #b5b5b5;          /* Even lighter */
+    --color-text-medium: #9e9e9e;           /* Medium gray */
+
+    /* Border Colors */
+    --color-border-base: #1f1f1f;           /* Default borders */
+    --color-border-light: #333;             /* Lighter borders */
+    --color-border-lighter: #d0d0d0;        /*Even lighter */
+    --color-border-lightest: #e0e0e0;       /* Lightest borders */
+
+    /* Overlay */
+    --color-overlay: rgba(0, 0, 0, 0.7);    /* Modal backdrop */
+    --color-dark: #111;                     /* Very dark backgrounds */
+
+    /* ========================================
+       TYPEOGRAPHY
+       ======================================== */
+    
+    /* Font Families */
+    --font-primary: 'Poppins', system-ui, -apple-system, sans-serif;
+    --font-heading: 'Montserrat', sans-serif;
+
+    /* Font Weights */
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    /* Font Sizes */
+    --font-size-xs: 0.7rem;     /* 11.2px */
+    --font-size-sm: 0.8rem;     /* 12.8px */
+    --font-size-base: 0.9rem;   /* 14.4px */
+    --font-size-md: 1rem;       /* 16px */
+    --font-size-lg: 1.1rem;     /* 17.6px */
+    --font-size-xl: 1.25rem;    /* 20px */
+    --font-size-2xl: 1.5rem;    /* 24px */
+    --font-size-3xl: 2rem;      /* 32px */
+
+    /* Line Heights */
+    --line-height-tight: 1.2;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.6;
+
+    /* ========================================
+       SPACING (Padding & Margins)
+       ======================================== */
+    
+    --space-xs: 4px;
+    --space-sm: 6px;
+    --space-md: 8px;
+    --space-base: 10px;
+    --space-lg: 12px;
+    --space-xl: 14px;
+    --space-2xl: 16px;
+    --space-3xl: 18px;
+    --space-4xl: 20px;
+    --space-5xl: 24px;
+
+    /* ========================================
+       LAYOUT DIMENSIONS
+       ======================================== */
+    
+    /* Sidebar */
+    --sidebar-width-collapsed: 70px;
+    --sidebar-width-expanded: 230px;
+    --sidebar-transition: width 0.3s ease;
+
+    /* Border Radius */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 10px;
+    --radius-xl: 12px;
+    --radius-2xl: 16px;
+    --radius-full: 50%;
+
+    /* Gaps */
+    --gap-xs: 6px;
+    --gap-sm: 8px;
+    --gap-md: 10px;
+    --gap-lg: 14px;
+    --gap-xl: 16px;
+
+    /* ========================================
+       TRANSITIONS & ANIMATIONS
+       ======================================== */
+    
+    --transition-fast: 0.15s ease;
+    --transition-base: 0.2s ease;
+    --transition-slow: 0.3s ease;
+    --transition-slower: 0.4s ease;
+
+    /* ========================================
+       SHADOWS
+       ======================================== */
+    
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.2);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.3);
+
+    /* Glow Effects */
+    --glow-primary: 0 0 8px rgba(230, 0, 48, 0.5);
+    --glow-primary-soft: 0 0 6px rgba(230, 0, 48, 0.4);
+
+    /* ========================================
+       Z-INDEX LAYERS (Stacking Order)
+       ======================================== */
+    
+    --z-base: 1;
+    --z-sidebar: 10;
+    --z-dropdown: 50;
+    --z-modal-backdrop: 100;
+    --z-modal: 101;
+    --z-tooltip: 200;
+
+}

@@ -1,0 +1,264 @@
+/* ========================================
+   ADMIN DASHBOARD PAGE
+   Dashboard-specific styles and layout
+   ======================================== */
+
+
+/* ========================================
+   DASHBOARD OVERVIEW CONTAINER
+   ======================================== */
+
+.dashboard-overview {
+    /* Spacing */
+    padding: var(--space-5xl) 32px;
+    padding-bottom: 32px;
+
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4xl);
+}
+
+/* ========================================
+   RESPONSIVE BREAKPOINTS
+   ======================================== */
+
+/* Large Desktop (1440px+) */
+@media (min-width: 1440px) {
+    .dashboard-overview {
+        padding: var(--space-5xl) 48px;
+    }
+
+    /* More breathing room on large screens */
+    .kpi-grid {
+        gap: var(--space-4xl);
+    }
+}
+
+/* Laptop (1024px - 1440px) */
+/*Default styles work well - no changes needed */
+
+/* Tablet (768px - 1024px) */
+@media (max-width: 1024px) {
+    /* Two columns for KPI cards */
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Stack dashboard panels vertically */
+    .dash-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Reduce padding */
+    .dashboard-overview {
+        padding: var(--space-4xl) var(--space-5xl);
+    }
+}
+
+/* Mobile (640px and below) */
+@media (max-width: 640px) {
+    /* Single column for everything */
+    .kpi-grid {
+        grid-template-columns: 1fr;
+        gap: var(--gap-lg);
+    }
+
+    /* Tighter spacing on mobile */
+    .dashboard-overview {
+        padding: var(--space-3xl) var(--space-2xl);
+        gap: var(--space-3xl);
+    }
+
+    /* Adjust KPI card padding */
+    .kpi-card {
+        padding: var(--space-lg);
+    }
+
+    /* Adjust panel padding */
+    .panel {
+        padding: var(--space-lg);
+    }
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+    /* Hide interactive elements when printing */
+    .sidebar, 
+    .topbar, 
+    .btn, 
+    button {
+        display: none !important;
+    }
+
+    /* Full width for printed content */
+    .main-content {
+        margin-left: 0;
+    }
+
+    /* White background for print */
+    body, 
+    .kpi-card, 
+    .panel {
+        background: white;
+        color: black;
+    }
+
+    /* Remove shadows (unnecessary for print) */
+    .kpi-card, 
+    .panel {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+
+    /* Page breaks */
+    .kpi-card, 
+    .panel {
+        page-break-inside: avoid;
+    }
+}
+
+/* Why print styles?
+   
+   Users might want to:
+   - Print dashboard for meetings
+   - Save as PDF for reports
+
+   Without print styles:
+   - Dark background wastes ink
+   - Sidebar takes up space
+   - Looks unprofessional
+
+   With print styles:
+   - Clean, professional output
+   - Saves ink
+*/
+
+/* ========================================
+   DASHBOARD SPECIFIC UTILITIES
+   ======================================== */
+
+/* Loading State (Show while data fetches) */
+.dashboard-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lg);
+}
+
+.dashboard-loading::after {
+    content: "";
+    width: 40px;
+    height: 40px;
+    margin-left: var(--gap-xl);
+    border: 3px solid var(--color-border-base);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s ease linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Empty State (No Data Available) */
+.dashboard-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-xl);
+    min-height: 300px;
+    padding: var(--space-5xl);
+    text-align: center;
+    color: var(--color-text-muted);
+}
+
+.dashboard-empty i {
+    font-size: 4rem;
+    color: var(--color-border-light);
+}
+
+.dashboard-empty h3 {
+    font-size: var(--font-size-xl);
+    color: var(--color-text-secondary);
+}
+
+.dashboard-empty p {
+    font-size: var(--font-size-base);
+    max-width: 400px;
+}
+
+/* Error State (API Failure) */
+.dashboard-error {
+    background: rgba(255, 68, 68, 0.1);
+    border: 1px solid rgba(255, 68, 68, 0.3);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4xl);
+    text-align: center;
+    color: #ff4444;
+}
+
+.dashboard-error i {
+    font-size: 3rem;
+    margin-bottom: var(--gap-lg);
+}
+
+.dashboard-error h3 {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--gap-md);
+}
+
+.dashboard-error .btn {
+    margin-top: var(--gap-xl);
+}
+
+/* ========================================
+   PERFORMANCE OPTIMIZATION
+   ======================================== */
+
+/* Prevent layout shift while loading */
+.kpi-grid, 
+.dash-grid {
+    min-height: 200px;
+}
+
+/* Smooth transitions for dynamic content */
+.kpi-value, 
+.branch-stat-value {
+    transition: color var(--transition-base);
+}
+
+/* When values update, smoothly change color */
+.kpi-value.updating, 
+.branch-stat-value.updating {
+    color: var(--color-primary);
+}
+
+/* ========================================
+   ACCESSIBILITY ENHANCEMENTS
+   ======================================== */
+
+/* Skip to content link (for keyboard users) */
+.skip-to-content {
+    position: absolute;
+    top: 40px;
+    left: 0;
+    background: var(--color-primary);
+    color: var(--color-text-primary);
+    padding: var(--space-md) var(--space-2xl);
+    text-decoration: none;
+    z-index: 1000;
+    transition: top 0.2s;
+}
+
+.skip-to-content:focus {
+    top: 0;
+}

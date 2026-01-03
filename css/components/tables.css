@@ -1,0 +1,309 @@
+/* ============================================
+   TABLES COMPONENTS
+   Reusable table styles for data display
+   Used by: Members, Staff, Inventory, etc.
+   ============================================ */
+
+
+/* ============================================
+   TABLE CONTAINER
+   ============================================ */
+
+.table-container {
+    /* Layout */
+    background: var(--color-bg-sidebar);
+    border-radius: 14px;
+    border: 1px solid #232323;
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
+    
+    /* Fixed height with scrolling */
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.table-cotainer thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: var(--color-bg-sidebar);
+}
+
+/* ============================================
+   TABLE STYLES
+   ============================================ */
+
+.data-table {
+    /* Layout */
+    width: 100%;
+    border-collapse: collapse;  /* Removes space between cells */
+
+    /* Typography */
+    font-size: 0.85rem;
+}
+
+/* Table Header */
+.data-table thead {
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--color-border-base);
+}
+
+.data-table th {
+    /* Layout */
+    padding: var(--space-lg) var(--space-xl);
+    text-align: left;
+
+    /* Typography */
+    font-weight: var(--font-weight-semibold);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-muted);
+}
+
+/* Table Body */
+.data-table tbody tr {
+    /* Styling */
+    border-bottom: 1px solid var(--color-border-base);
+
+    /* Animation */
+    transition: background-color var(--transition-base);
+}
+
+.data-table tbody tr:last-child {
+    border-bottom: none;    /* Remove border from last row */
+}
+
+.data-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.data-table td {
+    /* Layout */
+    padding: var(--space-lg) var(--space-xl);
+
+    /* Typography */
+    color: var(--color-text-secondary);
+    vertical-align: middle;     /* Aligns content to center of cell height */
+}
+
+/* First column (usually ID or name) - make it stand out */
+.data-table td:first-child {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+}
+
+/* ============================================
+   TABLE ACTIONS (Edit, Delete, View buttons)
+   ============================================ */
+
+.table-actions {
+    /* Layout */
+    display: flex;
+    gap: var(--gap-sm);
+    align-items: center;
+}
+
+.table-action-btn {
+    /* Layout */
+    padding: 6px 10px;
+
+    /* Styling */
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--color-text-secondary);
+    cursor: pointer;
+
+    /* Typography */
+    font-size: 0.75rem;
+
+    /* Animation */
+    transition: all var(--transition-base);
+}
+
+.table-action-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-text-primary);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Specific action button colors */
+.table-action-btn.view {
+    /* Blue for view */
+    color: #3498db;
+    border-color: rgba(52, 152, 219, 0.3);
+}
+
+.table-action-btn.view:hover {
+    background: rgba(52, 152, 219, 0.1);
+    border-color: rgba(52, 152, 219, 0.5);
+}
+
+.table-action-btn.edit {
+    /* Orange for edit */
+    color: #f39c12;
+    border-color: rgba(243, 156, 18, 0.3);
+}
+
+.table-action-btn.edit:hover {
+    background: rgba(243, 156, 18, 0.1);
+    border-color: rgba(243, 156, 18, 0.5);
+}
+
+.table-action-btn.delete {
+    /* Red for delete */
+    color: #e74c3c;
+    border-color: rgba(231, 76, 60, 0.3);
+}
+
+.table-action-btn.delete:hover {
+    background: rgba(231, 76, 60, 0.1);
+    border-color: rgba(231, 76, 60, 0.5);
+}
+
+/* ============================================
+   STATUS PILLS (Active, Frozen, etc)
+   ============================================ */
+
+/* These extend the .pill class from buttons.css
+    but add table-specific sizing */
+
+.data-table .pill {
+    /* Make pills smaller in tables */
+    padding: 3px 8px;
+    font-size: 0.7rem;
+    display: inline-flex;
+}
+
+/* ============================================
+   EMPTY STATE (No results)
+   ============================================ */
+
+.table-empty {
+    /* Layout */
+    padding: var(--space-5xl);
+    text-align: center;
+
+    /* Typography */
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+.table-empty i {
+    /* Large icon */
+    font-size: 3rem;
+    color: var(--color-text-dim);
+    margin-bottom: var(--space-lg);
+    display: block;
+}
+
+/* ============================================
+   LOADING STATE
+   ============================================ */
+
+.table-loading {
+    /* Layout */
+    padding: var(--space-5xl);
+    text-align: center;
+
+    /* Typography */
+    color: var(--color-text-muted);
+}
+
+.table-loading i {
+    /* Spinning icon */
+    font-size: 2rem;
+    color: var(--color-text-primary);
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg);  }
+    to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   RESPONSIVE TABLE
+   Mobile: Stack table vertically
+   ============================================ */
+
+@media (max_width: 768px) {
+    .table-container {
+        overflow-x: auto;   /* Allow horizontal scroll on smaller screens */
+    }
+
+    .data-table {
+        min-width: 600px;   /* Prevent table from becoming too narrow */
+    }
+}
+
+/* ============================================
+   TABLE UTILITIES
+   ============================================ */
+
+/* Sortable column headers */
+.sortable {
+    cursor: pointer;
+    user-select: none;  /* Prevent text selection when clicking to sort */
+    position: relative;
+}
+
+.sortable:hover {
+    color: var(--color-text-primary);
+}
+
+.sortable::after {
+    /* Sort indicator (arrow) */
+    content: '\f0dc';   /* Font Awesome sort icon */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    margin-left: 6px;
+    opacity: 0.3;
+    font-size: 0.7rem;
+}
+
+.sortable.asc::after {
+    content: '\f0de';   /* Up Arrow */
+    opacity: 1;
+}
+
+.sortable.desc::after {
+     content: '\f0dd';  /* Down Arrow */
+     opacity: 1;
+}
+
+/* Numeric column - right align */
+.data-table .numeric {
+    text-align: right;
+}
+
+/* Truncate long text */
+.data-table .truncate {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR FOR TABLE
+   ============================================ */
+
+.table-cotainer::-webkit-scrollbar {
+    width: 8px;
+}
+
+.table-cotainer::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    transition: background var(--transition-base);
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}

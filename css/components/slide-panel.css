@@ -1,0 +1,812 @@
+/* ============================================
+   SLIDE-OUT PANEL COMPONENT
+   Side drawer for viewing/editing member details
+   ============================================ */
+
+
+/* ============================================
+   OVERLAY (Background Darkener)
+   ============================================ */
+
+.slide-panel-overlay {
+    /* Positioning */
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;  /* Above everything else */
+
+    /* Styling */
+    background: rgba(0, 0, 0, 0.7); /* Dark semi-transparent */
+
+    /* Initially hidden */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;   /* Can't click when hidden */
+
+    /* Animation */
+    transition: all var(--transition-base);
+}
+
+/* When overlay is active (pane open) */
+.slide-panel-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: all;    /* Can click to close */
+}
+
+/* ============================================
+   SLIDE PANEL (The Drawer Itself)
+   ============================================ */
+
+.slide-panel {
+    /* Positioning */
+    position: fixed;
+    top: 0;
+    right: 0;   /* Aligned to the right edge */
+    bottom: 0;
+    z-index: 1001;  /* Above overlay */
+
+    /* Sizing */
+    width: 450px;   /* Panel width */
+    max-width: 90vw;    /* On mobile, don't exceed 90% of screen */
+
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border-left: 1px solid var(--color-border-base);
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5); /* Shadow on left side */
+
+    /* Initially hidden (off-screen to the right) */
+    transform: translateX(100%);    /* Pushed 100% to the right (hidden) */
+
+    /* Animation */
+    transition: transform 0.3s ease-out;
+}
+
+/* When panel is active (slide-in) */
+.slide-panel-overlay.active .slide-panel {
+    transform: translateX(0);   /* Slide into view */
+}
+
+/* ============================================
+   RESPONSIVE: Mobile
+   ============================================ */
+
+@media (max-width: 768px) {
+    .slide-panel {
+        width: 100%;    /* Full width on mobile */
+        max-width: 100%;
+    }
+}
+
+/* ============================================
+   SLIDE PANEL HEADER
+   Member name, ID, and close button
+   ============================================ */
+
+.slide-panel-header {
+    /* Layout */
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: var(--space-2xl);
+
+    /* Styling */
+    border-bottom: 1px solid var(--color-border-base);
+    background: rgba(255, 255, 255, 0.02);
+
+    /* Flex shrink */
+    flex-shrink: 0; /* Don't shrink when content overflows */
+}
+
+/* Member info section (left side) */
+.slide-panel-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-xs);
+}
+
+/* "Member Profile" label */
+.slide-panel-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-semibold);
+}
+
+/* Member name */
+.slide-panel-name {
+    font-size: 1.5rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    line-height: 1.2;
+}
+
+/* Member ID (below name) */
+.slide-panel-id {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+/* Close button (X) */
+.slide-panel-close {
+    /* Layout */
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Styling */
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-border-base);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+
+    /* Typography */
+    font-size: 1.5rem;
+    line-height: 1;
+
+    /* Animation */
+    transition: all var(--transition-base);
+}
+
+.slide-panel-close:hover {
+    background: rgba(230, 0, 48, 0.1);
+    border-color: rgba(230, 0, 48, 0.3);
+    color: var(--color-text-primary);
+}
+
+/* ============================================
+   SLIDE PANEL BODY
+   Scrollable content area with member details
+   ============================================ */
+
+.slide-panel-body {
+    /* Layout */
+    flex: 1;    /* Takes up remaining space */
+    overflow-y: auto;   /* Scrollable if content is long */
+    padding: var(--space-2xl);
+}
+
+/* Detail rows (Location, Plan, Status, etc.) */
+.slide-panel-row {
+    /* Layout */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-lg) 0;
+
+    /* Styling */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.slide-panel-row:last-child {
+    border-bottom: none;    /* Remove border from last row */
+}
+
+/* Row label (left side - "Location", "Plan", etc.) */
+.slide-panel-key {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Row value (right side - "Downtown", "Premium", etc.) */
+.slide-panel-value {
+    font-size: 0.9rem;
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-medium);
+    text-align: right;
+}
+
+/* Section labels (like "Quick Stats", "Notes") */
+.slide-panel-section-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-semibold);
+    margin-top: var(--space-2xl);
+    margin-bottom: var(--space-md);
+}
+
+/* Quick Stats Grid (3 columns) */
+.slide-panel-stats {
+    /* Layout */
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--gap-md);
+    margin-top: var(--space-md);
+}
+
+/* Individual stat card */
+.slide-panel-stat {
+    /* Layout */
+    padding: var(--space-lg);
+
+    /* Styling */
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--color-border-base);
+    border-radius: var(--radius-md);
+    text-align: center;
+}
+
+/* Stat label (top - "Visits (30d)") */
+.slide-panel-stat-label {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--gap-xs);
+}
+
+/* Stat value (bottom - "12") */
+.slide-panel-stat-value {
+    font-size: 1.25rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+}
+
+/* Notes section */
+.slide-panel-notes {
+    /* Layout */
+    padding: var(--space-lg);
+    margin-top: var(--space-md);
+
+    /* Styling */
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--color-border-base);
+    border-radius: var(--radius-md);
+
+    /* Typography */
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+}
+
+/* Custom scrollbar for body (matches table scrollbar) */
+.slide-panel-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.slide-panel-body::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.slide-panel-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    transition: background var(--transition-base);
+}
+
+.slide-panel-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 0, 48, 0.5);
+}
+
+/* ========================================
+   SLIDE PANEL FOOTER
+   Action buttons at the bottom
+   ======================================== */
+
+.slide-panel-footer {
+    /* Layout */
+    display: flex;
+    gap: var(--gap-md);
+    padding: var(--space-2xl);
+    
+    /* Styling */
+    border-top: 1px solid var(--color-border-base);
+    background: rgba(255, 255, 255, 0.02);
+    
+    /* Flex shrink */
+    flex-shrink: 0; /* Don't shrink - stays fixed at bottom */
+}
+
+
+/* Footer buttons should grow to fill space */
+.slide-panel-footer .btn {
+    flex: 1; /* All buttons equal width */
+}
+
+/* Specific button styles */
+
+/* Freeze button (ghost style) */
+.slide-panel-footer .btn.freeze {
+    background: rgba(255, 193, 7, 0.1);
+    border-color: rgba(255, 193, 7, 0.3);
+    color: #ffd666;
+}
+
+.slide-panel-footer .btn.freeze:hover {
+    background: rgba(255, 193, 7, 0.2);
+    border-color: rgba(255, 193, 7, 0.5);
+}
+
+
+/* Unfreeze button (ghost style) */
+.slide-panel-footer .btn.unfreeze {
+    background: rgba(0, 180, 120, 0.1);
+    border-color: rgba(0, 180, 120, 0.3);
+    color: #5ce6a8;
+}
+
+.slide-panel-footer .btn.unfreeze:hover {
+    background: rgba(0, 180, 120, 0.2);
+    border-color: rgba(0, 180, 120, 0.5);
+}
+
+
+/* Cancel/Delete button (danger - red) */
+.slide-panel-footer .btn.danger {
+    background: rgba(230, 0, 48, 0.1);
+    border-color: rgba(230, 0, 48, 0.3);
+    color: #ff5c7a;
+}
+
+.slide-panel-footer .btn.danger:hover {
+    background: rgba(230, 0, 48, 0.2);
+    border-color: rgba(230, 0, 48, 0.5);
+}
+
+/* ============================================
+   MODE TOGGLING (View / Edit / Freeze
+   ============================================ */
+
+/* Hide view mode when in edit mode or freeze mode */
+.slide-panel.edit-mode .slide-panel-view, 
+.slide-panel.freeze-mode .slide-panel-view {
+    display: none;
+}
+
+/* Hide edit mode by default */
+.slide-panel-edit {
+    display: none;
+}
+
+/* Show edit mode when active */
+.slide-panel.edit-mode .slide-panel-edit {
+    display: block;
+}
+
+/* Hide freeze mode by default */
+.slide-panel-freeze {
+    display: none;
+}
+
+/* Show freeze mode when active */
+.slide-panel.freeze-mode .slide-panel-freeze {
+    display: block;
+}
+
+/* Why three modes?
+   View: Read-only member details
+   Edit: Form to update member info
+   Freeze: Form to freeze membership
+   Only one visible at a time */
+
+/* ============================================
+   EDIT FORM STYLES
+   ============================================ */
+
+.slide-panel-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-lg);
+}
+
+/* Form field container */
+.slide-panel-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-xs);
+}
+
+/* Field label */
+.slide-panel-field label {
+    font-size: 0.8rem;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Text inputs, select, textarea */
+.slide-panel-field input[type="text"], 
+.slide-panel-field input[type="email"], 
+.slide-panel-field input[type="tel"], 
+.slide-panel-field textarea {
+    /* Layout */
+    padding: var(--space-md) var(--space-lg);
+
+    /* Styling */
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-border-base);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+
+    /* Typography */
+    font-size: 0.9rem;
+    font-family: inherit;
+
+    /* Animation */
+    transition: all var(--transition-base);
+}
+
+/* Select dropdown - seperate from other inputs */
+.slide-panel-field select {
+    /* Layout */
+    padding: var(--space-md) var(--space-lg);
+    padding-right: 40px;    /* Space for custom arrow */
+    width: 100%;
+
+    /* Styling */
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-border-base);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+
+    /* Typography */
+    font-size: 0.9rem;
+    font-family: inherit;
+
+    /* Remove default styling */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    /* Custom arrow */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+
+    /* Behavior */
+    cursor: pointer;
+
+    /* Animation */
+    transition: all var(--transition-base);
+}
+
+/* Select focus state */
+.slide-panel-field select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(230, 0, 48, 0.1);
+}
+
+/* Select options styling */
+.slide-panel-field select option {
+    background: #1a1a1a;    /* Solid dark background */
+    color: var(--color-text-primary);
+    padding: 12px;
+}
+
+
+.slide-panel-field input:focus, 
+.slide-panel-field select:focus, 
+.slide-panel-field textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(230, 0, 48, 0.1);
+}
+
+/* Textarea specific */
+.slide-panel-field textarea {
+    min-height: 100px;
+    resize: vertical;   /* Allow vertical resize only */
+    font-family: inherit;
+}
+
+/* ============================================
+   READ-ONLY FIELDS (Grayed Out)
+   ============================================ */
+
+.slide-panel-field.read-only input, 
+.slide-panel-field.read-only select {
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--color-text-dim);
+    border-color: rgba(255, 255, 255, 0.05);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.slide-panel-field.read-only label {
+    color: var(--color-text-dim);
+}
+
+/* Why read-only styles?
+   Shows user which fields can't be changed
+   Member ID, Status, Join Date are historical
+   Can't be edited (only viewed) */
+
+/* ============================================
+   EDIT MODE HEADER
+   ============================================ */
+
+.slide-panel-header.edit-mode {
+    background: rgba(230, 0, 48, 0.05);
+    border-bottom-color: rgba(230, 0, 48, 0.2);
+}
+
+.slide-panel-header.edit-mode .slide-panel-label {
+    color: var(--color-primary);
+}
+
+/* Why different header color?
+   Visual indicator you're in edit mode
+   Prevents accidental edits (user knows they're editing) */
+
+/* ============================================
+   EDIT MODE FOOTER BUTTONS
+   ============================================ */
+
+.slide-panel-footer.edit-mode {
+    gap: var(--gap-md);
+}
+
+.slide-panel-footer.edit-mode .btn.cancel {
+    flex: 1;
+}
+
+/* Cancel button in edit mode */
+.slide-panel-footer.edit-mode .btn.cancel {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--color-border-base);
+    color: var(--color-text-secondary);
+}
+
+.slide-panel-footer.edit-mode .btn.cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Save button in edit mode (uses .btn.primary from buttons.css) */
+
+/* ============================================
+   FORM VALIDATION MESSAGES
+   ============================================ */
+
+.slide-panel-error {
+    /* Layout */
+    padding: var(--space-md) var(--space-lg);
+    margin-bottom: var(--space-lg);
+
+    /* Styling */
+    background: rgba(230, 0, 48, 0.1);
+    border: 1px solid rgba(230, 0, 48, 0.3);
+    border-radius: var(--radius-md);
+    color: #ff5c7a;
+
+    /* Typography */
+    font-size: 0.85rem;
+}
+
+.slide-panel-success {
+    /* Layout */
+    padding: var(--space-md) var(--space-lg);
+    margin-bottom: var(--space-lg);
+
+    /* Styling */
+    background: rgba(0, 180, 120, 0.1);
+    border: 1px solid rgba(0, 180, 120, 0.3);
+    border-radius: var(--radius-md);
+    color: #5ce6a8;
+
+    /* Typography */
+    font-size: 0.85rem;
+}
+
+/* WHY validation message?
+   Show errors (duplicate email, missing fields)
+   Show success (member updated)
+   User feedback is essential */
+
+/* ============================================
+   REQUIRED FIELD INDICATOR
+   ============================================ */
+
+.slide-panel-field.required label::after {
+    content: '*';
+    color: var(--color-primary);
+}
+
+/* Why asterisk (*)?
+   Shows which fields are required
+   Standard UX pattern
+   Prevents form aubmission errors */
+
+/* ============================================
+   FREEZE MODE STYLES
+   ============================================ */
+
+/* Freeze member info display */
+.freeze-member-info {
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+    background: rgba(255, 193, 7, 0.05);
+    border: 1px solid rgba(255, 193, 7, 0.2);
+    border-radius: var(--radius-md);
+    text-align: center;
+}
+
+.freeze-info-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-muted);
+    margin-bottom: var(--gap-xs);
+}
+
+.freeze-info-name {
+    font-size: 1.2rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--gap-xs);
+}
+
+.freeze-info-id {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+/* Freeze summary box */
+.freeze-summary {
+    display: flex;
+    gap: var(--gap-md);
+    padding: var(--space-lg);
+    margin: var(--space-lg) 0;
+    background: rgba(255, 193, 7, 0.1);
+    border: 2px solid rgba(255, 193, 7, 0.3);
+    border-radius: var(--radius-md);
+}
+
+.freeze-summary-icon {
+    font-size: 2rem;
+    color: #ffd666;
+    flex-shrink: 0;
+}
+
+.freeze-summary-content {
+    flex: 1;
+}
+
+.freeze-summary-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-muted);
+    margin-bottom: var(--gap-xs);
+}
+
+.freeze-summary-value {
+    font-size: 1.5rem;
+    font-weight: var(--font-weight-bold);
+    color: #ffd666;
+    margin-bottom: var(--gap-xs);
+}
+
+.freeze-summary-dates {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+}
+
+/* WHY yellow/orange theme?
+   Freeze is a "warning" action (not dangerous, but noteworthy)
+   Orange/yellow signals caution
+   Difference from red (delete) or blue (edit) */
+
+/* Freeze notice box */
+.freeze-notice {
+    display: flex;
+    gap: var(--gap-md);
+    padding: var(--space-md) var(--space-lg);
+    background: rgba(0, 180, 120, 0.05);
+    border-left: 3px solid rgba(0, 180, 120, 0.5);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    margin-top: var(--space-lg);
+}
+
+.freeze-notice i {
+    color: #5ce6a8;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* Date input styling (for freeze dates) */
+.slide-panel-field input[type="date"] {
+    /* Layout */
+    padding: var(--space-md) var(--space-lg);
+
+    /* Styling */
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-border-base);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+
+    /* Typography */
+    font-size: 0.9rem;
+    font-family: inherit;
+
+    /* Animation */
+    transition: all var(--transition-base);
+
+    /* Cursor */
+    cursor: pointer;
+}
+
+.slide-panel-field input[type="date"]:focus {
+    outline: none;
+    border-color: #ffd666;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.1);
+}
+
+/* Read-only date input (end date) */
+.slide-panel-field input[type="date"]:read-only {
+    background: rgba(255, 255, 255, 0.02);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* ============================================
+   FREEZE MODE HEADER
+   ============================================ */
+
+.slide-panel-header.freeze-mode {
+    background: rgba(255, 193, 7, 0.05);
+    border-bottom-color: rgba(255, 193, 7, 0.2);
+}
+
+.slide-panel-header.freeze-mode .slide-panel-label {
+    color: #ffd666;
+}
+
+/* WHY different header?
+   Visual indicator you're in freeze mode
+   Consistent with edit mode pattern
+   Yellow theme throughout */
+
+/* ============================================
+   FREEZE BUTTON STYLING
+   ============================================ */
+
+.btn.freeze {
+    background: rgba(255, 193, 7, 0.1);
+    border-color: rgba(255, 193, 7, 0.3);
+    color: #ffd666;
+}
+
+.btn.freeze:hover {
+    background: rgba(255, 193, 7, 0.2);
+    border-color: rgba(255, 193, 7, 0.5);
+    box-shadow: 0 0 12px rgba(255, 193, 7, 0.2);
+}
+
+/* ========================================
+   RESPONSIVE: Footer on Mobile
+   ======================================== */
+
+@media (max-width: 768px) {
+    .slide-panel-footer {
+        flex-direction: column; /* Stack buttons vertically */
+    }
+    
+    .slide-panel-footer .btn {
+        width: 100%; /* Full width buttons */
+    }
+}
+
+/* WHY stack on mobile?
+   3-4 buttons side-by-side are cramped on phone
+   Stacked = easier to tap (bigger touch targets)
+   Better mobile UX */

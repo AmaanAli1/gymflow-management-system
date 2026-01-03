@@ -1,0 +1,322 @@
+/* ========================================
+   MODAL COMPONENTS
+   Modal Overlays, Cards, Forms, Fields
+   ======================================== */
+
+
+/* ========================================
+   MODAL OVERLAY (Full-Screen Backdrop)
+   ======================================== */
+
+.modal-overlay {
+    /* Positioning */
+    position: fixed;
+    inset: 0;   /* Shorthand for top:0, right:0, bottom:0, left:0 */
+    z-index: var(--z-modal-backdrop);
+
+    /* Layout */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Styling */
+    background: var(--color-overlay);
+
+    /* Hidden by default */
+    opacity: 0;
+    pointer-events: none;
+
+    /* Animation */
+    transition: opacity 0.25s ease;
+}
+
+/* Show modal (JavaScript adds .show class) */
+.modal-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ========================================
+   MODAL CARD (Content Container)
+   ======================================== */
+
+.modal-card {
+    /* Sizing */
+    width: 520px;
+    max-width: 92vw;    /* Don't overflow on mobile */
+
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border-radius: 14px;
+    border: 1px solid var(--color-bg-input);
+    padding: var(--space-3xl) var(--space-3xl) 14px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.85);
+
+    /* Initial state (before animation */
+    transform: translateY(10px);
+    opacity: 0;
+
+    /* Animation */
+    transition: all 0.25s ease;
+}
+
+/* Animate in when modal shown */
+.modal-overlay.show .modal-card {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Wide modal variant (for more complex forms) */
+.modal-card.wide {
+    width: 640px;
+    max-width: 96vw;
+}
+
+/* ========================================
+   MODAL HEADER
+   ======================================== */
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--gap-md);
+}
+
+.modal-header h2 {
+    font-family: var(--font-heading);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+}
+
+/* Close Button (x) */
+.modal-close {
+    /* Reset button styles */
+    background: none;
+    border: none;
+    padding: 0;
+
+    /* Styling */
+    color: var(--color-text-muted);
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+
+    /* Animation */
+    transition: color var(--transition-base);
+}
+
+.modal-close:hover {
+    color: var(--color-primary);
+}
+
+/* ========================================
+   MODAL BODY
+   ======================================== */
+
+.modal-body {
+    margin-top: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-md);
+}
+
+/* Modal Grid (Two-Column Form Layout) */
+.modal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-md);
+}
+
+/* Modal Hint Text */
+.modal-hint {
+    font-size: 0.7rem;
+    color: var(--color-text-dim);
+    font-style: italic;
+    padding: var(--space-sm) 0;
+}
+
+/* ========================================
+   FORM FIELDS
+   ======================================== */
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    font-size: 0.78rem;
+}
+
+/* Field Label */
+.field label {
+    color: var(--color-text-lighter);
+    font-size: 0.72rem;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    font-weight: var(--font-weight-medium);
+}
+
+/* Input, Select, Textarea Base Styles */
+.field input, 
+.field select, 
+.field textarea {
+    /* Sizing */
+    padding: 7px 9px;
+
+    /* Styling */
+    background: var(--color-dark);
+    border-radius: var(--radius-md);
+    border: 1px solid #2a2a2a;
+    color: var(--color-text-secondary);
+    font-size: 0.78rem;
+
+    /* Remove default outline */
+    outline: none;
+
+    /* Animation */
+    transition: all 0.25s ease;
+}
+
+/* Focus State (When user clicks/tabs into field) */
+.field input:focus, 
+.field select:focus, 
+.field textarea:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 8px rgba(var(--color-primary-rgb), 0.5);
+}
+
+/* Hover State */
+.field input:hover, 
+.field select:hover, 
+.field textarea:hover {
+    border-color: rgba(var(--color-primary-rgb), 0.6);
+}
+
+/* Textarea Specific */
+.field textarea {
+    resize: vertical;   /* Allow vertical resizing only */
+    min-height: 60px;
+    font-family: inherit;   /* Uses same font as rest of app */
+}
+
+/* ========================================
+   SELECT DROPDOWNS (Custom Styling)
+   ======================================== */
+
+.field select {
+    /* Remove default arrows */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    /* Custom arrow using inline SVG */
+     background: var(--color-dark) 
+                url('data:image/svg+xml;utf8,<svg fill="%23aaa" height="12" width="12" xmlns="http://www.w3.org/2000/svg"><path d="M2 4l4 4 4-4z"/></svg>') 
+                no-repeat right 10px center;
+     background-size: 12px;
+
+     /* Padding (extra space on right for arrow) */
+     padding: 8px 30px 8px 9px;
+
+     /* Styling */
+     cursor: pointer;
+}
+
+/* ========================================
+   MODAL FOOTER (Action Buttons)
+   ======================================== */
+
+.modal-footer {
+    margin-top: var(--gap-md);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-md);
+}
+
+/* ========================================
+   FORM VALIDATION STATES
+   ======================================== */
+
+/* Error State */
+.field.error input, 
+.field.error select, 
+.field.error textarea {
+    border-color: #ff4444;
+}
+
+.field .error-message {
+    color: #ff4444;
+    font-size: 0.7rem;
+    margin-top: 2px;
+}
+
+/* Success State */
+.field.success input, 
+.field.success select, 
+.field.success textarea {
+    border-color: var(--color-success);
+}
+
+/* ========================================
+   CHECKBOX & RADIO STYLES
+   ======================================== */
+
+.field input[type="checkbox"], 
+.field input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--color-primary);
+}
+
+/* Checkbox/Radio Label (Next to box) */
+.field.inline {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.field.inline label {
+    text-transform: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+/* ========================================
+   RESPONSIVE (Mobile)
+   ======================================== */
+
+@media (max-width: 640px) {
+    /* Single column forms on mobile */
+    .modal-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Smaller padding */
+    .modal-card {
+        padding: var(--space-2xl)
+    }
+
+    /* Stack buttons vertically */
+    .modal-footer {
+        flex-direction: column-reverse;
+        gap: var(--space-md);
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+    }
+}
+
+/* ========================================
+   ACCESSIBILITY HELPERS
+   ======================================== */
+
+/* Focus-visible for keyboard navigation */
+.modal-card:focus-visible, 
+.field input:focus-visible, 
+.field select:focus-visible, 
+.field textarea:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}

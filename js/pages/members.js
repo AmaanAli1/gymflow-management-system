@@ -1,0 +1,1007 @@
+/* ============================================
+   MEMBERS PAGE JAVASCRIPT
+   Handles member list, filters, search, CRUD operations
+   ============================================ */
+
+document.addEventListener('DOMContentLoaded', () => {
+    
+    /* ========================================
+       API CONFIGURATION
+       ======================================== */
+    
+    const API_BASE_URL = 'http://127.0.0.1:5000/api';
+    
+    
+    /* ========================================
+       STATE MANAGEMENT
+       Track current filters and search
+       ======================================== */
+    
+    let currentFilters = {
+        location: '',
+        plan: '',
+        status: '',
+        search: ''
+    };
+    
+    let allMembers = []; // Store ALL members (never filtered)
+    let filteredMembers = [] // Current filtered/searched results
+    
+    
+    /* ========================================
+       DOM ELEMENTS
+       ======================================== */
+    
+    const membersTableBody = document.getElementById('membersTableBody');
+    const searchInput = document.getElementById('searchInput');
+    const locationFilter = document.getElementById('locationFilter');
+    const planFilter = document.getElementById('planFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    
+    
+    /* ========================================
+       FETCH MEMBERS FROM API
+       ======================================== */
+    
+    async function fetchMembers() {
+        try {
+            console.log('🔄 Fetching members from API...');
+            
+            // Build query string from filters
+            const params = new URLSearchParams();
+            
+            if (currentFilters.location) params.append('location', currentFilters.location);
+            if (currentFilters.plan) params.append('plan', currentFilters.plan);
+            if (currentFilters.status) params.append('status', currentFilters.status);
+            if (currentFilters.search) params.append('search', currentFilters.search);
+            
+            const queryString = params.toString();
+            const url = `${API_BASE_URL}/members${queryString ? '?' + queryString : ''}`;
+            
+            console.log('📡 Fetching:', url);
+            
+            // Fetch from API
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            console.log(`✅ Received ${data.members.length} members`);
+            
+            // Store filtered members for display
+            allMembers = data.members;
+
+            // If no filters applied, also update allMembers
+            if (!currentFilters.location && !currentFilters.plan && !currentFilters.status && !currentFilters.search) {
+                allMembers = data.members;
+            }
+
+            populateMembersTable(data.members);
+            
+        } catch (error) {
+            console.error('❌ Failed to fetch members:', error);
+            
+            // Show error message in table
+            membersTableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="table-empty">
+                        <i class="fa-solid fa-exclamation-triangle" style="color: #e74c3c;"></i>
+                        <p>Failed to load members</p>
+                        <p style="font-size: 0.8rem; margin-top: 8px;">
+                            Make sure the backend server is running on port 5000
+                        </p>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+    
+    
+    /* ========================================
+       FETCH MEMBER STATS
+       ======================================== */
+    
+    async function fetchStats() {
+        try {
+            console.log('📊 Fetching member stats...');
+            
+            const response = await fetch(`${API_BASE_URL}/members/stats`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const stats = await response.json();
+            
+            console.log('✅ Stats received:', stats);
+            
+            updateStats(stats);
+            
+        } catch (error) {
+            console.error('❌ Failed to fetch stats:', error);
+        }
+    }
+    
+    
+    /* ========================================
+       UPDATE KPI STATS
+       ======================================== */
+    
+    function updateStats(stats) {
+        document.querySelector('[data-stat="activeMembers"]').textContent = stats.activeMembers;
+        document.querySelector('[data-stat="newThisMonth"]').textContent = stats.newThisMonth;
+        document.querySelector('[data-stat="frozenMembers"]').textContent = stats.frozenMembers;
+        document.querySelector('[data-stat="cancelledMembers"]').textContent = stats.cancelledMembers;
+        
+        console.log('✅ Member stats updated');
+    }
+    
+    
+    /* ========================================
+       POPULATE MEMBERS TABLE
+       ======================================== */
+    
+    function populateMembersTable(members) {
+        // Clear table
+        membersTableBody.innerHTML = '';
+        
+        // Check if no members
+        if (members.length === 0) {
+            membersTableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="table-empty">
+                        <i class="fa-solid fa-users-slash"></i>
+                        <p>No members found</p>
+                        <p style="font-size: 0.8rem; margin-top: 8px;">Try adjusting your filters or search terms</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        // Create table rows
+        members.forEach(member => {
+            const row = document.createElement('tr');
+            
+            // Determine status pill class
+            let statusClass = 'check'; // default green for active
+            if (member.status === 'frozen') statusClass = 'stock'; // yellow
+            if (member.status === 'cancelled') statusClass = 'pill'; // gray
+            if (member.status === 'inactive') statusClass = 'pill'; // gray
+            
+            // Determine plan pill class
+            let planClass = 'add'; // default red for Basic
+            if (member.plan === 'Premium') planClass = 'pay'; // green
+            if (member.plan === 'Elite') planClass = 'stock'; // yellow
+            
+            // Format join date
+            const joinDate = new Date(member.created_at).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            row.innerHTML = `
+                <td>${member.member_id}</td>
+                <td>${member.name}</td>
+                <td class="truncate">${member.email}</td>
+                <td>${member.location_name || 'Unknown'}</td>
+                <td><span class="pill ${planClass}">${member.plan}</span></td>
+                <td><span class="pill ${statusClass}">${member.status}</span></td>
+                <td>${joinDate}</td>
+                <td>
+                    <div class="table-actions">
+                        <button class="table-action-btn view" 
+                                data-member-id="${member.id}"
+                                title="View details">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                        <button class="table-action-btn edit" 
+                                data-member-id="${member.id}"
+                                title="Edit member">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button class="table-action-btn delete" 
+                                data-member-id="${member.id}"
+                                title="Delete member">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            membersTableBody.appendChild(row);
+        });
+        
+        // Add event listeners to action buttons
+        attachTableActionListeners();
+        
+        console.log(`✅ Populated table with ${members.length} members`);
+    }
+    
+    
+    /* ========================================
+       ATTACH EVENT LISTENERS TO TABLE ACTIONS
+       ======================================== */
+    
+    function attachTableActionListeners() {
+        // View buttons
+        document.querySelectorAll('.table-action-btn.view').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const memberId = e.currentTarget.dataset.memberId;
+                viewMemberDetails(memberId);
+            });
+        });
+        
+        // Edit buttons
+        document.querySelectorAll('.table-action-btn.edit').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const memberId = e.currentTarget.dataset.memberId;
+                editMember(memberId);
+            });
+        });
+        
+        // Delete buttons
+        document.querySelectorAll('.table-action-btn.delete').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const memberId = e.currentTarget.dataset.memberId;
+                deleteMember(memberId);
+            });
+        });
+    }
+    
+    
+    /* ========================================
+       EVENT LISTENERS: Filters and Search
+       ======================================== */
+    
+    // Location filter
+    locationFilter.addEventListener('change', (e) => {
+        currentFilters.location = e.target.value;
+        fetchMembers(); // Re-fetch with new filter
+    });
+    
+    // Plan filter
+    planFilter.addEventListener('change', (e) => {
+        currentFilters.plan = e.target.value;
+        fetchMembers(); // Re-fetch with new filter
+    });
+    
+    // Status filter
+    statusFilter.addEventListener('change', (e) => {
+        currentFilters.status = e.target.value;
+        fetchMembers(); // Re-fetch with new filter
+    });
+    
+    // Search input (with debounce)
+    let searchTimeout;
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            currentFilters.search = e.target.value;
+            fetchMembers(); // Re-fetch with search term
+        }, 500); // Wait 500ms after user stops typing
+    });
+    
+    
+    /* ========================================
+       CRUD OPERATIONS
+       ======================================== */
+    
+    function viewMemberDetails(memberId) {
+        console.log('👁️ View member:', memberId);
+        
+        // Find member in allMembers array
+        const member = allMembers.find(m => m.id == memberId);
+        
+        if (member) {
+            // Open slide panel with member data
+            openMemberPanel(member);
+        } else {
+            console.error('Member not found:', memberId);
+        }
+    }
+
+    /* ========================================
+       OPEN MEMBER DETAILS PANEL
+       ======================================== */
+    
+    function openMemberPanel(member) {
+        console.log('📋 Opening panel for:', member.name);
+
+        // Populate header
+        document.getElementById('panelMemberName').textContent = member.name;
+        document.getElementById('panelMemberId').textContent = `ID: ${member.member_id}`;
+
+        // Populate details
+        document.getElementById('panelMemberEmail').textContent = member.email;
+        document.getElementById('panelMemberLocation').textContent = member.location_name || 'Unknown';
+        document.getElementById('panelMemberPlan').textContent = member.plan;
+
+        // Format join date
+        const joinDate = new Date(member.created_at).toLocaleDateString('en-US', {
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric'
+        });
+        document.getElementById('panelMemberJoinDate').textContent = joinDate;
+
+        // Populate status with colored pill
+        const statusElement = document.getElementById('panelMemberStatus');
+        let statusClass = 'check';  // default green
+        if (member.status === 'frozen') statusClass = 'stock';  // yellow
+        if (member.status === 'cancelled') statusClass = 'pill';    //gray
+        if (member.status === 'inactive') statusClass = 'pill';     // gray
+
+        statusElement.innerHTML = `<span class="pill ${statusClass}">${member.status}</span>`;
+
+        // Populate stats (placeholder for now)
+        // TODO: These would come from a seperate API call for member activity
+        document.getElementById('panelStatCheckins').textContent = '--';
+        document.getElementById('panelStatDaysActive').textContent = calculateDaysActive(member.created_at);
+        document.getElementById('panelStatLastVisit').textContent = 'N/A';
+
+        // Notes (placehodler)
+        document.getElementById('panelMemberNotes').textContent = 'No notes available for this member.'
+
+        // Store member ID on buttons for actions
+        document.getElementById('freezeMemberBtn').dataset.memberId = member.id;
+        document.getElementById('editMemberBtn').dataset.memberId = member.id;
+        document.getElementById('deleteMemberBtn').dataset.memberId = member.id;
+
+        // Update freeze button based on member status
+        const freezeBtn = document.getElementById('freezeMemberBtn');
+        if (member.status === 'frozen') {
+            freezeBtn.innerHTML = '<i class="fa-solid fa-fire"></i> Unfreeze';
+            freezeBtn.onclick = (e) => {
+                e.stopPropagation();
+                unfreezeMember(member.id);
+            };
+        } else {
+            freezeBtn.innerHTML = '<i class="fa-solid fa-snowflake"></i> Freeze';
+            freezeBtn.onclick = null;   // Use event listener instead
+        }
+
+        // Show the panel
+        document.getElementById('memberDetailPanel').classList.add('active');
+
+        console.log('✅ Panel opened');
+
+    }
+
+    /* ========================================
+       CLOSE MEMBER DETAILS PANEL
+       ======================================== */
+
+    function closeMemberPanel() {
+        document.getElementById('memberDetailPanel').classList.remove('active');
+
+        // Reset to view mode when closing
+        switchToViewMode();
+
+        console.log('✅ Panel closed');
+    }
+
+    /* Helper: Calculate days since joining */
+    function calculateDaysActive(joinDate) {
+        const join = new Date(joinDate);
+        const today = new Date();
+        const diffTime = Math.abs(today - join);
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays;
+    }
+    
+    function editMember(memberId) {
+        console.log('✏️ Edit member:', memberId);
+        
+        // Find member in allMembers array
+        const member = allMembers.find(m => m.id == memberId);
+
+        if (member) {
+            // First, open the panel with member details (if not already open)
+            openMemberPanel(member);
+
+            // Then switch to edit mode
+            setTimeout(() => {
+                switchToEditMode(member);
+            }, 100);    // Small delay to ensure panel is rendered
+        } else {
+            console.error('Member not found', memberId);
+        }
+    }
+
+    /* ========================================
+       SWITCH TO EDIT MODE
+       ======================================== */
+    
+    function switchToEditMode(member) {
+        console.log('✏️ Switching to edit mode for:', member.name);
+
+        // Add edit-mode class to panel
+        document.querySelector('.slide-panel').classList.add('edit-mode');
+
+        // Hide view buttons, show edit buttons
+        document.getElementById('viewModeButtons').style.display = 'none';
+        document.getElementById('editModeButtons').style.display = 'flex';
+
+        // Pre-fill form with current member data
+        document.getElementById('editMemberId').value = member.member_id;
+        document.getElementById('editName').value = member.name;
+        document.getElementById('editEmail').value = member.email;
+        document.getElementById('editPhone').value = member.phone || '';
+        document.getElementById('editEmergencyContact').value = member.emergency_contact || '';
+        document.getElementById('editLocation').value = member.location_id;
+        document.getElementById('editPlan').value = member.plan;
+        document.getElementById('editStatus').value = member.status;
+        document.getElementById('editNotes').value = member.notes || '';
+
+        // Format and set join date (read-only)
+        const joinDate = new Date(member.created_at).toLocaleDateString('en-US', {
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric'
+        });
+        document.getElementById('editJoinDate').value = joinDate;
+
+        // Store member ID for saving later
+        document.getElementById('editMemberForm').dataset.memberId = member.id;
+
+        // Hide any previous error/success messages
+        document.getElementById('editErrorMessage').style.display = 'none';
+        document.getElementById('editSuccessMessage').style.display = 'none';
+
+        console.log('✅ Switched to edit mode');
+    }
+
+    /* ========================================
+       SWITCH TO VIEW MODE
+       ======================================== */
+
+    function switchToViewMode() {
+        console.log('👁️ Switching to view mode');
+
+        // Remove ALL mode classes from panel
+        const panel = document.querySelector('.slide-panel');
+        panel.classList.remove('edit-mode');
+        panel.classList.remove('freeze-mode');
+
+        // Show view buttons ONLY
+        document.getElementById('viewModeButtons').style.display = 'flex';
+        document.getElementById('editModeButtons').style.display = 'none';
+        document.getElementById('freezeModeButtons').style.display = 'none';
+
+        // Hide error/success messages
+        document.getElementById('editErrorMessage').style.display = 'none';
+        document.getElementById('editSuccessMessage').style.display = 'none';
+        document.getElementById('freezeErrorMessage').style.display = 'none';
+        document.getElementById('freezeSuccessMessage').style.display = 'none';
+
+        console.log('✅ Switched to view mode');
+    }
+
+    /* ========================================
+       SWITCH TO FREEZE MODE
+       ======================================== */
+
+    function switchToFreezeMode(member) {
+        console.log(' Switching to freeze mode for:', member.name);
+
+        // Add freeze-mode class to panel
+        document.querySelector('.slide-panel').classList.add('freeze-mode');
+
+        // Hide view buttons, show freeze buttons
+        document.getElementById('viewModeButtons').style.display = 'none';
+        document.getElementById('freezeModeButtons').style.display = 'flex';
+
+        // Populate member info
+        document.getElementById('freezeMemberName').textContent = member.name;
+        document.getElementById('freezeMemberId').textContent = member.member_id;
+
+        // Set start date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('freezeStartDate').value = today;
+
+        // Clear form
+        document.getElementById('freezeDuration').value = '';
+        document.getElementById('freezeEndDate').value = '';
+        document.getElementById('freezeReason').value = '';
+        document.getElementById('freezeNotes').value = '';
+
+        // Hide summary initially
+        document.getElementById('freezeSummary').style.display = 'none';
+
+        // Store member ID for later
+        document.getElementById('freezeMemberForm').dataset.memberId = member.id;
+
+        // Hide error/success messages
+        document.getElementById('freezeErrorMessage').style.display = 'none';
+        document.getElementById('freezeSuccessMessage').style.display = 'none';
+
+        console.log (' Switched to freeze mode');
+    }
+
+    /* ========================================
+       CALCULATE FREEZE END DATE
+       ======================================== */
+
+    function calculateFreezeEndDate() {
+        const duration = document.getElementById('freezeDuration').value;
+        const startDate = document.getElementById('freezeStartDate').value;
+
+        if (!duration || !startDate) {
+            document.getElementById('freezeSummary').style.display = 'none';
+            return;
+        }
+
+        // If custom, make end date editable
+        if (duration === 'custom') {
+            document.getElementById('freezeEndDate').removeAttribute('readonly');
+            document.getElementById('freezeSummary').style.display = 'none';
+            return;
+        }
+
+        // Calculate end date based on duration
+        const start = new Date(startDate);
+        const days = parseInt(duration);
+        const end = new Date(start);
+        end.setDate(end.getDate() + days);
+
+        // Set end date (read-only)
+        const endDateString = end.toISOString().split('T')[0];
+        document.getElementById('freezeEndDate').value = endDateString;
+        document.getElementById('freezeEndDate').setAttribute('readonly', true);
+
+        // Update summary display
+        updateFreezeSummary(start, end, days);
+    }
+
+    /* ========================================
+       UPDATE FREEZE SUMMARY DISPLAY
+       ======================================== */
+
+    function updateFreezeSummary(startDate, endDate, days) {
+        // Format dates
+        const startFormatted = startDate.toLocaleDateString('en-US', {
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric'
+        });
+
+        const endFormatted = endDate.toLocaleDateString('en-US', {
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric'
+        });
+
+        // Update display
+        document.getElementById('freezeDurationDisplay').textContent = `${days} days`;
+        document.getElementById('freezeDateDisplay').textContent = `${startFormatted} → ${endFormatted}`;
+
+        // Show summary
+        document.getElementById('freezeSummary').style.display = 'flex';
+    }
+
+    /* ========================================
+       FREEZE MEMBER (Submit to API)
+       ======================================== */
+
+    async function freezeMember(e) {
+        e.preventDefault();
+
+        const form = document.getElementById('freezeMemberForm');
+        const memberId = form.dataset.memberId;
+
+        // Get form data
+        const formData = new FormData(form);
+        const freezeData = {
+            freeze_start_date: formData.get('start_date'), 
+            freeze_end_date: formData.get('end_date'), 
+            freeze_reason: formData.get('reason') || null, 
+            notes: formData.get('notes') || null
+        };
+
+        console.log(' Freezing member:', freezeData);
+
+        // Hide previous messages
+        document.getElementById('freezeErrorMessage').style.display = 'none';
+        document.getElementById('freezeSuccessMessage').style.display = 'none';
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/members/${memberId}/freeze`, {
+                method: 'POST', 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(freezeData)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to freeze member');
+            }
+
+            console.log(' Member frozen:', result);
+
+            // Show success message
+            const successMsg = document.getElementById('freezeSuccessMessage');
+            successMsg.textContent = ' Member frozen successfully!';
+            successMsg.style.display = 'block';
+
+            // Update the member in allMembers array
+            const index = allMembers.findIndex(m => m.id == memberId);
+            if (index !== -1) {
+                allMembers[index] = result.member;
+            }
+
+            // Wait 1 second, then switch back to view mode with updated data
+            setTimeout(() => {
+                openMemberPanel(result.member);
+                switchToViewMode();
+            }, 1000);
+
+            // Refresh the table and stats
+            fetchMembers();
+            fetchStats();
+
+        } catch (error) {
+            console.error(' Failed to freeze member:', error);
+
+            // Show error message
+            const errorMsg = document.getElementById('freezeErrorMessage');
+            errorMsg.textContent = ` ${error.message}`;
+            errorMsg.style.display = 'block';
+        }
+    }
+
+    /* ========================================
+       UNFREEZE MEMBER
+       ======================================== */
+
+    async function unfreezeMember(memberId) {
+        console.log(' Unfreezing member:', memberId);
+
+        if (!confirm('Are you sure you want to unfreeze this member? They will be set back to active status.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/members/${memberId}/unfreeze`, {
+                method: 'POST'
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to unfreeze member');
+            }
+
+            console.log(' Member unfrozen:', result);
+            alert(' Member unfrozen successfully!');
+
+            // Update the member in allMembers array
+            const index = allMembers.findIndex(m => m.id == memberId);
+            if (index !== -1) {
+                allMembers[index] = result.member;
+            }
+
+            // Refresh panel and table
+            openMemberPanel(result.member);
+            fetchMembers();
+            fetchStats();
+
+        } catch (error) {
+            console.error(' Failed to unfreeze member:', error);
+            alert(`Failed to unfreeze member: ${error.message}`);
+        }
+    }
+
+
+    /* ========================================
+       SAVE MEMBER CHANGES
+       ======================================== */
+
+    async function saveMemberChanges(e) {
+        e.preventDefault(); // Prevent form submission
+
+        const form = document.getElementById('editMemberForm');
+        const memberId = form.dataset.memberId;
+
+        // Get form data
+        const formData = new FormData(form);
+        const memberData = {
+            name: formData.get('name'), 
+            email: formData.get('email'), 
+            phone: formData.get('phone') || null, 
+            emergency_contact: formData.get('emergency_contact') || null, 
+            location_id: parseInt(formData.get('location_id')), 
+            plan: formData.get('plan'), 
+            notes: formData.get('notes') || null
+        };
+
+        console.log('💾 Saving member changes:', memberData);
+
+        // Hide previous messages
+        document.getElementById('editErrorMessage').style.display = 'none';
+        document.getElementById('editSuccessMessage').style.display = 'none';
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/members/${memberId}`, {
+                method: 'PUT', 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(memberData)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to update member');
+            }
+
+            console.log('✅ Member updated:', result);
+
+            // Show success message
+            const successMsg = document.getElementById('editSuccessMessage');
+            successMsg.textContent = '✅ Member updated successfully!';
+            successMsg.style.display = 'block';
+
+            // Update the member in allMembers array
+            const index = allMembers.findIndex(m => m.id == memberId);
+            if (index !== -1) {
+                allMembers[index] = result.member;
+            }
+
+            // Wait 1 second, then switch back to view mode with updated data
+            setTimeout(() => {
+                openMemberPanel(result.member);
+                switchToViewMode();
+            }, 1000);
+
+            // Refresh the table to show updated data
+            fetchMembers();
+
+        } catch (error) {
+            console.error('❌ Failed to save changed:', error);
+
+            // Show error message
+            const errorMsg = document.getElementById('editErrorMessage');
+            errorMsg.textContent = `❌ ${error.message}`;
+            errorMsg.style.display = 'block';
+        }
+    }
+
+    
+    async function deleteMember(memberId) {
+        console.log('🗑️ Delete member:', memberId);
+        
+        // Confirm before deleting
+        if (!confirm('Are you sure you want to delete this member?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/members/${memberId}`, {
+                method: 'DELETE'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            console.log('✅ Member deleted:', result);
+            alert('Member deleted successfully!');
+            
+            // Refresh the table
+            fetchMembers();
+            fetchStats();
+            
+        } catch (error) {
+            console.error('❌ Failed to delete member:', error);
+            alert('Failed to delete member. Please try again.');
+        }
+    }
+    
+    
+    /* ========================================
+       ADD MEMBER FORM SUBMISSION
+       ======================================== */
+    
+    const addMemberForm = document.getElementById('addMemberForm');
+    
+    if (addMemberForm) {
+        addMemberForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Get form data
+            const formData = new FormData(addMemberForm);
+            const memberData = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                location_id: parseInt(formData.get('location_id')),
+                plan: formData.get('plan')
+            };
+            
+            console.log('📝 Submitting new member:', memberData);
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/members`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(memberData)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to create member');
+                }
+                
+                const result = await response.json();
+                
+                console.log('✅ Member created:', result);
+                alert('✅ Member added successfully!');
+                
+                // Close modal
+                document.getElementById('add-member-modal').classList.remove('show');
+                
+                // Reset form
+                addMemberForm.reset();
+                
+                // Refresh table and stats
+                fetchMembers();
+                fetchStats();
+                
+            } catch (error) {
+                console.error('❌ Failed to create member:', error);
+                alert(`Failed to add member: ${error.message}`);
+            }
+        });
+    }
+    
+    
+    /* ========================================
+       POPULATE LOCATION DROPDOWNS
+       ======================================== */
+    
+    async function populateLocationDropdowns() {
+        // Fetch locations from database via members query
+        // For now, hardcode (we can create /api/locations later)
+        const locations = [
+            { id: 1, name: 'Downtown' },
+            { id: 2, name: 'Midtown' },
+            { id: 3, name: 'Eastside' }
+        ];
+        
+        // Populate filter dropdown
+        locations.forEach(loc => {
+            const option = document.createElement('option');
+            option.value = loc.id;
+            option.textContent = loc.name;
+            locationFilter.appendChild(option);
+        });
+        
+        // Populate modal dropdowns
+        const modalLocationSelects = document.querySelectorAll('#memberLocation, #checkinLocation, #editLocation');
+        modalLocationSelects.forEach(select => {
+            locations.forEach(loc => {
+                const option = document.createElement('option');
+                option.value = loc.id;
+                option.textContent = loc.name;
+                select.appendChild(option);
+            });
+        });
+    }
+    
+
+    /* ========================================
+       SLIDE PANEL EVENT LISTENERS
+       ======================================== */
+
+    // Close button
+    document.getElementById('closeMemberPanel').addEventListener('click', closeMemberPanel);
+
+    // Click overlay to close
+    document.getElementById('memberDetailPanel').addEventListener('click', (e) => {
+        // Only close if clicking the overlay itself, not the panel
+        if (e.target.id === 'memberDetailPanel') {
+            closeMemberPanel();
+        }
+    });
+
+    // Freeze button
+    document.getElementById('freezeMemberBtn').addEventListener('click', (e) => {
+        const memberId = e.currentTarget.dataset.memberId;
+        const member = allMembers.find(m => m.id == memberId);
+        
+        if (member) {
+            switchToFreezeMode(member);
+        }
+    });
+
+    // Edit button
+    document.getElementById('editMemberBtn').addEventListener('click', (e) => {
+        const memberId = e.currentTarget.dataset.memberId;
+        console.log('✏️ Edit member:', memberId);
+        editMember(memberId);
+    });
+
+    // Delete button from panel
+    document.getElementById('deleteMemberBtn').addEventListener('click', (e) => {
+        const memberId = e.currentTarget.dataset.memberId;
+        console.log(' Delete member from panel:', memberId);
+        closeMemberPanel(); // Close panel first
+        deleteMember(memberId); // Then delete (will show confirmation)
+    });
+
+    // Escape key to close
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const panel = document.getElementById('memberDetailPanel');
+            if (panel.classList.contains('active')) {
+                closeMemberPanel();
+            }
+        }
+    });
+
+    // Cancel edit button
+    document.getElementById('cancelEditBtn').addEventListener('click', () => {
+        console.log('❌ Cancelling edit');
+        switchToViewMode();
+    });
+
+    // Save changes button
+    document.getElementById('saveEditBtn').addEventListener('click', saveMemberChanges);
+
+    // Also handle form submission (pressing Enter in input)
+    document.getElementById('editMemberForm').addEventListener('submit', saveMemberChanges);
+
+    // Cancel freeze button
+    document.getElementById('cancelFreezeBtn').addEventListener('click', () => {
+        console.log(' Canceling freeze');
+        switchToViewMode();
+    });
+
+    // Confirm freeze button
+    document.getElementById('confirmFreezeBtn').addEventListener('click', freezeMember);
+
+    // Also handle form submission
+    document.getElementById('freezeMemberForm').addEventListener('submit', freezeMember);
+
+    // Duration dropdown change - calculate end date
+    document.getElementById('freezeDuration').addEventListener('change', calculateFreezeEndDate);
+
+    // Start date change - recalculate end date
+    document.getElementById('freezeStartDate').addEventListener('change', calculateFreezeEndDate);
+
+    
+    /* ========================================
+       INITIALIZE PAGE
+       Load data from API
+       ======================================== */
+    
+    async function initMembersPage() {
+        console.log('🔄 Initializing members page...');
+        
+        // Populate location dropdowns
+        await populateLocationDropdowns();
+        
+        // Fetch stats
+        await fetchStats();
+        
+        // Fetch and display members
+        await fetchMembers();
+        
+        console.log(`✅ Members page initialized with real data! (${allMembers.length} total members)`);
+    }
+    
+    // Run initialization
+    initMembersPage();
+});

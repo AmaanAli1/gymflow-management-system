@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================
+         CHARACTER ENCODING & VIEWPORT
+         ============================================ -->
+    <!-- UTF-8: Supports all characters (emojis, special symbols, international text) -->
+    <meta charset="UTF-8">
+    
+    <!-- Viewport: Makes site responsive on mobile devices
+         - width=device-width: Use device's width (not zoomed out desktop view)
+         - initial-scale=1.0: Don't zoom in/out by default -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Page title (shows in browser tab) -->
+    <title>GymFlow Admin | Dashboard</title>
+
+    <!-- ============================================
+         EXTERNAL RESOURCES
+         ============================================ -->
+    <!-- Google Fonts: Montserrat (headings) & Poppins (body text) -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome: Icon library for UI icons -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+          crossorigin="anonymous" 
+          referrerpolicy="no-referrer">
+
+    <!-- ============================================
+         CUSTOM STYLESHEETS (Order matters!)
+         ============================================ -->
+    <!-- 1. Variables first (colors, fonts, spacing used by other files) -->
+    <link rel="stylesheet" href="../css/variables.css">
+    
+    <!-- 2. Base styles (resets, body, common elements) -->
+    <link rel="stylesheet" href="../css/base.css">
+    
+    <!-- 3. Layout (sidebar, topbar, main-content structure) -->
+    <link rel="stylesheet" href="../css/layout.css">
+    
+    <!-- 4. Reusable components (used across multiple pages) -->
+    <link rel="stylesheet" href="../css/components/buttons.css">
+    <link rel="stylesheet" href="../css/components/cards.css">
+    <link rel="stylesheet" href="../css/components/modals.css">
+    
+    <!-- 5. Page-specific styles (only for this dashboard) -->
+    <link rel="stylesheet" href="../css/pages/admin-dashboard.css">
+</head>
+
+<body>
+    <!-- ============================================
+         SIDEBAR NAVIGATION
+         Role: Main navigation menu for admin
+         ============================================ -->
+    <aside class="sidebar" role="navigation" aria-label="Main navigation">
+        
+        <!-- Sidebar Header: Logo & Pin Button -->
+        <div class="sidebar-header">
+            <!-- Logo icon (visible when collapsed) -->
+            <div class="sidebar-logo-icon" aria-hidden="true">GF</div>
+            
+            <!-- Logo text (visible when expanded) -->
+            <div class="sidebar-logo-text">GymFlow</div>
+
+            <!-- Pin button: Keeps sidebar expanded when clicked -->
+            <button class="sidebar-pin-btn" 
+                    id="sidebarPinBtn" 
+                    aria-label="Pin or unpin sidebar"
+                    title="Pin / Unpin sidebar">
+                <i class="fa-solid fa-thumbtack" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="sidebar-nav">
+            <!-- Dashboard (current page) -->
+            <a href="./dashboard.html" class="nav-item active" aria-current="page">
+                <i class="fa-solid fa-house" aria-hidden="true"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <!-- Members Section (has submenu) -->
+            <div class="nav-group">
+                <button class="nav-item has-sub" aria-expanded="false">
+                    <i class="fa-solid fa-users" aria-hidden="true"></i>
+                    <span>Members</span>
+                    <i class="fa-solid fa-chevron-down caret" aria-hidden="true"></i>
+                </button>
+                <div class="submenu">
+                    <a href="./members.html" class="submenu-item">All Members</a>
+                    <a href="#" 
+                       class="submenu-item open-modal" 
+                       data-modal="add-member-modal">
+                        Add Member
+                    </a>
+                    <a href="#" 
+                       class="submenu-item open-modal" 
+                       data-modal="checkin-modal">
+                        Member Check-In
+                    </a>
+                </div>
+            </div>
+
+            <!-- Staff Section (has submenu) -->
+            <div class="nav-group">
+                <button class="nav-item has-sub" aria-expanded="false">
+                    <i class="fa-solid fa-user-gear" aria-hidden="true"></i>
+                    <span>Staff</span>
+                    <i class="fa-solid fa-chevron-down caret" aria-hidden="true"></i>
+                </button>
+                <div class="submenu">
+                    <a href="./staff.html" class="submenu-item">All Staff</a>
+                    <a href="./trainers.html" class="submenu-item">All Trainers</a>
+                    <a href="#" 
+                       class="submenu-item open-modal" 
+                       data-modal="add-staff-modal">
+                        Add Staff
+                    </a>
+                    <a href="#" 
+                       class="submenu-item open-modal" 
+                       data-modal="add-trainer-modal">
+                        Add Trainer
+                    </a>
+                </div>
+            </div>
+
+            <!-- Inventory Section (has submenu) -->
+            <div class="nav-group">
+                <button class="nav-item has-sub" aria-expanded="false">
+                    <i class="fa-solid fa-box" aria-hidden="true"></i>
+                    <span>Inventory</span>
+                    <i class="fa-solid fa-chevron-down caret" aria-hidden="true"></i>
+                </button>
+                <div class="submenu">
+                    <a href="./inventory.html" class="submenu-item">Stock Overview</a>
+                    <a href="./inventory-reorders.html" class="submenu-item">Reorder Requests</a>
+                    <a href="./inventory-vendors.html" class="submenu-item">Vendors</a>
+                </div>
+            </div>
+
+            <!-- Locations Section (has submenu) -->
+            <div class="nav-group">
+                <button class="nav-item has-sub" aria-expanded="false">
+                    <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                    <span>Locations</span>
+                    <i class="fa-solid fa-chevron-down caret" aria-hidden="true"></i>
+                </button>
+                <div class="submenu">
+                    <a href="./locations.html" class="submenu-item">All Branches</a>
+                    <a href="./locations-capacity.html" class="submenu-item">Capacity Overview</a>
+                    <a href="./locations-performance.html" class="submenu-item">Performance Stats</a>
+                </div>
+            </div>
+
+            <!-- Analytics Section (has submenu) -->
+            <div class="nav-group">
+                <button class="nav-item has-sub" aria-expanded="false">
+                    <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+                    <span>Analytics</span>
+                    <i class="fa-solid fa-chevron-down caret" aria-hidden="true"></i>
+                </button>
+                <div class="submenu">
+                    <a href="./analytics.html" class="submenu-item">Power BI Dashboard</a>
+                    <a href="./analytics-revenue.html" class="submenu-item">Revenue Trends</a>
+                    <a href="./analytics-retention.html" class="submenu-item">Member Retention</a>
+                </div>
+            </div>
+
+            <!-- Settings Section (has submenu) -->
+            <div class="nav-group">
+                <button class="nav-item has-sub" aria-expanded="false">
+                    <i class="fa-solid fa-gear" aria-hidden="true"></i>
+                    <span>Settings</span>
+                    <i class="fa-solid fa-chevron-down caret" aria-hidden="true"></i>
+                </button>
+                <div class="submenu">
+                    <a href="./settings-profile.html" class="submenu-item">Profile Settings</a>
+                    <a href="./settings-preferences.html" class="submenu-item">App Preferences</a>
+                    <a href="./settings-security.html" class="submenu-item">Security</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Sidebar Footer: Profile & Logout -->
+        <div class="sidebar-footer">
+            <div class="profile">
+                <img src="https://i.pravatar.cc/40" 
+                     alt="Admin profile picture" 
+                     loading="lazy">
+                <span class="profile-name">Admin</span>
+            </div>
+            <button class="logout-btn" aria-label="Logout">
+                <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- ============================================
+         MAIN CONTENT AREA
+         Contains: Topbar + Dashboard content
+         ============================================ -->
+    <div class="main-content">
+        
+        <!-- Topbar: Page title + Actions -->
+        <header class="topbar">
+            <h1>Dashboard</h1>
+            <div class="topbar-actions">
+                <!-- Notification button -->
+                <button class="notification-btn" aria-label="View notifications">
+                    <i class="fa-regular fa-bell" aria-hidden="true"></i>
+                </button>
+                
+                <!-- Profile picture -->
+                <img src="https://i.pravatar.cc/35" 
+                     alt="Admin profile picture" 
+                     class="topbar-profile"
+                     loading="lazy">
+            </div>
+        </header>
+
+        <!-- ============================================
+             DASHBOARD CONTENT
+             ============================================ -->
+        <section class="dashboard-overview">
+            
+            <!-- KPI Cards: Key Performance Indicators -->
+            <div class="kpi-grid">
+                
+                <!-- Total Members KPI -->
+                <article class="kpi-card">
+                    <p class="kpi-label">Total Members</p>
+                    <p class="kpi-value" data-metric="totalMembers">---</p>
+                </article>
+
+                <!-- Monthly Revenue KPI -->
+                <article class="kpi-card">
+                    <p class="kpi-label">Monthly Revenue</p>
+                    <p class="kpi-value" data-metric="monthlyRevenue">---</p>
+                </article>
+
+                <!-- Inventory Health KPI -->
+                <article class="kpi-card">
+                    <p class="kpi-label">Inventory Health</p>
+                    <p class="kpi-value" data-metric="inventoryHealth">---</p>
+                </article>
+
+                <!-- Active Trainers KPI -->
+                <article class="kpi-card">
+                    <p class="kpi-label">Active Trainers</p>
+                    <p class="kpi-value" data-metric="activeTrainers">---</p>
+                </article>
+            </div>
+
+            <!-- Two-column layout: Branch Performance + Recent Activity -->
+            <div class="dash-grid">
+                
+                <!-- Branch Performance Panel -->
+                <article class="panel">
+                    <div class="panel-header">
+                        <h2>Branch Performance Snapshot</h2>
+                        <span class="panel-tag live">
+                            <span class="live-dot"></span>
+                            Live Signal
+                        </span>
+                    </div>
+                    <div class="panel-body">
+                        <!-- Branch cards will be populated by JavaScript -->
+                        <div id="branchCards">
+                            <!-- JavaScript will insert branch cards here -->
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Recent Activity Panel -->
+                <article class="panel">
+                    <div class="panel-header">
+                        <h2>Recent Activity</h2>
+                    </div>
+                    <div class="panel-body">
+                        <!-- Activity feed will be populated by JavaScript -->
+                        <div id="activityFeed">
+                            <!-- JavaScript will insert activity items here -->
+                        </div>
+                    </div>
+                </article>
+            </div>
+
+            <!-- ============================================
+                 CHARTS SECTION
+                 Membership Growth + Revenue by Location
+                 ============================================ -->
+            <div class="charts-grid">
+                <article class="panel">
+                    <div class="panel-header">
+                        <h2>Membership Growth (Last 6 Months)</h2>
+                        <span class="panel-tag">Live Data</span>
+                    </div>
+                    <div class="panel-body">
+                        <!-- Chart.js canvas -->
+                        <canvas id="membershipChart"></canvas>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <div class="panel-header">
+                        <h2>Monthly Revenue by Location</h2>
+                        <span class="panel-tag">Live Data</span>
+                    </div>
+                    <div class="panel-body">
+                        <!-- Chart.js canvas -->
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </article>
+            </div>
+
+            <!-- ============================================
+                 BOTTOM PANELS
+                 Inventory Alerts + System Health
+                 ============================================ -->
+            <div class="bottom-panels">
+                <article class="panel">
+                    <div class="panel-header">
+                        <h2>Inventory & Supply Alerts</h2>
+                        <span class="panel-tag warn">Attention Needed</span>
+                    </div>
+                    <div class="panel-body">
+                        <!-- Alerts will be populated by JavaScript -->
+                        <ul id="inventoryAlerts" class="alert-list">
+                            <!-- JavaScript will insert alerts here -->
+                        </ul>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <div class="panel-header">
+                        <h2>System Health</h2>
+                        <span class="panel-tag">Status</span>
+                    </div>
+                    <div class="panel-body">
+                        <!-- System status will be populated by JavaScript -->
+                        <ul id="systemHealth" class="health-list">
+                            <!-- JavaScript will insert status here -->
+                        </ul>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============================================
+         MODALS (Hidden by default, shown when triggered)
+         ============================================ -->
+
+    <!-- Add Member Modal -->
+    <div class="modal-overlay" id="add-member-modal" role="dialog" aria-labelledby="addMemberTitle" aria-hidden="true">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 id="addMemberTitle">Add New Member</h2>
+                <button class="modal-close" data-close-modal aria-label="Close modal">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <form id="addMemberForm">
+                    <div class="modal-grid">
+                        <div class="field">
+                            <label for="memberName">Full Name</label>
+                            <input type="text" 
+                                   id="memberName" 
+                                   name="name"
+                                   placeholder="John Doe" 
+                                   required>
+                        </div>
+                        <div class="field">
+                            <label for="memberEmail">Email</label>
+                            <input type="email" 
+                                   id="memberEmail" 
+                                   name="email"
+                                   placeholder="john@example.com" 
+                                   required>
+                        </div>
+                        <div class="field">
+                            <label for="memberLocation">Location</label>
+                            <select id="memberLocation" name="location" required>
+                                <option value="">Select location</option>
+                                <option value="downtown">Downtown</option>
+                                <option value="midtown">Midtown</option>
+                                <option value="eastside">Eastside</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="memberPlan">Membership Plan</label>
+                            <select id="memberPlan" name="plan" required>
+                                <option value="">Select plan</option>
+                                <option value="basic">Basic</option>
+                                <option value="premium">Premium</option>
+                                <option value="elite">Elite</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="memberNotes">Notes</label>
+                        <textarea id="memberNotes" 
+                                  name="notes"
+                                  rows="3" 
+                                  placeholder="Optional notes (goals, referral, etc.)"></textarea>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn ghost" data-close-modal type="button">Cancel</button>
+                <button class="btn primary" type="submit" form="addMemberForm">Save Member</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Member Check-In Modal -->
+    <div class="modal-overlay" id="checkin-modal" role="dialog" aria-labelledby="checkinTitle" aria-hidden="true">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 id="checkinTitle">Member Check-In</h2>
+                <button class="modal-close" data-close-modal aria-label="Close modal">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <form id="checkinForm">
+                    <div class="field">
+                        <label for="searchMember">Search Member</label>
+                        <input type="text" 
+                               id="searchMember" 
+                               name="search"
+                               placeholder="Type name, email, or member ID" 
+                               required>
+                    </div>
+                    <p class="modal-hint">
+                        Later this will search live from the database and confirm access & status.
+                    </p>
+                    <div class="field">
+                        <label for="checkinLocation">Location</label>
+                        <select id="checkinLocation" name="location" required>
+                            <option value="">Select location</option>
+                            <option value="downtown">Downtown</option>
+                            <option value="midtown">Midtown</option>
+                            <option value="eastside">Eastside</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn ghost" data-close-modal type="button">Close</button>
+                <button class="btn primary" type="submit" form="checkinForm">Confirm Check-In</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Trainer Modal -->
+    <div class="modal-overlay" id="add-trainer-modal" role="dialog" aria-labelledby="addTrainerTitle" aria-hidden="true">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 id="addTrainerTitle">Add Trainer</h2>
+                <button class="modal-close" data-close-modal aria-label="Close modal">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <form id="addTrainerForm">
+                    <div class="modal-grid">
+                        <div class="field">
+                            <label for="trainerName">Full Name</label>
+                            <input type="text" 
+                                   id="trainerName" 
+                                   name="name"
+                                   placeholder="Jane Doe" 
+                                   required>
+                        </div>
+                        <div class="field">
+                            <label for="trainerEmail">Email</label>
+                            <input type="email" 
+                                   id="trainerEmail" 
+                                   name="email"
+                                   placeholder="jane@gymflow.com" 
+                                   required>
+                        </div>
+                        <div class="field">
+                            <label for="trainerLocation">Location</label>
+                            <select id="trainerLocation" name="location" required>
+                                <option value="">Select location</option>
+                                <option value="downtown">Downtown</option>
+                                <option value="midtown">Midtown</option>
+                                <option value="eastside">Eastside</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="trainerSpecialty">Specialty</label>
+                            <select id="trainerSpecialty" name="specialty" required>
+                                <option value="">Select specialty</option>
+                                <option value="strength">Strength</option>
+                                <option value="hypertrophy">Hypertrophy</option>
+                                <option value="weightloss">Weight Loss</option>
+                                <option value="conditioning">Conditioning</option>
+                                <option value="yoga">Yoga / Mobility</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="trainerRate">Hourly Rate</label>
+                            <input type="number" 
+                                   id="trainerRate" 
+                                   name="rate"
+                                   placeholder="e.g. 65" 
+                                   min="0" 
+                                   step="5">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="trainerNotes">Notes</label>
+                        <textarea id="trainerNotes" 
+                                  name="notes"
+                                  rows="3" 
+                                  placeholder="Certifications, preferences, languages..."></textarea>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn ghost" data-close-modal type="button">Cancel</button>
+                <button class="btn primary" type="submit" form="addTrainerForm">Save Trainer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Staff Modal -->
+    <div class="modal-overlay" id="add-staff-modal" role="dialog" aria-labelledby="addStaffTitle" aria-hidden="true">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 id="addStaffTitle">Add Staff Member</h2>
+                <button class="modal-close" data-close-modal aria-label="Close modal">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <form id="addStaffForm">
+                    <div class="modal-grid">
+                        <div class="field">
+                            <label for="staffName">Full Name</label>
+                            <input type="text" 
+                                   id="staffName" 
+                                   name="name"
+                                   placeholder="e.g. Sarah Lee" 
+                                   required>
+                        </div>
+                        <div class="field">
+                            <label for="staffEmail">Email (Login)</label>
+                            <input type="email" 
+                                   id="staffEmail" 
+                                   name="email"
+                                   placeholder="staff@gymflowhq.com" 
+                                   required>
+                        </div>
+                        <div class="field">
+                            <label for="staffRole">Primary Role</label>
+                            <select id="staffRole" name="role" required>
+                                <option value="">Select role</option>
+                                <option value="front-desk">Front Desk / CSR</option>
+                                <option value="sales">Sales</option>
+                                <option value="trainer">Trainer</option>
+                                <option value="operations">Operations</option>
+                                <option value="manager">Manager</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="staffLocation">Home Location</label>
+                            <select id="staffLocation" name="location" required>
+                                <option value="">Select location</option>
+                                <option value="downtown">Downtown</option>
+                                <option value="midtown">Midtown</option>
+                                <option value="eastside">Eastside</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="staffEmployment">Employment Type</label>
+                            <select id="staffEmployment" name="employment" required>
+                                <option value="">Select type</option>
+                                <option value="full-time">Full-time</option>
+                                <option value="part-time">Part-time</option>
+                                <option value="contract">Contract</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="staffAccess">Access Level</label>
+                            <select id="staffAccess" name="access" required>
+                                <option value="">Select level</option>
+                                <option value="standard">Standard</option>
+                                <option value="manager">Manager</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="staffNotes">Notes</label>
+                        <textarea id="staffNotes" 
+                                  name="notes"
+                                  rows="3" 
+                                  placeholder="Certifications, languages, special permissions, etc."></textarea>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn ghost" data-close-modal type="button">Cancel</button>
+                <button class="btn primary" type="submit" form="addStaffForm">Create Staff Account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         JAVASCRIPT FILES (Load at end for performance)
+         ============================================ -->
+    <!-- Chart.js library (for charts) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+    
+    <!-- Shared JS: Used by all admin pages -->
+    <script src="../js/main.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script src="../js/modals.js"></script>
+    
+    <!-- Dashboard-specific JS: Mock data & dashboard logic -->
+    <script src="../js/pages/admin-dashboard.js"></script>
+</body>
+</html>

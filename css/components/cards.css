@@ -1,0 +1,557 @@
+/* ============================================
+   CARD COMPONENTS
+   KPI Cards, Panels, Branch Cards, Activity Feed
+   ============================================ */
+
+
+/* ========================================
+   KPI CARDS (Key Performance Indicators)
+   ======================================== */
+
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--gap-xl);
+    align-items: start; /* Prevent cards from stretching vertically */
+}
+
+
+.kpi-card {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: 2px; /* Small gap keeps card compact */
+    padding: 14px 14px 12px;
+    
+    /* Sizing - ensure all cards have same minimum height */
+    min-height: 140px;
+    
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border-radius: 14px;
+    border: 1px solid #232323;
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
+    
+    /* Animation */
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 22px var(--color-primary-light);
+    border-color: rgba(var(--color-primary-rgb), 0.5);
+}
+
+/* Hover effect creates "lift" - card feels interactive even without click */
+
+
+/* KPI Label (Top text like "Total Members") */
+.kpi-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: #9e9e9e; /* Darker gray - more subdued */
+}
+
+/* KPI Value (Big number like "1,284") */
+.kpi-value {
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+/* KPI Subtitle (Context like "+42 this week") */
+.kpi-sub {
+    font-size: 0.75rem;
+    color: var(--color-text-medium);
+}
+
+
+/* KPI Trend Badge (Up/Down indicators) */
+.kpi-trend {
+    font-size: 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-top: 2px;
+    padding: 2px var(--space-md);
+    
+    /* Styling */
+    border-radius: 999px;
+    background: var(--color-bg-sidebar);
+    color: var(--color-text-lighter);
+    border: 1px solid var(--color-border-light);
+}
+
+.kpi-trend i {
+    font-size: 0.6rem;
+}
+
+/* Trend: Positive (Up) */
+.kpi-trend.up {
+    color: var(--color-success);
+    border-color: rgba(36, 192, 99, 0.7);
+}
+
+/* Trend: Neutral (OK/Stable) */
+.kpi-trend.ok {
+    color: var(--color-warning);
+    border-color: rgba(241, 196, 15, 0.6);
+}
+
+/* Trend: Negative (Down) - Add this if needed */
+.kpi-trend.down {
+    color: #ff4444;
+    border-color: rgba(255, 68, 68, 0.7);
+}
+
+/* Color coding instantly communicates:
+   Green = Good
+   Yellow = Caution
+   Red = Problem
+   
+   Users understand at a glance! */
+
+
+/* ========================================
+   DASHBOARD GRID (Two-Column Layout)
+   ======================================== */
+
+.dash-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.3fr);
+    gap: var(--gap-xl);
+    margin-top: -60px;
+}
+
+.dash-grid .panel {
+    max-height: 265px;
+    overflow: hidden;
+}
+
+/* ========================================
+   CHARTS GRID (Two-Column Charts)
+   ======================================== */
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--gap-xl);
+}
+
+.chart-container {
+    min-height: 250px;
+    padding: var(--space-lg) 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.charts-grid .panel-body {
+    height: 400px;
+}
+
+/* ========================================
+   BOTTOM PANELS (Side-by-Side)
+   ======================================== */
+
+.bottom-panels {
+    display: flex;
+    gap: var(--gap-xl);
+    align-items: flex-start;
+}
+
+.bottom-panels .panel {
+    flex: 1;
+    min-width: 300px;
+    min-height: 215px; /* Ensure both panels have same minimum height */
+}
+
+
+/* Alert List (Inventory Alerts) */
+.alert-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-sm);
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+}
+
+.alert-list li {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-md);
+    padding: var(--space-sm) 0;
+}
+
+/* Status Dots */
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+}
+
+.dot-ok {
+    background: var(--color-success);
+    box-shadow: 0 0 6px var(--color-success);
+}
+
+.dot-warn {
+    background: var(--color-warning);
+    box-shadow: 0 0 6px var(--color-warning);
+}
+
+.dot-low {
+    background: var(--color-warning);
+    box-shadow: 0 0 6px var(--color-warning);
+}
+
+.dot-error {
+    background: #ff4444;
+    box-shadow: 0 0 6px #ff4444;
+}
+
+.dot-critical {
+    background: #ff4444;
+    box-shadow: 0 0 6px #ff4444;
+}
+
+/* Health List (System Health) */
+.health-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+}
+
+.health-list li {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-md);
+    padding: var(--space-xs) 0;
+}
+
+.health-list strong {
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-medium);
+}
+
+
+/* ========================================
+   GENERIC PANEL (Reusable Container)
+   ======================================== */
+
+.panel {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-md);
+    padding: var(--space-2xl) var(--space-2xl) 14px;
+    
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border-radius: 14px;
+    border: 1px solid #232323;
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.7);
+}
+
+/* Panels are generic containers used for:
+   - Branch Performance
+   - Recent Activity
+   - Inventory Alerts
+   - System Health
+   
+   Consistent styling = cohesive design */
+
+
+/* Panel Header (Title + Badge) */
+.panel-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--gap-md);
+}
+
+.panel-header h2 {
+    font-family: var(--font-heading);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+}
+
+
+/* Panel Tags (Status Badges) */
+.panel-tag {
+    font-size: 0.65rem;
+    padding: 3px var(--space-md);
+    
+    /* Styling */
+    border-radius: 999px;
+    border: 1px solid #444;
+    color: var(--color-text-lighter);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.panel-tag.warn {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.panel-tag.live {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+    animation: pulseGlow 2.2s ease-in-out infinite;
+}
+
+/* Live indicator animation */
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+    }
+    50% {
+        box-shadow: 0 0 12px rgba(34, 197, 94, 0.9);
+    }
+}
+
+/* Live dot (used with "Live Signal" badge) */
+.live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: var(--radius-full);
+    background: var(--color-success);
+    box-shadow: 0 0 6px rgba(36, 192, 99, 0.9);
+}
+
+/* Panel Body (Content Area) */
+.panel-body {
+    flex-grow: 1;
+}
+
+
+/* ========================================
+   BRANCH CARDS (Location Performance)
+   ======================================== */
+
+.branch-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-lg);
+    font-size: 0.85rem;
+}
+
+.branch-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-lg);
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--color-primary);
+    transform: all var(--transition-base);
+}
+
+.branch-list li:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateX(3px);
+}
+
+.branch-name {
+    font-weight: var(--font-weight-semibold);
+    font-size: 0.95rem;
+    color: var(--color-text-primary);
+    min-width: 100px;
+}
+
+.branch-metric {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    text-align: right;
+}
+
+
+/* ========================================
+   ACTIVITY FEED (Recent Actions)
+   ======================================== */
+
+.activity-feed {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-sm);
+    max-height: 180px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* Custom scrollbar for activity feed */
+.activity-feed::-webkit-scrollbar {
+    width: 4px;
+}
+
+.activity-feed::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.activity-feed::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 999px;
+}
+
+.activity-feed::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.activity-item {
+    padding: 2px 0;
+    border-bottom: 1px solid var(--color-border-base);
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+    line-height: var(--line-height-relaxed);
+    
+    /* Animation for new items */
+    animation: slideIn 0.3s ease-out;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+/* Slide-in animation for new activity */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Activity Metadata (Time, User, etc.) */
+.activity-time {
+    font-size: 0.7rem;
+    color: var(--color-text-dim);
+    margin-top: var(--space-xs);
+}
+
+.activity-user {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-medium);
+}
+
+
+/* ========================================
+   STATUS PILLS (Inline Badges)
+   ======================================== */
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 6px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: var(--font-weight-medium);
+
+    margin-right: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.pill.success {
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.pill.warning {
+    background: var(--color-warning-light);
+    color: var(--color-warning);
+}
+
+.pill.danger {
+    background: rgba(255, 68, 68, 0.2);
+    color: #ff4444;
+}
+
+/* Activity Feed Pill Colors */
+.pill.add {
+    background: rgba(230, 0, 48, 0.16);
+    color: #ff5c7a;
+}
+
+.pill.pay {
+    background: rgba(0, 180, 120, 0.15);
+    color: #5ce6a8;
+}
+
+.pill.stock {
+    background: rgba(255, 193, 7, 0.16);
+    color: #ffd666;
+}
+
+.pill.check {
+    background: rgba(120, 167, 255, 0.16);
+    color: #9dbbff;
+}
+
+/* ========================================
+   RESPONSIVE (Mobile & Tablet)
+   ======================================== */
+
+@media (max-width: 1024px) {
+    /* Stack KPI cards in 2 columns on tablets */
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* Stack dashboard panels vertically */
+    .dash-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Stack charts vertically */
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Stack bottom panels vertically */
+    .bottom-panels {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 640px) {
+    /* Single column on mobile */
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Reduce padding on small screens */
+    .kpi-card,
+    .panel {
+        padding: var(--space-lg);
+    }
+    
+    /* Smaller chart height on mobile */
+    .chart-container {
+        min-height: 200px;
+    }
+}
+
+/* WHY responsive breakpoints?
+   
+   Your dashboard needs to work on:
+   - Desktop (1920px+)
+   - Laptop (1366px)
+   - Tablet (768px)
+   - Mobile (375px)
+   
+   Without responsive design, mobile users see tiny unreadable text! */
