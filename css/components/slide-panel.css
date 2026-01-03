@@ -355,12 +355,13 @@
 }
 
 /* ============================================
-   MODE TOGGLING (View / Edit / Freeze
+   MODE TOGGLING (View / Edit / Freeze / Delete
    ============================================ */
 
-/* Hide view mode when in edit mode or freeze mode */
+/* Hide view mode when in any other mode */
 .slide-panel.edit-mode .slide-panel-view, 
-.slide-panel.freeze-mode .slide-panel-view {
+.slide-panel.freeze-mode .slide-panel-view, 
+.slide-panel.delete-mode .slide-panel-view {
     display: none;
 }
 
@@ -384,10 +385,21 @@
     display: block;
 }
 
-/* Why three modes?
+/* Hide delete mode by default */
+.slide-panel-delete {
+    display: none;
+}
+
+/* Show delete mode when active */
+.slide-panel.delete-mode .slide-panel-delete {
+    display: block;
+}
+
+/* Why four modes?
    View: Read-only member details
    Edit: Form to update member info
    Freeze: Form to freeze membership
+   Delete: Confirmation to cancel member
    Only one visible at a time */
 
 /* ============================================
@@ -791,6 +803,203 @@
     border-color: rgba(255, 193, 7, 0.5);
     box-shadow: 0 0 12px rgba(255, 193, 7, 0.2);
 }
+
+/* ========================================
+   DELETE MODE STYLES
+   Red/danger theme for destructive action
+   ======================================== */
+
+/* Delete warning banner */
+.delete-warning-banner {
+    display: flex;
+    gap: var(--gap-md);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+    background: rgba(230, 0, 48, 0.1);
+    border: 2px solid rgba(230, 0, 48, 0.3);
+    border-left: 4px solid var(--color-primary);
+    border-radius: var(--radius-md);
+}
+
+.delete-warning-banner i {
+    font-size: 1.5rem;
+    color: var(--color-primary);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.delete-warning-banner strong {
+    display: block;
+    color: var(--color-primary);
+    margin-bottom: var(--gap-xs);
+    font-size: 0.95rem;
+}
+
+.delete-warning-banner p {
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* WHY prominent warning?
+   Delete is destructive (even though soft delete)
+   Red theme signals danger/caution
+   Clear explanation of what will happen */
+
+/* Delete member info display */
+.delete-member-info {
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--color-border-base);
+    border-radius: var(--radius-md);
+    text-align: center;
+}
+
+.delete-info-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-muted);
+    margin-bottom: var(--gap-xs);
+}
+
+.delete-info-name {
+    font-size: 1.2rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--gap-xs);
+}
+
+.delete-info-id {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--gap-sm);
+}
+
+.delete-info-details {
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+    padding-top: var(--gap-sm);
+    border-top: 1px solid var(--color-border-base);
+}
+
+/* Admin authentication section */
+.delete-auth-section {
+    padding: var(--space-lg);
+    margin: var(--space-lg) 0;
+    background: rgba(0, 180, 120, 0.05);
+    border: 1px solid rgba(0, 180, 120, 0.2);
+    border-radius: var(--radius-md);
+}
+
+.delete-auth-header {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    margin-bottom: var(--space-md);
+    font-weight: var(--font-weight-semibold);
+    color: #5ce6a8;
+    font-size: 0.9rem;
+}
+
+.delete-auth-header i {
+    font-size: 1.1rem;
+}
+
+/* WHY green authentication section?
+   Contrast with red delete theme
+   Green = security/verification
+   Visually separates auth from cancel action */
+
+/* Delete confirmation checkbox */
+.delete-confirmation {
+    padding: var(--space-md) var(--space-lg);
+    margin-top: var(--space-lg);
+    background: rgba(230, 0, 48, 0.05);
+    border: 1px solid rgba(230, 0, 48, 0.2);
+    border-radius: var(--radius-md);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-md);
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-top: 2px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.checkbox-label span {
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+/* WHY checkbox required?
+   Prevents accidental deletions
+   Forces user to read and acknowledge
+   Industry standard pattern (GitHub, etc.) */
+
+/* Delete button states */
+.btn.danger:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: rgba(230, 0, 48, 0.1);
+    border-color: rgba(230, 0, 48, 0.2);
+}
+
+.btn.danger:disabled:hover {
+    background: rgba(230, 0, 48, 0.1);
+    box-shadow: none;
+}
+
+/* WHY disabled state?
+   Button is disabled until checkbox is checked
+   Visual feedback that action isn't ready
+   Prevents accidental clicks */
+
+/* ========================================
+   DELETE MODE HEADER
+   ======================================== */
+
+.slide-panel-header.delete-mode {
+    background: rgba(230, 0, 48, 0.05);
+    border-bottom-color: rgba(230, 0, 48, 0.2);
+}
+
+.slide-panel-header.delete-mode .slide-panel-label {
+    color: var(--color-primary);
+}
+
+/* WHY red header?
+   Consistent with delete/danger theme
+   Entire panel indicates destructive action
+   Matches edit (red) and freeze (yellow) patterns */
+
+/* Password input specific styling for delete */
+.delete-auth-section input[type="password"] {
+    font-family: monospace;
+    letter-spacing: 2px;
+}
+
+.delete-auth-section input[type="password"]::placeholder {
+    font-family: inherit;
+    letter-spacing: normal;
+}
+
+/* WHY monospace password?
+   Visual feedback that it's a password field
+   Consistent character width
+   Standard UX pattern
 
 /* ========================================
    RESPONSIVE: Footer on Mobile

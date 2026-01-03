@@ -608,6 +608,84 @@
 
                     </div>
                     <!-- End of slide-panel-freeze -->
+                    
+
+                    <!-- DELETE MODE (Confirmation) -->
+                    <div class="slide-panel-delete">
+
+                        <!-- Error/Success Message -->
+                        <div id="deleteErrorMessage" class="slide-panel-error" style="display: none;"></div>
+                        <div id="deleteSuccessMessage" class="slide-panel-success" style="display: none;"></div>
+
+                        <!-- Warning Banner -->
+                        <div class="delete-warning-banner">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <div>
+                                <strong>Warning: This action will cancel the membership</strong>
+                                <p>The member will be set to 'cancelled' status. This can be reversed by reactivating the member later.</p>
+                            </div>
+                        </div>
+
+                        <!-- Member Info Being Deleted -->
+                        <div class="delete-member-info">
+                            <div class="delete-info-label">Cancelling Membership For:</div>
+                            <div class="delete-info-name" id="deleteMemberName">---</div>
+                            <div class="delete-info-id" id="deleteMemberId">---</div>
+                            <div class="delete-info-details" id="deleteMemberDetails">---</div>
+                        </div>
+
+                        <form id="deleteMemberForm" class="slide-panel-form" novalidate>
+
+                            <!-- Reason for Deletion -->
+                            <div class="slide-panel-field required">
+                                <label for="deleteReason">Reason for Cancellation</label>
+                                <select id="deleteReason" name="reason" required>
+                                    <option value="">Select reason...</option>
+                                    <option value="Member Requested">Member Requested</option>
+                                    <option value="Non-Payment">Non-Payment</option>
+                                    <option value="Duplicate Account">Duplicate Account</option>
+                                    <option value="Fraudulent Activity">Fraudulent Activity</option>
+                                    <option value="Moved Away">Moved Away</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <!-- Optional Notes -->
+                            <div class="slide-panel-field">
+                                <label for="deleteNotes">Additional Notes (Optional)</label>
+                                <textarea id="deleteNotes" name="notes" rows="3" placeholder="Any additional context about this cancellation..."></textarea>
+                            </div>
+
+                            <!-- Admin Authentication -->
+                            <div class="delete-auth-section">
+                                <div class="delete-auth-header">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                    <span>Admin Authentication Required</span>
+                                </div>
+
+                                <div class="slide-panel-field required">
+                                    <label for="deleteAdminUsername">Admin Username</label>
+                                    <input type="text" id="deleteAdminUsername" name="admin_username" value="admin" required autocomplete="username">
+                                </div>
+
+                                <div class="slide-panel-field required">
+                                    <label for="deleteAdminPassword">Admin Password</label>
+                                    <input type="password" id="deleteAdminPassword" name="admin_password" required autocomplete="current-password" placeholder="Enter your admin password">
+                                </div>
+                            </div>
+
+                            <!-- Confirmation Checkbox -->
+                            <div class="delete-confirmation">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="deleteConfirmCheckbox" required>
+                                    <span>I understand this will cancel the member's account and set their status to 'cancelled'</span>
+                                </label>
+                            </div>
+
+                        </form>
+
+                    </div>
+                    <!-- End of slide-panel-delete -->
 
                 </div>
                 <!-- End of slide-panel-body -->
@@ -654,6 +732,18 @@
                         <button type="submit" class="btn freeze" id="confirmFreezeBtn">
                             <i class="fa-solid fa-snowflake"></i>
                             Confirm Freeze
+                        </button>
+                    </div>
+
+                    <!-- DELETE MODE BUTTONS -->
+                    <div id="deleteModeButtons" style="display: none;">
+                        <button type="button" class="btn ghost cancel" id="cancelDeleteBtn">
+                            <i class="fa-solid fa-times"></i>
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn danger" id="confirmDeleteBtn" disabled>
+                            <i class="fa-solid fa-trash"></i>
+                            Confirm Delete
                         </button>
                     </div>
 

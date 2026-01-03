@@ -248,7 +248,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.table-action-btn.delete').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const memberId = e.currentTarget.dataset.memberId;
-                deleteMember(memberId);
+                
+                // Find member and open delete mode in slide panel
+                const member = allMembers.find(m => m.id == memberId);
+                if (member) {
+                    openMemberPanel(member);
+                    setTimeout(() => {
+                        switchToDeleteMode(member);
+                    }, 100);
+                }
             });
         });
     }
@@ -467,17 +475,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const panel = document.querySelector('.slide-panel');
         panel.classList.remove('edit-mode');
         panel.classList.remove('freeze-mode');
+        panel.classList.remove('delete-mode');
 
         // Show view buttons ONLY
         document.getElementById('viewModeButtons').style.display = 'flex';
         document.getElementById('editModeButtons').style.display = 'none';
         document.getElementById('freezeModeButtons').style.display = 'none';
+        document.getElementById('deleteModeButtons').style.display = 'none';
 
         // Hide error/success messages
         document.getElementById('editErrorMessage').style.display = 'none';
         document.getElementById('editSuccessMessage').style.display = 'none';
         document.getElementById('freezeErrorMessage').style.display = 'none';
         document.getElementById('freezeSuccessMessage').style.display = 'none';
+        document.getElementById('deleteErrorMessage').style.display = 'none';
+        document.getElementById('deleteSuccessMessage').style.display = 'none';
 
         console.log('✅ Switched to view mode');
     }
@@ -487,7 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
        ======================================== */
 
     function switchToFreezeMode(member) {
-        console.log(' Switching to freeze mode for:', member.name);
+        console.log('❄️ Switching to freeze mode for:', member.name);
 
         // Add freeze-mode class to panel
         document.querySelector('.slide-panel').classList.add('freeze-mode');
@@ -520,7 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('freezeErrorMessage').style.display = 'none';
         document.getElementById('freezeSuccessMessage').style.display = 'none';
 
-        console.log (' Switched to freeze mode');
+        console.log ('❄️ Switched to freeze mode');
     }
 
     /* ========================================
@@ -603,7 +615,7 @@ document.addEventListener('DOMContentLoaded', () => {
             notes: formData.get('notes') || null
         };
 
-        console.log(' Freezing member:', freezeData);
+        console.log('❄️ Freezing member:', freezeData);
 
         // Hide previous messages
         document.getElementById('freezeErrorMessage').style.display = 'none';
@@ -624,7 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(result.error || 'Failed to freeze member');
             }
 
-            console.log(' Member frozen:', result);
+            console.log('❄️ Member frozen:', result);
 
             // Show success message
             const successMsg = document.getElementById('freezeSuccessMessage');
@@ -648,7 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchStats();
 
         } catch (error) {
-            console.error(' Failed to freeze member:', error);
+            console.error('❌ Failed to freeze member:', error);
 
             // Show error message
             const errorMsg = document.getElementById('freezeErrorMessage');
@@ -662,7 +674,7 @@ document.addEventListener('DOMContentLoaded', () => {
        ======================================== */
 
     async function unfreezeMember(memberId) {
-        console.log(' Unfreezing member:', memberId);
+        console.log('💦 Unfreezing member:', memberId);
 
         if (!confirm('Are you sure you want to unfreeze this member? They will be set back to active status.')) {
             return;
@@ -679,8 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(result.error || 'Failed to unfreeze member');
             }
 
-            console.log(' Member unfrozen:', result);
-            alert(' Member unfrozen successfully!');
+            console.log('💦 Member unfrozen:', result);
 
             // Update the member in allMembers array
             const index = allMembers.findIndex(m => m.id == memberId);
@@ -694,8 +705,190 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchStats();
 
         } catch (error) {
-            console.error(' Failed to unfreeze member:', error);
-            alert(`Failed to unfreeze member: ${error.message}`);
+            console.error('❌ Failed to unfreeze member:', error);
+        }
+    }
+
+    /* ========================================
+       SWITCH TO DELETE MODE
+       ======================================== */
+
+    function switchToDeleteMode(member) {
+        console.log('🗑️ Switching to delete mode for:', member.name);
+
+        // Add delete-mode class to panel
+        document.querySelector('.slide-panel').classList.add('delete-mode');
+
+        // Hide view buttons, show delete buttons
+        document.getElementById('viewModeButtons').style.display = 'none';
+        document.getElementById('deleteModeButtons').style.display = 'flex';
+
+        // Populate member info
+        document.getElementById('deleteMemberName').textContent = member.name;
+        document.getElementById('deleteMemberId').textContent = member.member_id;
+        document.getElementById('deleteMemberDetails').textContent = 
+            `${member.email} • ${member.location_name} • ${member.plan}`;
+        
+        // Clear form
+        document.getElementById('deleteReason').value = '';
+        document.getElementById('deleteNotes').value = '';
+        document.getElementById('deleteAdminUsername').value = 'admin';
+        document.getElementById('deleteAdminPassword').value = '';
+        document.getElementById('deleteConfirmCheckbox').checked = false;
+
+        // Disable delete button initially
+        document.getElementById('confirmDeleteBtn').disabled = true;
+
+        // Store member ID for later
+        document.getElementById('deleteMemberForm').dataset.memberId = member.id;
+
+        // Hide error/success messages
+        document.getElementById('deleteErrorMessage').style.display = 'none';
+        document.getElementById('deleteSuccessMessage').style.display = 'none';
+
+        console.log('✅ Switched to delete mode');
+    }
+
+    /* ========================================
+       DELETE MEMBER (Submit to API)
+       With admin password verification
+       ======================================== */
+
+    async function deleteMember(e) {
+        e.preventDefault();
+
+        const form = document.getElementById('deleteMemberForm');
+        const memberId = form.dataset.memberId;
+
+        // Get form data
+        const formData = new FormData(form);
+        const deleteData = {
+            reason: formData.get('reason'), 
+            notes: formData.get('notes') || null, 
+            admin_username: formData.get('admin_username'), 
+            admin_password: formData.get('admin_password')
+        };
+
+        console.log('🗑️ Attempting to delete member:', memberId);
+
+        // ========== VALIDATION BLOCK ==========
+
+        // Validate required fields
+        if (!deleteData.reason) {
+            const errorMsg = document.getElementById('deleteErrorMessage');
+            errorMsg.textContent = ' Please select a reason for cancellation';
+            errorMsg.style.display = 'block';
+            return;
+        }
+
+        if (!deleteData.admin_username || !deleteData.admin_password) {
+            const errorMsg = document.getElementById('deleteErrormessage');
+            errorMsg.textContent = ' Please enter admin username and password';
+            errorMsg.style.display = 'block';
+            return;
+        }
+
+        if (!document.getElementById('deleteConfirmCheckbox'). checked) {
+            const errorMsg = document.getElementById('deleteErrorMessage');
+            errorMsg.textContent = ' Please check the confirmation checkbox';
+            errorMsg.style.display = 'block';
+            return;
+        }
+
+        // ========== END VALIDATION BLOCK ==========
+
+        // Hide previous messages
+        document.getElementById('deleteErrorMessage').style.display = 'none';
+        document.getElementById('deleteSuccessMessage').style.display = 'none';
+
+        try {
+            // STEP 1: Verify admin password
+            console.log('🔐 Verifying admin credentials...');
+
+            const verifyResponse = await fetch(`${API_BASE_URL}/admin/verify-password`, {
+                method: 'POST', 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: deleteData.admin_username, 
+                    password: deleteData.admin_password
+                })
+            });
+
+            const verifyResult = await verifyResponse.json();
+
+            if (!verifyResult.verified) {
+                throw new Error('Invalid admin credentials. Please check your username and password.');
+            }
+
+            console.log('✅ Admin verified');
+
+            // STEP 2: Delete the member (soft delete)
+            console.log('🗑️ Deleting member...');
+
+            const deleteResponse = await fetch(`${API_BASE_URL}/members/${memberId}`, {
+                method: 'DELETE', 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    reason: deleteData.reason, 
+                    notes: deleteData.notes
+                })
+            });
+
+            const deleteResult = await deleteResponse.json();
+
+            if (!deleteResponse.ok) {
+                throw new Error(deleteResult.error || 'Failed to delete member');
+            }
+
+            console.log('✅ Member deleted:', deleteResult);
+
+            // Show success message
+            const successMsg = document.getElementById('deleteSuccessMessage');
+            successMsg.textContent = '✅ Member cancelled successfully!';
+            successMsg.style.display = 'block';
+
+            // Update the member in allMembers array
+            const index = allMembers.findIndex(m => m.id == memberId);
+            if (index !== -1) {
+                allMembers[index].status = 'cancelled';
+            }
+
+            // Wait 1.5 seconds, then close panel and refresh
+            setTimeout(() => {
+                closeMemberPanel();
+                fetchMembers();     // Refresh table (will hide cancelled by default)
+                fetchStats();       // Update stats
+            }, 1500);
+
+        } catch (error) {
+            console.error('❌ Failed to delete member:', error);
+
+            // Show error message
+            const errorMsg = document.getElementById('deleteErrorMessage');
+            errorMsg.textContent = `❌ ${error.message}`;
+            errorMsg.style.display = 'block';
+        }
+    }
+
+    /* ========================================
+       ENABLE/DISABLE DELETE BUTTON
+       ======================================== */
+
+    function toggleDeleteButton() {
+        const checkbox = document.getElementById('deleteConfirmCheckbox');
+        const deleteBtn = document.getElementById('confirmDeleteBtn');
+
+        // Enable button only if checkbox is checked
+        deleteBtn.disabled = !checkbox.checked;
+
+        if (checkbox.checked) {
+            console.log('✅ Delete button enabled');
+        } else {
+            console.log('❌ Delete button disabled');
         }
     }
 
@@ -776,39 +969,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     
-    async function deleteMember(memberId) {
-        console.log('🗑️ Delete member:', memberId);
-        
-        // Confirm before deleting
-        if (!confirm('Are you sure you want to delete this member?')) {
-            return;
-        }
-        
-        try {
-            const response = await fetch(`${API_BASE_URL}/members/${memberId}`, {
-                method: 'DELETE'
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            
-            console.log('✅ Member deleted:', result);
-            alert('Member deleted successfully!');
-            
-            // Refresh the table
-            fetchMembers();
-            fetchStats();
-            
-        } catch (error) {
-            console.error('❌ Failed to delete member:', error);
-            alert('Failed to delete member. Please try again.');
-        }
-    }
-    
-    
     /* ========================================
        ADD MEMBER FORM SUBMISSION
        ======================================== */
@@ -847,7 +1007,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
                 
                 console.log('✅ Member created:', result);
-                alert('✅ Member added successfully!');
                 
                 // Close modal
                 document.getElementById('add-member-modal').classList.remove('show');
@@ -861,7 +1020,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
             } catch (error) {
                 console.error('❌ Failed to create member:', error);
-                alert(`Failed to add member: ${error.message}`);
             }
         });
     }
@@ -926,6 +1084,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Cancel delete button
+    document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
+        console.log(' Canceling delete');
+        switchToViewMode();
+    });
+
+    // Confirm delete button
+    document.getElementById('confirmDeleteBtn').addEventListener('click', deleteMember);
+
+    // Also handle form submission
+    document.getElementById('deleteMemberForm').addEventListener('submit', deleteMember);
+
+    // Checkbox toggle - enable/disable delete button
+    document.getElementById('deleteConfirmCheckbox').addEventListener('change', toggleDeleteButton);
+
     // Edit button
     document.getElementById('editMemberBtn').addEventListener('click', (e) => {
         const memberId = e.currentTarget.dataset.memberId;
@@ -936,9 +1109,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delete button from panel
     document.getElementById('deleteMemberBtn').addEventListener('click', (e) => {
         const memberId = e.currentTarget.dataset.memberId;
-        console.log(' Delete member from panel:', memberId);
-        closeMemberPanel(); // Close panel first
-        deleteMember(memberId); // Then delete (will show confirmation)
+        const member = allMembers.find(m => m.id == memberId);
+
+        if (member) {
+            switchToDeleteMode(member);
+        }
     });
 
     // Escape key to close

@@ -11,6 +11,9 @@ const mysql = require('mysql2');
 // CORS: Allow frontend to talk to backend (different ports)
 const cors = require('cors');
 
+// Bcrypt Import
+const bcrypt = require('bcrypt');
+
 // Dotenv: Load environment variables from .env file
 require('dotenv').config();
 
@@ -560,6 +563,98 @@ app.post('/api/members/:id/unfreeze', (req, res) => {
         });
     });
 });
+
+/* ============================================
+   POST /api/admin/verify-password
+   Verify admin password for sensitive operations
+   ============================================ */
+
+app.post('/api/admin/verify-password', async (req, res) => {
+    const { username, password } = req.body;
+
+    console.log(`🔐 Verifying password for admin: ${username}`);
+
+    // Validate required fields
+    if (!username || !password) {
+        return res.status(400).json ({
+            error: 'Missing required fields', 
+            required: ['username', 'password']
+        });
+    }
+
+    // Query database for admin user
+    const query = 'SELECT id, username, password_hash FROM admins WHERE username = ?';
+
+    db.query(query, [username], async (err, admins) => {
+        if (err) {
+            console.error('❌ Database error:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        // Check if admin exists
+        if (admins.length === 0) {
+            console.log('❌ Admin not found');
+            return res.status(401).json({
+                verified: false, 
+                error: 'Invalid username or password'
+            });
+        }
+
+        const admin = admins[0];
+
+        try {
+            // Compare provided password with stored hash
+            const isMatch = await bcrypt.compare(password, admin.password_hash);
+
+            if (isMatch) {
+                console.log('✅ Password verified successfully');
+
+                // Update last_login timestamp
+                db.query(
+                    'UPDATE admins SET last_login = NOW() WHERE id = ?', 
+                    [admin.id], 
+                    (err) => {
+                        if (err) console.error('Failed to update last_login:', err);
+                    }
+                );
+
+                // Return success
+                return res.json({
+                    verified: true, 
+                    admin: {
+                        id: admin.id, 
+                        username: admin.username
+                    }
+                });
+            } else {
+                console.log('❌ Password incorrect');
+                return res.status(401).json({
+                    verified: false, 
+                    error: 'Invalid username or password'
+                });
+            }
+
+        } catch (error) {
+            console.error('❌ Bcrypt error:', error);
+            return res.status(500).json({ error: 'Password verification failed' });
+        }
+    });
+});
+
+/* ============================================
+   WHY THIS ENDPOINT?
+
+   - Verifies admin credentials before sensitive operations (like delete)
+   - Uses bcrypt.compare() to check password against stored hash
+   - Never returns the password hash to the client
+   - Updates last_login timestamp for adut trail
+
+   SECRUITY:
+   - Returns same error for "user not found" and "wrong password"
+     (prevents attackers from knowing which usernames exist)
+   - Uses async/await for bcrypt (it's a slow operation by design)
+   - Only returns minimal admin info (id, username) on success
+   ============================================*/
 
 
 // ============================================
