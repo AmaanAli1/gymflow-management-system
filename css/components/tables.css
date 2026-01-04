@@ -150,6 +150,14 @@
     border-color: rgba(243, 156, 18, 0.5);
 }
 
+.table-action-btn.payment {
+    color: #5ce6a8;
+}
+
+.table-action-btn.payment:hover {
+    background: rgba(0, 180, 120, 0.1);
+}
+
 .table-action-btn.delete {
     /* Red for delete */
     color: #e74c3c;

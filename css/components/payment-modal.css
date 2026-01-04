@@ -1,0 +1,597 @@
+/* ============================================ 
+   PAYMENT MODAL STYLES
+   Professional payment management interface
+   ============================================ */
+
+
+/* ============================================ 
+   MODAL OVERLAY (All Payment Modals)
+   ============================================ */
+
+.payment-modal-overlay, 
+.record-payment-modal-overlay, 
+.update-payment-method-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-lg);
+}
+
+.payment-modal-overlay.active, 
+.record-payment-modal-overlay.active, 
+.update-payment-method-modal-overlay.active {
+    display: flex;
+}
+
+/* ============================================
+   MAIN PAYMENT MODAL
+   ============================================ */
+
+.payment-modal {
+    background: var(--color-bg-card);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   PAYMENT MODAL HEADER
+   ============================================ */
+
+.payment-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-xl);
+    border-bottom: 1px solid var(--color-border-base);
+    flex-shrink: 0;
+}
+
+.payment-modal-title {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-md);
+}
+
+.payment-modal-title i {
+    font-size: 1.8rem;
+    color: #5ce6a8;
+    background: rgba(0, 180, 120, 0.1);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+}
+
+.payment-modal-title h3 {
+    font-size: 1.3rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.payment-modal-title p {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin: 4px 0 0 0;
+}
+
+.payment-modal-close {
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: var(--space-sm);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-base);
+}
+
+.payment-modal-close:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-text-primary);
+}
+
+/* ============================================
+   PAYMENT MODAL BODY
+   ============================================ */
+
+.payment-modal-body {
+    padding: var(--space-xl);
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Custom scrollbar */
+.payment-modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.payment-modal-body::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.payment-modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.payment-modal-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Section Titles */
+.section-title {
+    font-size: 1rem;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--gap-md) 0;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--gap-md);
+}
+
+/* ============================================
+   PAYMENT SUMMARY SECTION
+   ============================================ */
+
+.payment-summary-section {
+    margin-bottom: var(--space-xl);
+}
+
+.payment-summary-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--gap-md);
+    margin-bottom: var(--gap-lg);
+}
+
+.summary-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--color-border-base);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+}
+
+.summary-card-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-muted);
+    margin-bottom: var(--gap-xs);
+}
+
+.summary-card-value {
+    font-size: 1.1rem;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+.payment-summary-details {
+    background: rgba(0, 180, 120, 0.05);
+    border: 1px solid rgba(0, 180, 120, 0.2);
+    border-radius: var(--radius-md);
+    padding: var(--space-md) var(--space-lg);
+}
+
+.summary-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--gap-sm) 0;
+}
+
+.summary-detail-row:not(:last-child) {
+    border-bottom: 1px solid rgba(0, 180, 120, 0.1);
+}
+
+.summary-detail-row span {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+}
+
+.summary-detail-row strong {
+    color: #5ce6a8;
+}
+
+/* ============================================
+   PAYMENT HISTORY SECTION
+   ============================================ */
+
+.payment-history-section {
+    margin-bottom: var(--space-xl);
+}
+
+.payment-history-table-wrapper {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--color-border-base);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.payment-history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.payment-history-table thead {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.payment-history-table th {
+    padding: var(--space-md);
+    text-align: left;
+    font-size: 0.8rem;
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-border-base);
+}
+
+.payment-history-table td {
+    padding: var(--space-md);
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.payment-history-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.payment-history-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Empty state */
+.payment-history-table .table-empty {
+    text-align: center;
+    padding: var(--space-xl) var(--space-lg);
+}
+
+.payment-history-table .table-empty i {
+    font-size: 2.5rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--gap-sm);
+    display: block;
+}
+
+.payment-history-table .table-empty p {
+    color: var(--color-text-muted);
+    margin: 0;
+}
+
+/* ============================================
+   PAYMENT METHOD SECTION
+   ============================================ */
+
+.payment-method-section {
+    margin-bottom: var(--space-lg);
+}
+
+.payment-method-display {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--color-border-base);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+}
+
+.no-payment-method {
+    text-align: center;
+    padding: var(--space-lg);
+}
+
+.no-payment-method i {
+    font-size: 2.5rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--gap-md);
+    display: block;
+}
+
+.no-payment-method p {
+    color: var(--color-text-muted);
+    margin: 0 0 var(--gap-lg) 0;
+}
+
+/* Card display */
+.card-display {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-lg);
+}
+
+.card-icon {
+    font-size: 2.5rem;
+    color: #5ce6a8;
+}
+
+.card-details {
+    flex: 1;
+}
+
+.card-type-number {
+    font-size: 1.1.rem;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--gap-xs);
+}
+
+.card-expiry {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+.card-name {
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    margin-top: var(--gap-xs);
+}
+
+/* ============================================
+   PAYMENT MODAL FOOTER
+   ============================================ */
+
+.payment-modal-footer {
+    padding: var(--space-lg) var(--space-xl);
+    border-top: 1px solid var(--color-border-base);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--gap-md);
+    flex-shrink: 0;
+}
+
+/* ============================================
+   RECORD PAYMENT & UPDATE METHOD MODALS
+   Smaller centered modals for forms
+   ============================================ */
+
+.record-payment-modal,
+.update-payment-method-modal {
+    background: var(--color-bg-card);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-lg) var(--space-xl);
+    border-bottom: 1px solid var(--color-border-base);
+    flex-shrink: 0;
+}
+
+.modal-header h3 {
+    font-size: 1.2rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: var(--space-sm);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-base);
+}
+
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-text-primary);
+}
+
+.modal-body {
+    padding: var(--space-xl);
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-footer {
+    padding: var(--space-lg) var(--space-xl);
+    border-top: 1px solid var(--color-border-base);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--gap-md);
+    flex-shrink: 0;
+}
+
+
+/* ========================================
+   FORM STYLING (Payment Modals)
+   ======================================== */
+
+.form-group {
+    margin-bottom: var(--gap-lg);
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--gap-xs);
+}
+
+.form-group.required label::after {
+    content: ' *';
+    color: var(--color-primary);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: var(--space-md) var(--space-lg);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-border-base);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: all var(--transition-base);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #5ce6a8;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(0, 180, 120, 0.1);
+}
+
+.form-group select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 40px;
+}
+
+/* Style dropdown options */
+.form-group select option {
+    background: var(--color-bg-card);
+    color: var(--color-text-primary);
+    padding: var(--space-sm);
+}
+
+/* Ensure select background is dark, not white */
+.form-group select {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Form row (side-by-side fields) */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gap-md);
+}
+
+
+/* ========================================
+   PAYMENT METHOD NOTICE
+   ======================================== */
+
+.payment-method-notice {
+    display: flex;
+    gap: var(--gap-md);
+    padding: var(--space-md) var(--space-lg);
+    background: rgba(0, 180, 120, 0.05);
+    border: 1px solid rgba(0, 180, 120, 0.2);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--gap-lg);
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+.payment-method-notice i {
+    color: #5ce6a8;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+
+/* ========================================
+   ERROR/SUCCESS MESSAGES
+   ======================================== */
+
+.modal-error,
+.modal-success {
+    padding: var(--space-md) var(--space-lg);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--gap-lg);
+    font-size: 0.9rem;
+}
+
+.modal-error {
+    background: rgba(230, 0, 48, 0.1);
+    border: 1px solid rgba(230, 0, 48, 0.3);
+    color: var(--color-primary);
+}
+
+.modal-success {
+    background: rgba(0, 180, 120, 0.1);
+    border: 1px solid rgba(0, 180, 120, 0.3);
+    color: #5ce6a8;
+}
+
+
+/* ========================================
+   BUTTON SIZES
+   ======================================== */
+
+.btn.small {
+    padding: var(--space-sm) var(--space-md);
+    font-size: 0.85rem;
+}
+
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+    .payment-summary-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .payment-modal,
+    .record-payment-modal,
+    .update-payment-method-modal {
+        max-width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+}

@@ -30,6 +30,7 @@
         <link rel="stylesheet" href="../css/components/modals.css">
         <link rel="stylesheet" href="../css/components/tables.css">
         <link rel="stylesheet" href="../css/components//slide-panel.css">
+        <link rel="stylesheet" href="../css/components/payment-modal.css">
 
         <!-- Page specific styles -->
         <link rel="stylesheet" href="../css/pages/members.css">
@@ -751,6 +752,307 @@
 
             </div>
         </div>
+
+        <!-- ============================================ 
+             PAYMENT MODAL
+             Centered modal for payment management
+             ============================================ -->
+            
+        <div class="payment-modal-overlay" id="paymentModalOverlay">
+            <div class="payment-modal" id="paymentModal">
+
+                <!-- Header -->
+                <div class="payment-modal-header">
+                    <div class="payment-modal-title">
+                        <i class="fa-solid fa-dollar-sign"></i>
+                        <div>
+                            <h3>Payment Center</h3>
+                            <p id="paymentModalMemberName">---</p>
+                        </div>
+                    </div>
+                    <button class="payment-modal-close" id="closePaymentModal">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="payment-modal-body">
+
+                    <!-- SECTION 1: Payment Summary -->
+                    <div class="payment-summary-section">
+                        <h4 class="section-title">Payment Summary</h4>
+
+                        <div class="payment-summary-cards">
+                            <div class="summary-card">
+                                <div class="summary-card-label">Current Plan</div>
+                                <div class="summary-card-value" id="summaryPlan">Premium - $50/mo</div>
+                            </div>
+
+                            <div class="summary-card">
+                                <div class="summary-card-label">Next Payment Due</div>
+                                <div class="summary-card-value" id="summaryNextDue">Feb 1, 2026</div>
+                            </div>
+
+                            <div class="summary-card">
+                                <div class="summary-card-label">Account Status</div>
+                                <div class="summary-card-value" id="summaryStatus">
+                                    <span class="pill check">Current</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="payment-summary-details">
+                            <div class="summary-detail-row">
+                                <span>Outstanding Balance:</span>
+                                <strong id="summaryBalance">$0.00</strong>
+                            </div>
+                            <div class="summary-detail-row">
+                                <span>Last Payment:</span>
+                                <strong id="summaryLastPayment">Jan 1, 2026 - $50.00</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: Payment History -->
+                    <div class="payment-history-section">
+                        <div class="section-header">
+                            <h4 class="section-title">Payment History</h4>
+                            <button class="btn primary small" id="recordPaymentBtn">
+                                <i class="fa-solid fa-plus"></i>
+                                Record Payment
+                            </button>
+                        </div>
+
+                        <div class="payment-history-table-wrapper">
+                            <table class="payment-history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>Method</th>
+                                        <th>Status</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="paymentHistoryTableBody">
+                                    <!-- Populated by JavaScript -->
+                                    <tr>
+                                        <td colspan="5" class="table-empty">
+                                            <i class="fa-solid fa-receipt"></i>
+                                            <p>No payment history</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 3: Payment Method on File -->
+                    <div class="payment-method-section">
+                        <div class="section-header">
+                            <h4 class="section-title">Payment Method on File</h4>
+                            <button class="btn ghost small" id="updatePaymentMethodBtn">
+                                <i class="fa-solid fa-pen"></i>
+                                Update
+                            </button>
+                        </div>
+
+                        <div class="payment-method-display" id="paymentMethodDisplay">
+                            <!-- Populate by JavaScript -->
+                            <div class="no-payment-method">
+                                <i class="fa-solid fa-credit-card"></i>
+                                <p>No payment method on file</p>
+                                <button class="btn primary small" id="addPaymentMethodBtn">
+                                    <i class="fa-solid fa-plus"></i>
+                                    Add Payment Method
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+        <!-- End of payment-modal-overlay -->
+        
+
+        <!-- ============================================ 
+             RECORD PAYMENT MODAL
+             Form to add a new payment
+             ============================================ -->
+
+        <div class="record-payment-modal-overlay" id="recordPaymentModalOverlay">
+            <div class="record-payment-modal">
+
+                <div class="modal-header">
+                    <h3>Record Payment</h3>
+                    <button class="modal-close" id="closeRecordPaymentModal">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    
+                    <!-- Error/Success Messages -->
+                    <div id="recordPaymentError" class="modal-error" style="display: none;"></div>
+                    <div id="recordPaymentSuccess" class="modal-success" style="display: none;"></div>
+
+                    <form id="recordPaymentForm">
+
+                        <div class="form-group required">
+                            <label for="paymentAmount">Amount</label>
+                            <input type="number" id="paymentAmount" name="amount" step="0.01" min="0.01" required placeholder="0.00">
+                        </div>
+
+                        <div class="form-group required">
+                            <label for="paymentDate">Payment Date</label>
+                            <input type="date" id="paymentDate" name="payment_date" required>
+                        </div>
+
+                        <div class="form-group required">
+                            <label for="paymentMethodSelect">Payment Method</label>
+                            <select id="paymentMethodSelect" name="payment_method" required>
+                                <option value="">Select method...</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Cheque">Cheque</option>
+                                <option value="Credit Card">Credit Card</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="paymentStatus">Status</label>
+                            <select id="paymentStatus" name="status">
+                                <option value="success">Success</option>
+                                <option value="pending">Pending</option>
+                                <option value="failed">Failed</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="paymentNotes">Notes (Optional)</label>
+                            <textarea id="paymentNotes" name="notes" rows="3" placeholder="Any additional notes about this payment..."></textarea>
+                        </div>
+
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn ghost cancel" id="cancelRecordPayment">Cancel</button>
+                    <button class="btn primary" id="submitRecordPayment">
+                        <i class="fa-solid fa-check"></i>
+                        Record Payment
+                    </button>
+                </div>
+
+            </div>
+        </div>
+        <!-- End of record-payment-modal -->
+        
+
+        <!-- ============================================ 
+             UPDATE PAYMENT METHOD MODAL
+             Form to update card on file
+             ============================================ -->
+
+        <div class="update-payment-method-modal-overlay" id="updatePaymentMethodModalOverlay">
+            <div class="update-payment-method-modal">
+
+                <div class="modal-header">
+                    <h3>Update Payment Method</h3>
+                    <button class="modal-close" id="closeUpdatePaymentMethodModal">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <!-- Error/Success Messages -->
+                    <div id="updatePaymentMethodError" class="modal-error" style="display: none;"></div>
+                    <div id="updatePaymentMethodSuccess" class="modal-success" style="display: none;"></div>
+
+                    <div class="payment-method-notice">
+                        <i class="fa-solid fa-info-circle"></i>
+                        <span>This information is for display purposes only. We do not process or store full card details.</span>
+                    </div>
+
+                    <form id="updatePaymentMethodForm">
+
+                        <div class="form-group required">
+                            <label for="cardholderName">Cardholder Name</label>
+                            <input type="text" id="cardholderName" name="cardholder_name" required placeholder="John Smith">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group required">
+                                <label for="cardType">Card Type</label>
+                                <select id="cardType" name="card_type" required>
+                                    <option value="">Select card type...</option>
+                                    <option value="Visa">Visa</option>
+                                    <option value="Mastercard">Mastercard</option>
+                                    <option value="Amex">Amex</option>
+                                    <option value="Discover">Discover</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group required">
+                                <label for="lastFour">Last 4 Digits</label>
+                                <input type="text" id="lastFour" name="last_four" required maxlength="4" pattern="\d{4}" placeholder="4242">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group required">
+                                <label for="expiryMonth">Expiry Month</label>
+                                <select id="expiryMonth" name="expiry_month" required>
+                                    <option value="">Month</option>
+                                    <option value="1">01 - January</option>
+                                    <option value="2">02 - February</option>
+                                    <option value="3">03 - March</option>
+                                    <option value="4">04 - April</option>
+                                    <option value="5">05 - May</option>
+                                    <option value="6">06 - June</option>
+                                    <option value="7">07 - July</option>
+                                    <option value="8">08 - August</option>
+                                    <option value="9">09 - September</option>
+                                    <option value="10">10 - October</option>
+                                    <option value="11">11 - November</option>
+                                    <option value="12">12 - December</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group required">
+                                <label for="expiryYear">Expiry Year</label>
+                                <select id="expiryYear" name="expiry_year" required>
+                                    <option value="">Year</option>
+                                    <!-- Populated by JavaScript -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="billingZip">Billing ZIP Code (Optional)</label>
+                            <input type="text" id="billingZip" name="billing_zip" maxlength="10" placeholder="90210">
+                        </div>
+
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn ghost cancel" id="cancelUpdatePaymentMethod">Cancel</button>
+                    <button class="btn primary" id="submitUpdatePaymentMethod">
+                        <i class="fa-solid fa-check"></i>
+                        Save Payment Method
+                    </button>
+                </div>
+
+            </div>
+        </div>
+        <!-- End of update-payment-method-modal -->
+        
 
         <!-- ============================================ 
              JAVASCRIPT FILES

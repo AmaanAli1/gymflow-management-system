@@ -204,6 +204,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                 title="Edit member">
                             <i class="fa-solid fa-pen"></i>
                         </button>
+                        <button class="table-action-btn payment"
+                                data-member-id="${member.id}"
+                                title="Manage payments">
+                            <i class="fa-solid fa-dollar-sign"></i>
+                        </button>
                         <button class="table-action-btn delete" 
                                 data-member-id="${member.id}"
                                 title="Delete member">
@@ -243,6 +248,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 editMember(memberId);
             });
         });
+
+        // Payment buttons
+        document.querySelectorAll('.table-action-btn.payment').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const memberId = e.currentTarget.dataset.memberId;
+
+                // Find member and open payment modal
+                const member = allMembers.find(m => m.id == memberId);
+                if (member) {
+                    openPaymentModal(member);
+                }
+            });
+        })
         
         // Delete buttons
         document.querySelectorAll('.table-action-btn.delete').forEach(btn => {
@@ -894,6 +912,468 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /* ========================================
+       PAYMENT MODAL FUNCTIONS
+       ======================================== */
+
+    let currentPaymentMember = null;
+
+    /* ========================================
+       OPEN PAYMENT MODAL
+       ======================================== */
+
+    async function openPaymentModal(member) {
+        console.log('💰 Opening payment modal for:', member.name);
+
+        currentPaymentMember = member;
+
+        // Set member name in header
+        document.getElementById('paymentModalMemberName').textContent = `${member.name} (${member.member_id})`;
+
+        // Load payment data
+        await loadPaymentSummary(member);
+        await loadPaymentHistory(member.id);
+        await loadPaymentMethod(member.id);
+
+        // Show modal
+        document.getElementById('paymentModalOverlay').classList.add('active');
+
+        console.log('✅ Payment modal opened');
+    }
+
+    /* ========================================
+       CLOSE PAYMENT MODAL
+       ======================================== */
+
+    function closePaymentModal() {
+        document.getElementById('paymentModalOverlay').classList.remove('active');
+        currentPaymentMember = null;
+        console.log('✅ Payment modal closed');
+    }
+
+    /* ========================================
+       LOAD PAYMENT SUMMARY
+       ======================================== */
+
+    async function loadPaymentSummary(member) {
+        // Set plan
+        const planCosts = { 'Basic': 30, 'Premium': 50, 'Elite': 75 };
+        const monthlyCost = planCosts[member.plan] || 0;
+        document.getElementById('summaryPlan').textContent = `${member.plan} - $${monthlyCost}/mo`;
+
+        // Fetch payments to calculate next due date
+        try {
+            const response = await fetch(`${API_BASE_URL}/members/${member.id}/payments`);
+            const data = await response.json();
+
+            if (data.payments && data.payments.length > 0) {
+                // Sort by date (most recent first)
+                const payments = data.payments.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+                const lastPayment = payments[0];
+
+                // Calculate next due date (last + 1 month)
+                const lastPaymentDate = new Date(lastPayment.payment_date);
+                const nextDue = new Date(lastPaymentDate);
+                nextDue.setMonth(nextDue.getMonth() + 1);
+
+                const nextDueFormatted = nextDue.toLocaleDateString('en-US', {
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric'
+                });
+
+                document.getElementById('summaryNextDue').textContent = nextDueFormatted;
+
+                // Last payment
+                const lastPaymentFormatted = lastPaymentDate.toLocaleDateString('en-US', {
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric'
+                });
+                document.getElementById('summaryLastPayment').textContent = 
+                    `${lastPaymentFormatted} - $${parseFloat(lastPayment.amount).toFixed(2)}`;
+                
+                // Check if overdue (more than 35 days since last payment)
+                const daysSincePayment = Math.floor((new Date() - lastPaymentDate) / (1000 * 60 * 60 * 24));
+
+                if (daysSincePayment > 35) {
+                    document.getElementById('summaryStatus').innerHTML = '<span class="pill add">Overdue</span>';
+                    document.getElementById('summaryBalance').textContent = `$${monthlyCost.toFixed(2)}`;
+                } else {
+                    document.getElementById('summaryStatus').innerHTML = '<span class="pill check">Current</span>';
+                    document.getElementById('summaryBalance').textContent = '$0.00';
+                }
+
+            } else {
+                // No payments yet
+                document.getElementById('summaryNextDue').textContent = 'Not set';
+                document.getElementById('summaryLastPayment').textContent = 'No payments recorded';
+                document.getElementById('summaryStatus').innerHTML = '<span class="pill pill">New Member</span>';
+                document.getElementById('summaryBalance').textContent = '$0.00';
+            }
+
+        } catch (error) {
+            console.error('❌ Failed to load payment summary', error);
+        }
+    }
+
+    /* ========================================
+       LOAD PAYMENT HISTORY
+       ======================================== */
+
+    async function loadPaymentHistory(memberId) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/members/${memberId}/payments`);
+            const data = await response.json();
+
+            const tbody = document.getElementById('paymentHistoryTableBody');
+
+            if (!data.payments || data.payments.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="table-empty">
+                            <i class="fa-solid fa-receipt"></i>
+                            <p>No payment history</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Sort by date (most recent first)
+            const payments = data.payments.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+
+            tbody.innerHTML = payments.map(payment => {
+                const date = new Date(payment.payment_date).toLocaleDateString('en-US', {
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric'
+                });
+
+                const amount = `$${parseFloat(payment.amount).toFixed(2)}`;
+
+                // Status pill
+                let statusClass = 'check';  // green for success
+                if (payment.status === 'failed') statusClass = 'add';    // red
+                if (payment.status === 'pending') statusClass = 'stock';  // yellow
+                if (payment.status === 'refunded') statusClass = 'pill'; // gray
+
+                const notes = payment.notes || '-';
+
+                return `
+                    <tr>
+                        <td>${date}</td>
+                        <td>${amount}</td>
+                        <td>${payment.payment_method}</td>
+                        <td><span class="pill ${statusClass}">${payment.status}</span></td>
+                        <td>${notes}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            console.log(`✅ Loaded ${payments.length} payments`);
+
+        } catch (error) {
+            console.error('❌ Failed to load payment history:', error);
+        }
+    }
+
+    /* ========================================
+       LOAD PAYMENT METHOD ON FILE
+       ======================================== */
+
+    async function loadPaymentMethod(memberId) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/members/${memberId}/payment-method`);
+            const data = await response.json();
+
+            const display = document.getElementById('paymentMethodDisplay');
+
+            if (!data.payment_method) {
+                display.innerHTML = `
+                    <div class="no-payment-method">
+                        <i class="fa-solid fa-credit-card"></i>
+                        <p>No payment method on file</p>
+                        <button class="btn primary small" id="addPaymentMethodBtn">
+                            <i class="fa-solid fa-plus"></i>
+                            Add Payment Method
+                        </button>
+                    </div>
+                `;
+
+                // Add event listener to the dynamically created button
+                document.getElementById('addPaymentMethodBtn').addEventListener('click', openUpdatePaymentMethodModal);
+
+                return;
+            }
+
+            const method = data.payment_method;
+
+            // Card icon based on type
+            let cardIcon = 'fa-credit-card';
+            if (method.card_type === 'Visa') cardIcon = 'fa-cc-visa';
+            if (method.card_type === 'Mastercard') cardIcon = 'fa-cc-mastercard';
+            if (method.card_type === 'Amex') cardIcon = 'fa-cc-amex';
+            if (method.card_type === 'Discover') cardIcon = 'fa-cc-discover';
+
+            display.innerHTML = `
+                <div class="card-display">
+                    <i class="fa-brands ${cardIcon} card-icon"></i>
+                    <div class="card-details">
+                        <div class="card-type-number">${method.card_type} •••• ${method.last_four}</div>
+                        <div class="card-expiry">Expires: ${String(method.expiry_month).padStart(2, '0')}/${method.expiry_year}</div>
+                        <div class="card-name">${method.cardholder_name}</div>
+                    </div>
+                </div>
+            `;
+
+            console.log('✅ Loaded payment method');
+
+        } catch (error) {
+            console.error('❌ Failed to load payment method:', error);
+        }
+    }
+
+    /* ========================================
+       OPEN RECORD PAYMENT MODAL
+       ======================================== */
+
+    function openRecordPaymentModal() {
+        console.log('📝 Opening record payment modal');
+
+        // Set today's date as default
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('paymentDate').value = today;
+
+        // Clear form
+        document.getElementById('recordPaymentForm').reset();
+        document.getElementById('paymentDate').value = today;
+        document.getElementById('paymentStatus').value = 'success';
+
+        // Hide message
+        document.getElementById('recordPaymentError').style.display = 'none';
+        document.getElementById('recordPaymentSuccess').style.display = 'none';
+
+        // Show modal
+        document.getElementById('recordPaymentModalOverlay').classList.add('active');
+
+        console.log('✅ Record payment modal opened');
+    }
+
+    /* ========================================
+       CLOSE RECORD PAYMENT MODAL
+       ======================================== */
+
+    function closeRecordPaymentModal() {
+        document.getElementById('recordPaymentModalOverlay').classList.remove('active');
+        console.log('✅ Record payment modal closed');
+    }
+
+    /* ========================================
+       SUBMIT RECORD PAYMENT
+       ======================================== */
+
+    async function submitRecordPayment(e) {
+        e.preventDefault();
+
+        if (!currentPaymentMember) {
+            console.error('❌ No member selected');
+            return;
+        }
+
+        const form = document.getElementById('recordPaymentForm');
+        const formData = new FormData(form);
+
+        const paymentData = {
+            amount: formData.get('amount'), 
+            payment_date: formData.get('payment_date'), 
+            payment_method: formData.get('payment_method'), 
+            status: formData.get('status') || 'success', 
+            notes: formData.get('notes') || null
+        };
+
+        console.log('💰 Submitting payment:', paymentData);
+
+        // Hide previous message
+        document.getElementById('recordPaymentError').style.display = 'none';
+        document.getElementById('recordPaymentSuccess').style.display = 'none';
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/members/${currentPaymentMember.id}/payments`, {
+                method: 'POST', 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(paymentData)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to record payment');
+            }
+
+            console.log('✅ Payment recorded:', result);
+
+            // Show success message
+            const successMsg = document.getElementById('recordPaymentSuccess');
+            successMsg.textContent = '✅ Payment recorded successfully!';
+            successMsg.style.display = 'block';
+
+            // Wait 1 second, then close and refresh
+            setTimeout(async () => {
+                closeRecordPaymentModal();
+
+                // Refresh payment modal data
+                await loadPaymentSummary(currentPaymentMember);
+                await loadPaymentHistory(currentPaymentMember.id);
+            }, 1000);
+
+        } catch (error) {
+            console.error('❌ Failed to record payment:', error);
+
+            // Show error message
+            const errorMsg = document.getElementById('recordPaymentError');
+            errorMsg.textContent = `❌ ${error.message}`;
+            errorMsg.style.display = 'block';
+        }
+    }
+
+    /* ========================================
+       OPEN UPDATE PAYMENT METHOD MODAL
+       ======================================== */
+
+    async function openUpdatePaymentMethodModal() {
+        console.log('💳 Opening update payment method modal');
+
+        // Populate year dropdown (current year + 10 years)
+        const yearSelect = document.getElementById('expiryYear');
+        const currentYear = new Date().getFullYear();
+
+        yearSelect.innerHTML = '<option value="">Year</option>';
+        for (let i = 0; i < 15; i++) {
+            const year = currentYear + i;
+            yearSelect.innerHTML += `<option value="${year}">${year}</option>`;
+        }
+
+        // Load existing payment method if available
+        if (currentPaymentMember) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/members/${currentPaymentMember.id}/payment-method`);
+                const data = await response.json();
+
+                if (data.payment_method) {
+                    const method = data.payment_method;
+
+                    // Pre-fill form with existing data
+                    document.getElementById('cardholderName').value = method.cardholder_name;
+                    document.getElementById('cardType').value = method.card_type;
+                    document.getElementById('lastFour').value = method.last_four;
+                    document.getElementById('expiryMonth').value = method.expiry_month;
+                    document.getElementById('expiryYear').value = method.expiry_year;
+                    document.getElementById('billingZip').value = method.billing_zip || '';
+                } else {
+                    // No existing method - clear form
+                    document.getElementById('updatePaymentMethodForm').reset();
+                }
+
+            } catch (error) {
+                console.error('❌ Failed to load payment method:', error);
+                // Continue anyway - they can still add a new one
+                document.getElementById('updatePaymentMethodForm').reset();
+            }
+        }
+
+        // Hide messages
+        document.getElementById('updatePaymentMethodError').style.display = 'none';
+        document.getElementById('updatePaymentMethodSuccess').style.display = 'none';
+
+        // Show modal
+        document.getElementById('updatePaymentMethodModalOverlay').classList.add('active');
+
+        console.log('✅ Update payment method modal opened');
+    }
+
+    /* ========================================
+       CLOSE UPDATE PAYMENT METHOD MODAL
+       ======================================== */
+
+    function closeUpdatePaymentMethodModal() {
+        document.getElementById('updatePaymentMethodModalOverlay').classList.remove('active');
+        console.log('✅ Update payment method modal closed');
+    }
+
+    /* ========================================
+       SUBMIT UPDATE PAYMENT METHOD
+       ======================================== */
+
+    async function submitUpdatePaymentMethod(e) {
+        e.preventDefault();
+
+        if (!currentPaymentMember) {
+            console.error('❌ No member selected');
+            return;
+        }
+
+        const form = document.getElementById('updatePaymentMethodForm');
+        const formData = new FormData(form);
+
+        const methodData = {
+            card_type: formData.get('card_type'), 
+            last_four: formData.get('last_four'), 
+            expiry_month: parseInt(formData.get('expiry_month')), 
+            expiry_year: parseInt(formData.get('expiry_year')), 
+            cardholder_name: formData.get('cardholder_name'), 
+            billing_zip: formData.get('billing_zip') || null
+        };
+
+        console.log('💳 Submitting payment method:', methodData);
+
+        // Hide previous messages
+        document.getElementById('updatePaymentMethodError').style.display = 'none';
+        document.getElementById('updatePaymentMethodSuccess').style.display = 'none';
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/members/${currentPaymentMember.id}/payment-method`, {
+                method: 'PUT', 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(methodData)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to update payment method');
+            }
+
+            console.log('✅ Payment method updated:', result);
+
+            // Show success message
+            const successMsg = document.getElementById('updatePaymentMethodSuccess');
+            successMsg.textContent = `✅ Payment method updated successfully!`;
+            successMsg.style.display = 'block';
+
+            // Wait 1 second, then close and refresh
+            setTimeout(async () => {
+                closeUpdatePaymentMethodModal();
+
+                // Refresh payment method display
+                await loadPaymentMethod(currentPaymentMember.id);
+            }, 1000);
+
+        } catch (error) {
+            console.error('❌ Failed to update payment method:', error);
+
+            // Show error message
+            const errorMsg = document.getElementById('updatePaymentMethodError');
+            errorMsg.textContent = `❌ ${error.message}`;
+            errorMsg.style.display = 'block';
+        }
+    }
+
+
+    /* ========================================
        SAVE MEMBER CHANGES
        ======================================== */
 
@@ -1155,6 +1635,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Start date change - recalculate end date
     document.getElementById('freezeStartDate').addEventListener('change', calculateFreezeEndDate);
+
+    /* ========================================
+       PAYMENT MODAL EVENT LISTENERS
+       ======================================== */
+
+    // Close main payment modal
+    document.getElementById('closePaymentModal').addEventListener('click', closePaymentModal);
+
+    // Close payment modal when clicking overlay
+    document.getElementById('paymentModalOverlay').addEventListener('click', (e) => {
+        if (e.target.id === 'paymentModalOverlay') {
+            closePaymentModal();
+        }
+    });
+
+    // Record Payment button
+    document.getElementById('recordPaymentBtn').addEventListener('click', openRecordPaymentModal);
+
+    // Update Payment Method button (in main modal)
+    document.getElementById('updatePaymentMethodBtn').addEventListener('click', openUpdatePaymentMethodModal);
+
+    // Close record payment modal
+    document.getElementById('closeRecordPaymentModal').addEventListener('click', closeRecordPaymentModal);
+    document.getElementById('cancelRecordPayment').addEventListener('click', closeRecordPaymentModal);
+
+    // Submit record payment
+    document.getElementById('submitRecordPayment').addEventListener('click', submitRecordPayment);
+    document.getElementById('recordPaymentForm').addEventListener('submit', submitRecordPayment);
+
+    // Close record payment modal when clicking overlay
+    document.getElementById('recordPaymentModalOverlay').addEventListener('click', (e) => {
+        if (e.target.id === 'recordPaymentModalOverlay') {
+            closeRecordPaymentModal();
+        }
+    });
+
+    // Close update payment method modal
+    document.getElementById('closeUpdatePaymentMethodModal').addEventListener('click', closeUpdatePaymentMethodModal);
+    document.getElementById('cancelUpdatePaymentMethod').addEventListener('click', closeUpdatePaymentMethodModal);
+
+    // Submit update payment method
+    document.getElementById('submitUpdatePaymentMethod').addEventListener('click', submitUpdatePaymentMethod);
+    document.getElementById('updatePaymentMethodForm').addEventListener('submit', submitUpdatePaymentMethod);
+
+    // Close update payment method modal when clicking overlay
+    document.getElementById('updatePaymentMethodModalOverlay').addEventListener('click', (e) => {
+        if (e.target.id === 'updatePaymentMethodModalOverlay') {
+            closeUpdatePaymentMethodModal();
+        }
+    });
 
     
     /* ========================================

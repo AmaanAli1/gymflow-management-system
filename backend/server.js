@@ -657,6 +657,229 @@ app.post('/api/admin/verify-password', async (req, res) => {
    ============================================*/
 
 
+/* ============================================
+   GET /api/members/:id/payments
+   GET all payment history for a member
+   ============================================ */
+
+app.get('/api/members/:id/payments', (req, res) => {
+    const memberId = req.params.id;
+
+    console.log(`💰 Fetching payments for member ${memberId}`);
+
+    const query = `
+        SELECT
+            id,
+            amount,
+            payment_date,
+            payment_method,
+            status,
+            notes,
+            created_at
+        FROM payments
+        WHERE member_id = ?
+        ORDER BY payment_date DESC
+    `;
+
+    db.query(query, [memberId], (err, payments) => {
+        if (err) {
+            console.error(' Database error:', err);
+            return res.status(500).json({ error: 'Failed to fetch payments' });
+        }
+
+        console.log(`✅ Found ${payments.length} payments`);
+        res.json({ payments });
+    });
+});
+
+/* ============================================
+   POST /api/members/:id/payments
+   Record a new payment
+   ============================================ */
+
+app.post('/api/members/:id/payments', (req, res) => {
+    const memberId = req.params.id;
+    const { amount, payment_date, payment_method, status, notes } = req.body;
+
+    console.log(`💰 Recording payment for member ${memberId}:`, req.body);
+
+    // Validate required fields
+    if (!amount || !payment_date || !payment_method) {
+        return res.status(400).json({
+            error: 'Missing required fields', 
+            required: ['amount', 'payment_date', 'payment_method']
+        });
+    }
+
+    // Validate amount is positive
+    if (parseFloat(amount) <= 0) {
+        return res.status(400).json({ error: 'Amount must be greater than 0' });
+    }
+
+    const insertQuery = `
+        INSERT INTO payments (member_id, amount, payment_date, payment_method, status, notes)
+        VALUES (?, ?, ?, ?, ?, ?)
+    `;
+
+    const values = [
+        memberId, 
+        parseFloat(amount), 
+        payment_date, 
+        payment_method, 
+        status || 'success', 
+        notes || null
+    ];
+
+    db.query(insertQuery, values, (err, result) => {
+        if (err) {
+            console.error('❌ Insert error:', err);
+            return res.status(500).json({ error: 'Failed to record payment' });
+        }
+
+        // Fetch the newly created payment
+        const fetchQuery = 'SELECT * FROM payments WHERE id = ?';
+
+        db.query(fetchQuery, [result.insertId], (err, payments) => {
+            if (err) {
+                console.error('❌ Fetch error:', err);
+                return res.status(500).json({ error: 'Payment recorded but failed to fetch' });
+            }
+
+            console.log(`✅ Payment recorded successfully (ID: ${result.insertId})`);
+            res.json({
+                success: true, 
+                message: 'Payment recorded successfully', 
+                payment: payments[0]
+            });
+        });
+    });
+});
+
+/* ============================================
+   GET /api/members/:id:payment-method
+   Get payment method on file for a member
+   ============================================ */
+
+app.get('/api/members/:id/payment-method', (req, res) => {
+    const memberId = req.params.id;
+
+    console.log(`💳 Fetching payment method for a member ${memberId}`);
+
+    const query = `
+        SELECT
+            id,
+            card_type,
+            last_four,
+            expiry_month,
+            expiry_year,
+            cardholder_name,
+            billing_zip,
+            updated_at
+        FROM payment_methods
+        WHERE member_id = ?
+    `;
+
+    db.query(query, [memberId], (err, methods) => {
+        if (err) {
+            console.error('❌ Database error:', err);
+            return res.status(500).json({ error: 'Failed to fetch payment method' });
+        }
+
+        if (methods.length === 0) {
+            console.log('ℹ️ No payment method on file');
+            return res.json({ payment_method: null});
+        }
+
+        console.log('✅ Payment method found');
+        res.json({ payment_method: methods[0] });
+    });
+});
+
+/* ============================================
+   PUT /api/members/:id/payment-method
+   Update payment method on file
+   ============================================ */
+
+app.put('/api/members/:id/payment-method', (req, res) => {
+    const memberId = req.params.id;
+    const { card_type, last_four, expiry_month, expiry_year, cardholder_name, billing_zip } = req.body;
+
+    console.log(`💳 Updating payment method for member ${memberId}`);
+
+    // Validate required fields
+    if (!card_type || !last_four || !expiry_month || !expiry_year || !cardholder_name) {
+        return res.status(400).json({
+            error: 'Missing required fields', 
+            required: ['card_type', 'last_four', 'expiry_month', 'expiry_year', 'cardholder_name']
+        });
+    }
+
+    // Validate last_four is exactly 4 digits
+    if (!/^\d{4}$/.test(last_four)) {
+        return res.status(400).json({ error: 'last_four must be exactly 4 digits' });
+    }
+
+    // Validate expiry_month is 1-12
+    if (expiry_month < 1 || expiry_month > 12) {
+        return res.status(400).json({ error: 'expiry_month must be between 1 and 12' });
+    }
+
+    // Check if payment method already exists
+    const checkQuery = 'SELECT id FROM payment_methods WHERE member_id = ?';
+
+    db.query(checkQuery, [memberId], (err, existing) => {
+        if (err) {
+            console.error('❌ Database error:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        let query, values;
+
+        if (existing.length > 0) {
+            // Update existing payment method
+            query = `
+                UPDATE payment_methods
+                SET card_type = ?, last_four = ?, expiry_month = ?, expiry_year = ?,
+                    cardholder_name = ?, billing_zip = ?
+                WHERE member_id = ?
+            `;
+            values = [card_type, last_four, expiry_month, expiry_year, cardholder_name, billing_zip || null, memberId];
+        } else {
+            // INSERT new payment method
+            query = `
+                INSERT INTO payment_methods (member_id, card_type, last_four, expiry_month, expiry_year, cardholder_name, billing_zip)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `;
+            values = [memberId, card_type, last_four, expiry_month, expiry_year, cardholder_name, billing_zip || null];
+        }
+
+        db.query(query, values, (err, result) => {
+            if (err) {
+                console.error('❌ Update error:', err);
+                return res.status(500).json({ error: 'Failed to update payment method' });
+            }
+
+            // Fetch updated payment method
+            const fetchQuery = 'SELECT * FROM payment_methods WHERE member_id = ?';
+
+            db.query(fetchQuery, [memberId], (err, methods) => {
+                if (err) {
+                    console.error('❌ Fetch error:', err);
+                    return res.status(500).json({ error: 'Updated but failed to fetch' });
+                }
+
+                console.log('✅ Payment method updated successfully');
+                res.json({
+                    success: true, 
+                    message: 'Payment method updated successfully', 
+                    payment_method: methods[0]
+                });
+            });
+        });
+    });
+});
+
+
 // ============================================
 // DASHBOARD API ENDPOINT
 // Returns all data for admin dashboard
