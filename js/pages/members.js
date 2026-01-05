@@ -691,15 +691,33 @@ document.addEventListener('DOMContentLoaded', () => {
        UNFREEZE MEMBER
        ======================================== */
 
-    async function unfreezeMember(memberId) {
-        console.log('💦 Unfreezing member:', memberId);
+    let unfreezeTargetMemberId = null;
 
-        if (!confirm('Are you sure you want to unfreeze this member? They will be set back to active status.')) {
-            return;
-        }
+    async function unfreezeMember(memberId) {
+        console.log('🔥 Unfreezing member:', memberId);
+
+        // Find member info
+        const member = allMembers.find(m => m.id == memberId);
+        if (!member) return;
+
+        // Store member ID for confirmation
+        unfreezeTargetMemberId = memberId;
+
+        // Update modal with member info
+        document.getElementById('unfreezeMemberInfo').textContent = 
+            `${member.name} (${member.member_id}) will be reactivated.`;
+
+        // Show confirmation modal
+        document.getElementById('unfreezeModalOverlay').classList.add('active');
+    }
+
+    async function confirmUnfreezeAction() {
+        if (!unfreezeTargetMemberId) return;
+
+        console.log('🔥 Confirming unfreeze:', unfreezeTargetMemberId);
 
         try {
-            const response = await fetch(`${API_BASE_URL}/members/${memberId}/unfreeze`, {
+            const response = await fetch(`${API_BASE_URL}/members/${unfreezeTargetMemberId}/unfreeze`, {
                 method: 'POST'
             });
 
@@ -709,13 +727,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(result.error || 'Failed to unfreeze member');
             }
 
-            console.log('💦 Member unfrozen:', result);
+            console.log('✅ Member unfrozen:', result);
 
             // Update the member in allMembers array
-            const index = allMembers.findIndex(m => m.id == memberId);
+            const index = allMembers.findIndex(m => m.id == unfreezeTargetMemberId);
             if (index !== -1) {
                 allMembers[index] = result.member;
             }
+
+            // Close modal
+            closeUnfreezeModal();
 
             // Refresh panel and table
             openMemberPanel(result.member);
@@ -725,6 +746,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('❌ Failed to unfreeze member:', error);
         }
+    }
+
+    function closeUnfreezeModal() {
+        document.getElementById('unfreezeModalOverlay').classList.remove('active');
+        unfreezeTargetMemberId = null;
     }
 
     /* ========================================
@@ -1683,6 +1709,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('updatePaymentMethodModalOverlay').addEventListener('click', (e) => {
         if (e.target.id === 'updatePaymentMethodModalOverlay') {
             closeUpdatePaymentMethodModal();
+        }
+    });
+
+    // Unfreeze confirmation moda
+    document.getElementById('closeUnfreezeModal').addEventListener('click', closeUnfreezeModal);
+    document.getElementById('cancelUnfreeze').addEventListener('click', closeUnfreezeModal);
+    document.getElementById('confirmUnfreeze').addEventListener('click', confirmUnfreezeAction);
+
+    // Close unfreeze modal when clicking overlay
+    document.getElementById('unfreezeModalOverlay').addEventListener('click', (e) => {
+        if (e.target.id === 'unfreezeModalOverlay') {
+            closeUnfreezeModal();
         }
     });
 

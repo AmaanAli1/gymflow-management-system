@@ -575,6 +575,58 @@
 
 
 /* ========================================
+   UNFREEZE CONFIRMATION MODAL
+   ======================================== */
+
+.unfreeze-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-lg);
+}
+
+.unfreeze-modal-overlay.active {
+    display: flex;
+}
+
+.unfreeze-modal {
+    background: var(--color-bg-card);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+.unfreeze-warning {
+    display: flex;
+    gap: var(--gap-md);
+    padding: var(--space-lg);
+    background: rgba(255, 193, 7, 0.1);
+    border: 2px solid rgba(255, 193, 7, 0.3);
+    border-radius: var(--radius-md);
+}
+
+.unfreeze-warning i {
+    font-size: 1.8rem;
+    color: #ffc107;
+    flex-shrink: 0;
+}
+
+.unfreeze-warning p {
+    margin: 0;
+    color: var(--color-text-primary);
+}
+
+/* ========================================
    RESPONSIVE
    ======================================== */
 

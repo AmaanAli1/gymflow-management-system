@@ -1054,6 +1054,48 @@
         <!-- End of update-payment-method-modal -->
         
 
+        <!-- ============================================  
+             UNFREEZE CONFIRMATION MODAL
+             Small modal to confirm unfreezing a member
+             ============================================ -->
+
+        <div class="unfreeze-modal-overlay" id="unfreezeModalOverlay">
+            <div class="unfreeze-modal">
+
+                <div class="modal-header">
+                    <h3>Unfreeze Member</h3>
+                    <button class="modal-close" id="closeUnfreezeModal">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="unfreeze-warning">
+                        <i class="fa-solid fa-fire"></i>
+                        <div>
+                            <p><strong>Are you sure you want to unfreeze this member?</strong></p>
+                            <p id="unfreezeMemberInfo" style="margin-top: 8px; color: var(--color-text-muted);"></p>
+                        </div>
+                    </div>
+
+                    <p style="color: var(--color-text-secondary); font-size: 0.9rem; margin-top: 16px;">
+                        This will set their status back to <strong style="color: #5ce6a8;">active</strong> and clear all freeze data.
+                    </p>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn ghost cancel" id="cancelUnfreeze">Cancel</button>
+                    <button class="btn primary" id="confirmUnfreeze">
+                        <i class="fa-solid fa-fire"></i>
+                        Unfreeze Member
+                    </button>
+                </div>
+
+            </div>
+        </div>
+        <!-- End of unfreeze-modal -->
+        
+
         <!-- ============================================ 
              JAVASCRIPT FILES
              ============================================ -->
