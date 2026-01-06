@@ -565,6 +565,83 @@ app.post('/api/members/:id/unfreeze', (req, res) => {
 });
 
 /* ============================================
+   POST /api/members/:id/reactivate
+   Reactivate a cancelled member
+   ============================================ */
+
+app.post('/api/members/:id/reactivate', (req, res) => {
+    const memberId = req.params.id;
+    const { reason, start_date, notes } = req.body;
+
+    console.log(`🔄 Reactivating member ${memberId}`, req.body);
+
+    // VALIDATION - Check required fields
+    if (!reason || !start_date) {
+        console.log('❌ Validation failed: Missing required fields');
+        return res.status(400).json({
+            error: 'Missing required fields', 
+            required: ['reason', 'start_date']
+        });
+    }
+
+    // Update member to active status
+    const reactivateQuery = `
+        UPDATE members
+        SET status = 'active'
+        WHERE id = ?
+    `;
+
+    db.query(reactivateQuery, [memberId], (err, result) => {
+        if (err) {
+            console.error('❌ Reactivate error:', err);
+            return res.status(500).json({ error: 'Failed to reactivate member' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        // Fetch the updated member data
+        const fetchQuery = `
+            SELECT
+                m.id,
+                m.member_id,
+                m.name,
+                m.email,
+                m.phone,
+                m.emergency_contact,
+                m.location_id,
+                l.name as location_name,
+                m.plan,
+                m.status,
+                m.freeze_start_date,
+                m.freeze_end_date,
+                m.freeze_reason,
+                m.notes,
+                m.created_at,
+                m.updated_at
+            FROM members m
+            LEFT JOIN locations l on m.location_id = l.id
+            WHERE m.id = ?
+        `;
+
+        db.query(fetchQuery, [memberId], (err, members) => {
+            if (err) {
+                console.error('❌ Fetch error:', err);
+                return res.status(500).json({ error: 'Failed to fetch updated member' });
+            }
+
+            console.log(`✅ Member ${memberId} reactivated successfully`);
+            res.json({
+                success: true, 
+                message: 'Member reactivated successfully', 
+                member: members[0]
+            });
+        });
+    });
+});
+
+/* ============================================
    POST /api/admin/verify-password
    Verify admin password for sensitive operations
    ============================================ */

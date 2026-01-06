@@ -87,7 +87,6 @@
                     </a>
                     <div class="submenu">
                         <a href="./staff.html" class="submenu-item">All Staff</a>
-                        <a href="./trainers.html" class="submenu-item">All Trainers</a>
                         <a href="#" class="submenu-item" data-modal="add-staff-modal">Add Staff</a>
                         <a href="#" class="submenu-item" data-modal="add-trainer-modal">Add Trainer</a>
                     </div>
@@ -262,13 +261,27 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th class="sortable" data-sort="id">Member ID</th>
-                                <th class="sortable" data-sort="name">Name</th>
-                                <th class="sortable" data-sort="email">Email</th>
-                                <th class="sortable" data-sort="location">Location</th>
-                                <th class="sortable" data-sort="plan">Plan</th>
-                                <th class="sortable" data-sort="status">Status</th>
-                                <th class="sortable" data-sort="join_date">Join Date</th>
+                                <th class="sortable" data-sort="id">
+                                    Member ID <i class="fa-solid fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="name">
+                                    Name <i class="fa-solid fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="email">
+                                    Email <i class="fa-solid fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="location">
+                                    Location <i class="fa-solid fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="plan">
+                                    Plan <i class="fa-solid fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="status">
+                                    Status <i class="fa-solid fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="join_date">
+                                    Join Date <i class="fa-solid fa-sort"></i>
+                                </th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -367,6 +380,164 @@
                         <button type="submit" class="btn primary">Confirm Check-In</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Add Trainer Modal -->
+        <div class="modal-overlay" id="add-trainer-modal" role="dialog" aria-labelledby="addTrainer Title" aria-hidden="true">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2 id="addTrainerTitle">Add Trainer</h2>
+                    <button class="modal-close" data-close-modal aria-label="Close modal">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="addTrainerForm">
+                        <div class="modal-grid">
+                            <div class="field">
+                                <label for="trainerName">Full Name</label>
+                                <input type="text"
+                                       id="trainerName"
+                                       name="name"
+                                       placeholder="Jane Doe"
+                                       required>
+                            </div>
+                            <div class="field">
+                                <label for="trainerEmail">Email</label>
+                                <input type="email"
+                                       id="trainerEmail"
+                                       name="email"
+                                       placeholder="jame@gymflow.com"
+                                       required>
+                            </div>
+                            <div class="field">
+                                <label for="trainerLocation">Location</label>
+                                <select id="trainerLocation" name="location" required>
+                                    <option value="">Select location</option>
+                                    <option value="downtown">Downtown</option>
+                                    <option value="midtown">Midtown</option>
+                                    <option value="eastside">Eastside</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="trainerSpecialty">Specialty</label>
+                                <select id="trainerSpecialty" name="specialty" required>
+                                    <option value="">Select specialty</option>
+                                    <option value="strength">Strength</option>
+                                    <option value="hypertrophy">Hypertrophy</option>
+                                    <option value="weightloss">Weight Loss</option>
+                                    <option value="conditioning">Conditioning</option>
+                                    <option value="yoga">Yoga / Mobility</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="trainerRate">Hourly Rate</label>
+                                <input type="number" 
+                                       id="trainerRate" 
+                                       name="rate"
+                                       placeholder="e.g. 65" 
+                                       min="0" 
+                                       step="5">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="trainerNotes">Notes</label>
+                            <textarea id="trainerNotes"
+                                      name="notes"
+                                      rows="3"
+                                      placeholder="Certifications, preferences, languages..."></textarea>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn ghost" data-close-modal type="button">Cancel</button>
+                    <button class="btn primary" type="submit" form="addTrainerForm">Save Trainer</button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Add Staff Modal -->
+        <div class="modal-overlay" id="add-staff-modal" role="dialog" aria-labelledby="addStaffTitle" aria-hidden="true">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2 id="addStaffTitle">Add Staff Member</h2>
+                    <button class="modal-close" data-close-modal aria-label="Close modal">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="addStaffForm">
+                        <div class="modal-grid">
+                            <div class="field">
+                                <label for="staffName">Full Name</label>
+                                <input type="text" 
+                                       id="staffName" 
+                                       name="name"
+                                       placeholder="e.g. Sarah Lee" 
+                                       required>
+                            </div>
+                            <div class="field">
+                                <label for="staffEmail">Email (Login)</label>
+                                <input type="email" 
+                                       id="staffEmail" 
+                                       name="email"
+                                       placeholder="staff@gymflowhq.com" 
+                                       required>
+                            </div>
+                            <div class="field">
+                                <label for="staffRole">Primary Role</label>
+                                <select id="staffRole" name="role" required>
+                                    <option value="">Select role</option>
+                                    <option value="front-desk">Front Desk / CSR</option>
+                                    <option value="sales">Sales</option>
+                                    <option value="operations">Operations</option>
+                                    <option value="manager">Manager</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="staffLocation">Home Location</label>
+                                <select id="staffLocation" name="location" required>
+                                    <option value="">Select location</option>
+                                    <option value="downtown">Downtown</option>
+                                    <option value="midtown">Midtown</option>
+                                    <option value="eastside">Eastside</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="staffEmployment">Employment Type</label>
+                                <select id="staffEmployment" name="employment" required>
+                                    <option value="">Select type</option>
+                                    <option value="full-time">Full-time</option>
+                                    <option value="part-time">Part-time</option>
+                                    <option value="contract">Contract</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="staffAccess">Access Level</label>
+                                <select id="staffAccess" name="access" required>
+                                    <option value="">Select level</option>
+                                    <option value="standard">Standard</option>
+                                    <option value="manager">Manager</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="staffNotes">Notes</label>
+                            <textarea id="staffNotes" 
+                                      name="notes"
+                                      rows="3" 
+                                      placeholder="Certifications, languages, special permissions, etc."></textarea>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn ghost" data-close-modal type="button">Cancel</button>
+                    <button class="btn primary" type="submit" form="addStaffForm">Create Staff Account</button>
+                </div>
             </div>
         </div>
 
@@ -687,6 +858,93 @@
 
                     </div>
                     <!-- End of slide-panel-delete -->
+                    
+                    <!-- REACTIVATE MODE (Form) -->
+                    <div class="slide-panel-reactivate">
+
+                        <!-- Error/Success Messages -->
+                        <div id="reactivateErrorMessage" class="slide-panel-error" style="display: none;"></div>
+                        <div id="reactivateSuccessMessage" class="slide-panel-success" style="display: none;"></div>
+
+                        <!-- Welcome Back Banner -->
+                        <div class="reactivate-banner">
+                            <i class="fa-solid fa-party-horn"></i>
+                            <div>
+                                <strong>Welcome Back!</strong>
+                                <p>Reactivating membership for: <span id="reactivateMemberName">---</span></p>
+                            </div>
+                        </div>
+
+                        <form id="reactivateMemberForm" class="slide-panel-form">
+
+                            <!-- Reason for Return -->
+                            <div class="slide-panel-field required">
+                                <label for="reactivateReason">Reason for Return</label>
+                                <select id="reactivateReason" name="reason" required>
+                                    <option value="">Select reason...</option>
+                                    <option value="Resolved Previous Issue">Resolved Previous Issue</option>
+                                    <option value="Ready to Resume">Ready to Resume</option>
+                                    <option value="Financial Situation Improved">Financial Situation Improved</option>
+                                    <option value="New Fitness Goals">New Fitness Goals</option>
+                                    <option value="Missed the Gym">Missed the Gym</option>
+                                    <option value="Special Offer">Special Offer/Promotion</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <!-- Restart Date -->
+                            <div class="slide-panel-field required">
+                                <label for="reactivateStartDate">Restart Date</label>
+                                <input type="date" id="reactivateStartDate" name="start_date" required>
+                                <small class="field-hint">When should the membership resume?</small>
+                            </div>
+
+                            <!-- Payment Method Verification -->
+                            <div class="reactivate-payment-section">
+                                <div class="reactivate-section-header">
+                                    <i class="fa-solid fa-credit-card"></i>
+                                    <span>Payment Method Verification</span>
+                                </div>
+
+                                <div id="reactivatePaymentDisplay" class="reactivate-payment-display">
+                                    <!-- Populate by JavaScript -->
+                                    <div class="loading-state">
+                                        <i class="fa-solid fa-spinner fa-spin"></i>
+                                        <span>Loading payment method...</span>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn ghost small" id="updatePaymentBeforeReactivate" style="margin-top: 12px;">
+                                    <i class="fa-solid fa-pen"></i>
+                                    Update Payment Method
+                                </button>
+                            </div>
+
+                            <!-- Welcome Back Notes -->
+                            <div class="slide-panel-field">
+                                <label for="reactivateNotes">Welcome Back Notes (Optional)</label>
+                                <textarea id="reactivateNotes" name="notes" rows="3" placeholder="Promo code, special offer, trainer assignment, etc."></textarea>
+                                <small class="field-hint">Any special arrangements for this member's return</small>
+                            </div>
+
+                            <!-- Confirmation Checkbox -->
+                            <div class="reactivate-confirmation">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="reactivateConfirmCheckbox" required>
+                                    <span>I have verified the payment method is valid and the member is ready to resume</span>
+                                </label>
+                            </div>
+
+                            <!-- Info Notice -->
+                            <div class="reactivate-notice">
+                                <i class="fa-solid fa-info-circle"></i>
+                                <span>Member will be set to active status and billing will resume on the restart date.</span>
+                            </div>
+
+                        </form>
+
+                    </div>
+                    <!-- End of slide-panel-reactivate -->
 
                 </div>
                 <!-- End of slide-panel-body -->
@@ -745,6 +1003,18 @@
                         <button type="submit" class="btn danger" id="confirmDeleteBtn" disabled>
                             <i class="fa-solid fa-trash"></i>
                             Confirm Delete
+                        </button>
+                    </div>
+
+                    <!-- REACTIVATE MODE BUTTONS -->
+                    <div id="reactivateModeButtons" style="display: none;">
+                        <button type="button" class="btn ghost cancel" id="cancelReactivateBtn">
+                            <i class="fa-solid fa-times"></i>
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn success" id="confirmReactivateBtn" disabled>
+                            <i class="fa-solid fa-check"></i>
+                                Confirm Reactivation
                         </button>
                     </div>
 
@@ -1094,7 +1364,6 @@
             </div>
         </div>
         <!-- End of unfreeze-modal -->
-        
 
         <!-- ============================================ 
              JAVASCRIPT FILES

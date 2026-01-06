@@ -21,6 +21,7 @@
 
     /* Styling */
     background: var(--color-overlay);
+    backdrop-filter: blur(1px);
 
     /* Hidden by default */
     opacity: 0;

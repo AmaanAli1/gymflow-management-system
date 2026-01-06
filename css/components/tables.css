@@ -315,3 +315,44 @@
 .table-container::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.2);
 }
+
+/* ========================================
+   TABLE SORTING
+   ======================================== */
+
+.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--transition-base);
+    position: relative;
+}
+
+.sortable:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.sortable i {
+    margin-left: var(--gap-xs);
+    font-size: 0.7rem;
+    opacity: 0.4;
+    transition: all var(--transition-base);
+}
+
+.sortable:hover i {
+    opacity: 0.7;
+}
+
+/* Active sort column */
+.sortable.sorted-asc i, 
+.sortable.sorted-desc i {
+    opacity: 1;
+}
+
+/* Arrow direcion */
+.sortable.sorted-asc i::before {
+    content: "\f0de";   /* fa-sort-up */
+}
+
+.sortable.sorted-desc i::before {
+    content: "\f0dd";   /* fa-sort-down */
+}

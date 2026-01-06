@@ -25,7 +25,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     let allMembers = []; // Store ALL members (never filtered)
-    let filteredMembers = [] // Current filtered/searched results
+    let filteredMembers = []; // Current filtered/searched results
+    let currentDisplayedMembers =[];
+
+    // Sort state
+    let currentSortColumn = null;
+    let currentSortDirection = 'asc';
     
     
     /* ========================================
@@ -79,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 allMembers = data.members;
             }
 
+            currentDisplayedMembers = data.members;
             populateMembersTable(data.members);
             
         } catch (error) {
@@ -226,6 +232,99 @@ document.addEventListener('DOMContentLoaded', () => {
         
         console.log(`✅ Populated table with ${members.length} members`);
     }
+
+    /* ========================================
+       SORT MEMBERS TABLE
+       ======================================== */
+
+    function sortMembersTable(column) {
+        console.log(`🔄 Sorting by: ${column}`);
+
+        // Toggle direction if clicking same column
+        if (currentSortColumn === column) {
+            currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSortColumn = column;
+            currentSortDirection = 'asc';
+        }
+
+        // Sort the displayed members array
+        const sortedMembers = [...currentDisplayedMembers].sort((a, b) => {
+            let valueA, valueB;
+
+            switch(column) {
+                case 'id': 
+                    valueA = parseInt(a.member_id.replace('M-', ''));
+                    valueB = parseInt(b.member_id.replace('M-', ''));
+                    break;
+                case 'name': 
+                    valueA = a.name.toLowerCase();
+                    valueB = b.name.toLowerCase();
+                    break;
+                case 'email': 
+                    valueA = a.email.toLowerCase();
+                    valueB = b.email.toLowerCase();
+                    break;
+                case 'location': 
+                    valueA = (a.location_name || '').toLowerCase();
+                    valueB = (b.location_name || '').toLowerCase();
+                    break;
+                case 'plan': 
+                    const planOrder = { 'Basic': 1, 'Premium': 2, 'Elite': 3 };
+                    valueA = planOrder[a.plan] || 0;
+                    valueB = planOrder[b.plan] || 0;
+                    break;
+                case 'status': 
+                    const statusOrder = { 'active': 1, 'frozen': 2,'cancelled': 3 };
+                    valueA = statusOrder[a.status] || 0;
+                    valueB = statusOrder[b.status] || 0;
+                    break;
+                case 'join_date': 
+                    valueA = new Date(a.created_at).getTime();
+                    valueB = new Date(b.created_at).getTime();
+                    break;
+                default: 
+                    return 0;
+            }
+
+            // Compare values
+            if (valueA < valueB) return currentSortDirection === 'asc' ? -1 : 1;
+            if (valueA > valueB) return currentSortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        // Update sort indicators
+        updateSortIndicators(column);
+
+        // Re-populate table with sorted data
+        populateMembersTable(sortedMembers);
+
+        console.log(`✅ Sorted ${sortedMembers.length} members by ${column} (${currentSortDirection})`);
+    }
+
+    /* ========================================
+       UPDATE SORT INDICATORS
+       ======================================== */
+
+    function updateSortIndicators(activeColumn) {
+        // Remove active class from all headers
+        document.querySelectorAll('.sortable').forEach(th => {
+            th.classList.remove('sorted-asc', 'sorted-desc');
+        });
+
+        // Add active class to current column
+        const activeHeader = document.querySelector(`th[data-sort="${activeColumn}"]`);
+
+        if (!activeHeader) {
+            console.error(`❌ Could not find header with data-sort="${activeColumn}"`);
+            return;
+        }
+
+        const className = currentSortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc';
+        activeHeader.classList.add(className);
+
+        console.log(`✅ Sort indicator updated: ${activeColumn} (${currentSortDirection})`);
+    }
     
     
     /* ========================================
@@ -370,25 +469,40 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('panelStatDaysActive').textContent = calculateDaysActive(member.created_at);
         document.getElementById('panelStatLastVisit').textContent = 'N/A';
 
-        // Notes (placehodler)
+        // Notes (placeholder)
         document.getElementById('panelMemberNotes').textContent = 'No notes available for this member.'
 
         // Store member ID on buttons for actions
-        document.getElementById('freezeMemberBtn').dataset.memberId = member.id;
         document.getElementById('editMemberBtn').dataset.memberId = member.id;
         document.getElementById('deleteMemberBtn').dataset.memberId = member.id;
 
-        // Update freeze button based on member status
-        const freezeBtn = document.getElementById('freezeMemberBtn');
-        if (member.status === 'frozen') {
-            freezeBtn.innerHTML = '<i class="fa-solid fa-fire"></i> Unfreeze';
-            freezeBtn.onclick = (e) => {
+        // Update first button dynamically based on member status
+        const firstBtn = document.getElementById('freezeMemberBtn');
+
+        if (member.status === 'cancelled') {
+            // CANCELLED -> Show Reactivate button (green)
+            firstBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Reactivate';
+            firstBtn.className = 'btn ghost success';   // Green styling
+            firstBtn.dataset.memberId = member.id;
+            firstBtn.onclick = null;    // Use event listener
+
+
+        } else if (member.status === 'frozen') {
+            // FROZEN -> Show Unfreeze button (orange/fire)
+            firstBtn.innerHTML = '<i class="fa-solid fa-fire"></i> Unfreeze';
+            firstBtn.className = 'btn ghost freeze';    // Yellow/organce styling
+            firstBtn.dataset.memberId = member.id;
+            firstBtn.onclick = (e) => {
                 e.stopPropagation();
                 unfreezeMember(member.id);
             };
+
         } else {
-            freezeBtn.innerHTML = '<i class="fa-solid fa-snowflake"></i> Freeze';
-            freezeBtn.onclick = null;   // Use event listener instead
+            // ACTIVE -> Show Freeze button (blue/snowflake)
+            firstBtn.innerHTML = '<i class="fa-solid fa-snowflake"></i> Freeze';
+            firstBtn.className = 'btn ghost freeze';    // Blue styling
+            firstBtn.dataset.memberId = member.id;
+            firstBtn.onclick = null;    // Use event listener
         }
 
         // Show the panel
@@ -494,12 +608,14 @@ document.addEventListener('DOMContentLoaded', () => {
         panel.classList.remove('edit-mode');
         panel.classList.remove('freeze-mode');
         panel.classList.remove('delete-mode');
+        panel.classList.remove('reactivate-mode');
 
         // Show view buttons ONLY
         document.getElementById('viewModeButtons').style.display = 'flex';
         document.getElementById('editModeButtons').style.display = 'none';
         document.getElementById('freezeModeButtons').style.display = 'none';
         document.getElementById('deleteModeButtons').style.display = 'none';
+        document.getElementById('reactivateModeButtons').style.display = 'none';
 
         // Hide error/success messages
         document.getElementById('editErrorMessage').style.display = 'none';
@@ -508,6 +624,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('freezeSuccessMessage').style.display = 'none';
         document.getElementById('deleteErrorMessage').style.display = 'none';
         document.getElementById('deleteSuccessMessage').style.display = 'none';
+        document.getElementById('reactivateErrorMessage').style.display = 'none';
+        document.getElementById('reactivateSuccessMessage').style.display = 'none';
 
         console.log('✅ Switched to view mode');
     }
@@ -751,6 +869,202 @@ document.addEventListener('DOMContentLoaded', () => {
     function closeUnfreezeModal() {
         document.getElementById('unfreezeModalOverlay').classList.remove('active');
         unfreezeTargetMemberId = null;
+    }
+
+    /* ============================================ 
+       SWITCH TO REACTIVATE MODE
+       ============================================ */
+
+    function switchToReactivateMode(member) {
+        console.log('🔄 Switching to reactivate mode for:', member.name);
+
+        // Set current payment member for payment modal access
+        currentPaymentMember = member;
+
+        // Remove all other mode classes first
+        const panel = document.querySelector('.slide-panel');
+        panel.classList.remove('edit-mode', 'freeze-mode', 'delete-mode');
+
+        // Add reactivate-mode class to panel
+        panel.classList.add('reactivate-mode');
+
+        // Hide ALL other mode buttons first
+        document.getElementById('viewModeButtons').style.display = 'none';
+        document.getElementById('editModeButtons').style.display = 'none';
+        document.getElementById('freezeModeButtons').style.display = 'none';
+        document.getElementById('deleteModeButtons').style.display = 'none';
+        document.getElementById('reactivateModeButtons').style.display = 'flex';
+
+        // Populate member info
+        document.getElementById('reactivateMemberName').textContent = member.name;
+
+        // Set today as default restart date
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('reactivateStartDate').value = today;
+
+        // Clear form
+        document.getElementById('reactivateReason').value = '';
+        document.getElementById('reactivateNotes').value = '';
+        document.getElementById('reactivateConfirmCheckbox').checked = false;
+
+        // Disable button initially
+        document.getElementById('confirmReactivateBtn').disabled = true;
+
+        // Store member ID for later
+        document.getElementById('reactivateMemberForm').dataset.memberId = member.id;
+
+        // Load payment method
+        loadReactivatePaymentMethod(member.id);
+
+        // Hide error/success messages
+        document.getElementById('reactivateErrorMessage').style.display = 'none';
+        document.getElementById('reactivateSuccessMessage').style.display = 'none';
+
+        console.log('✅ Switched to reactivate mode');
+    }
+
+    /* ============================================ 
+       LOAD PAYMENT METHOD FOR REACTIVATION
+       ============================================ */
+
+    async function loadReactivatePaymentMethod(memberId) {
+        const display = document.getElementById('reactivatePaymentDisplay');
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/members/${memberId}/payment-method`);
+            const data = await response.json();
+
+            if (!data.payment_method) {
+                display.innerHTML = `
+                    <div class="no-payment-method-reactivate">
+                        <i class="fa-solid fa-credit-card"></i>
+                        <p>No payment method on file</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const method = data.payment_method;
+
+            // Card icon based on type
+            let cardIcon = 'fa-credit-card';
+            if (method.card_type === 'Visa') cardIcon = 'fa-cc-visa';
+            if (method.card_type === 'Mastercard') cardIcon = 'fa-cc-mastercard';
+            if (method.card_type === 'Amex') cardIcon = 'fa-cc-amex';
+            if (method.card_type === 'Discover') cardIcon = 'fa-cc-discover';
+
+            display.innerHTML = `
+                <div class="reactivate-card-display">
+                    <i class="fa-brands ${cardIcon}"></i>
+                    <div class="reactivate-card-info">
+                        <div class="reactivate-card-type">${method.card_type} •••• ${method.last_four}</div>
+                        <div class="reactivate-card-expiry">Expires: ${String(method.expiry_month).padStart(2, '0')}/${method.expiry_year}</div>
+                    </div>
+                </div>
+            `;
+
+            console.log('✅ Loaded payment method for reactivation');
+
+        } catch (error) {
+            console.error('❌ Failed to load payment method:', error);
+            display.innerHTML = `
+                <div class="no-payment-method-reactivate">
+                    <i class="fa-solid fa-exclamation-triangle"></i>
+                    <p>Failed to load payment method</p>
+                </div>
+            `;
+        }
+    }
+
+    /* ========================================
+       SUBMIT REACTIVATION
+       ======================================== */
+
+    async function submitReactivation(e) {
+        e.preventDefault();
+
+        const form = document.getElementById('reactivateMemberForm');
+        const memberId = form.dataset.memberId;
+
+        // Get form data
+        const formData = new FormData(form);
+        const reactivateData = {
+            reason: formData.get('reason'), 
+            start_date: formData.get('start_date'), 
+            notes: formData.get('notes') || null
+        };
+
+        console.log('🔄 Reactivating member:', reactivateData);
+
+        // Hide previous messages
+        document.getElementById('reactivateErrorMessage').style.display = 'none';
+        document.getElementById('reactivateSuccessMessage').style.display = 'none';
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/members/${memberId}/reactivate`, {
+                method: 'POST', 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(reactivateData)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to reactivate member');
+            }
+
+            console.log('✅ Member reactivated:', result);
+
+            // Show success message
+            const successMsg = document.getElementById('reactivateSuccessMessage');
+            successMsg.textContent = '✅ Member reactivated successfully!';
+            successMsg.style.display = 'block';
+
+            // Update the member in allMembers array
+            const index = allMembers.findIndex(m => m.id == memberId);
+            if (index !== -1) {
+                allMembers[index] = result.member;
+            }
+
+            // Wait 1.5 seconds, then switch back to view mode with updated data
+            setTimeout(() => {
+                openMemberPanel(result.member);
+                switchToViewMode();
+            }, 1500);
+
+            // Refresh the table and stats
+            fetchMembers();
+            fetchStats();
+
+        } catch (error) {
+            console.log('❌ Failed to reactivate member:', error);
+
+            // Show error message
+            const errorMsg = document.getElementById('reactivateErrorMessage');
+            errorMsg.textContent = `❌ ${error.message}`;
+            errorMsg.style.display = 'block';
+        }
+    }
+
+    /* ========================================
+       TOGGLE REACTIVATE BUTTON
+       Enable/Disable based on checkbox
+       ======================================== */
+
+    function toggleReactivateButton() {
+        const checkbox = document.getElementById('reactivateConfirmCheckbox');
+        const reactivateBtn = document.getElementById('confirmReactivateBtn');
+
+        // Enable button only if checkbox is checked
+        reactivateBtn.disabled = !checkbox.checked;
+
+        if (checkbox.checked) {
+            console.log('✅ Reactivate button enabled');
+        } else {
+            console.log('❌ Reactivate button disabled');
+        }
     }
 
     /* ========================================
@@ -1662,6 +1976,53 @@ document.addEventListener('DOMContentLoaded', () => {
     // Start date change - recalculate end date
     document.getElementById('freezeStartDate').addEventListener('change', calculateFreezeEndDate);
 
+    // Reactivate button (in view mode - dynamically set)
+    document.getElementById('freezeMemberBtn').addEventListener('click', (e) => {
+        const memberId = e.currentTarget.dataset.memberId;
+        const member = allMembers.find(m => m.id == memberId);
+
+        if (member) {
+            // Check status and act accordingly
+            if (member.status === 'cancelled') {
+                e.stopPropagation();
+                e.preventDefault();
+                switchToReactivateMode(member);
+            } else if (member.status === 'frozen') {
+                // Handled by onclick (unfreeze modal)
+            } else {
+                // ACTIVE member - open freeze mode
+                e.stopPropagation();
+                e.preventDefault();
+                switchToFreezeMode(member);
+            }
+        }
+    });
+
+    // Cancel reactivate button
+    document.getElementById('cancelReactivateBtn').addEventListener('click', () => {
+        console.log('❌ Cancelling reactivate');
+        switchToViewMode();
+    });
+
+    // Confirm reactivate button
+    document.getElementById('confirmReactivateBtn').addEventListener('click', submitReactivation);
+
+    // Also handle form submission
+    document.getElementById('reactivateMemberForm').addEventListener('submit', submitReactivation);
+
+    // Checkbox toggle - enable/disable reactivate button
+    document.getElementById('reactivateConfirmCheckbox').addEventListener('change', toggleReactivateButton);
+
+    // Update payment method before reactivate
+    document.getElementById('updatePaymentBeforeReactivate').addEventListener('click', () => {
+        // Open payment method modal
+        if (currentPaymentMember) {
+            openUpdatePaymentMethodModal();
+        } else {
+            console.error('❌ No current payment member set');
+        }
+    });
+
     /* ========================================
        PAYMENT MODAL EVENT LISTENERS
        ======================================== */
@@ -1722,6 +2083,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.id === 'unfreezeModalOverlay') {
             closeUnfreezeModal();
         }
+    });
+
+    // Table sorting
+    document.querySelectorAll('.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const column = th.dataset.sort;
+            sortMembersTable(column);
+        });
     });
 
     

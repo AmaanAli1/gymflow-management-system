@@ -278,3 +278,15 @@
 }
 
 /* Usage for filtering tables: JavaScript toggles .active on click */
+
+/* Success button (green - for reactivate) */
+.btn.ghost.success {
+    color: #5ce6a8;
+    background: transparent;
+    border-color: rgba(92, 230, 168, 0.3);
+}
+
+.btn.ghost.success:hover {
+    background: rgba(92, 230, 168, 0.1);
+    border-color: rgba(92, 230, 168, 0.5);
+}

@@ -355,13 +355,14 @@
 }
 
 /* ============================================
-   MODE TOGGLING (View / Edit / Freeze / Delete
+   MODE TOGGLING (View / Edit / Freeze / Delete / Reactivate
    ============================================ */
 
 /* Hide view mode when in any other mode */
 .slide-panel.edit-mode .slide-panel-view, 
 .slide-panel.freeze-mode .slide-panel-view, 
-.slide-panel.delete-mode .slide-panel-view {
+.slide-panel.delete-mode .slide-panel-view, 
+.slide-panel.reactivate-mode .slide-panel-view {
     display: none;
 }
 
@@ -395,11 +396,22 @@
     display: block;
 }
 
-/* Why four modes?
+/* Hide reactivate mode by default */
+.slide-panel-reactivate {
+    display: none;
+}
+
+/* Show reactivate mode when active */
+.slide-panel.reactivate-mode .slide-panel-reactivate {
+    display: block;
+}
+
+/* Why five modes?
    View: Read-only member details
    Edit: Form to update member info
    Freeze: Form to freeze membership
    Delete: Confirmation to cancel member
+   Reactivate: Form to reactivate cancelled member
    Only one visible at a time */
 
 /* ============================================
@@ -1000,6 +1012,212 @@
    Visual feedback that it's a password field
    Consistent character width
    Standard UX pattern
+
+/* ============================================ 
+   REACTIVATE MODE STYLES
+   Green/Success theme for member return
+   ============================================ */
+
+/* Reactivate welcome banner */
+.reactivate-banner {
+    display: flex;
+    gap: var(--gap-md);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+    background: rgba(0, 180, 120, 0.1);
+    border: 2px solid rgba(0, 180, 120, 0.3);
+    border-left: 4px solid #5ce6a8;
+    border-radius: var(--radius-md);
+}
+
+.reactivate-banner i {
+    font-size: 1.5rem;
+    color: #5ce6a8;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.reactivate-banner strong {
+    display: block;
+    color: #5ce6a8;
+    margin-bottom: var(--gap-xs);
+    font-size: 0.95rem;
+}
+
+.reactivate-banner p {
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* WHY green theme?
+   Reactivate is positive (member returning)
+   Green signals success, growth, renewal
+   Opposite of red (delete) - welcome vs warning */
+
+/* Field hints */
+.field-hint {
+    display: block;
+    margin-top: var(--gap-xs);
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+/* Payment verification section */
+.reactivate-payment-section {
+    padding: var(--space-lg);
+    margin: var(--space-lg) 0;
+    background: rgba(0, 180, 120, 0.05);
+    border: 1x solid rgba(0, 180, 120, 0.2);
+    border-radius: var(--radius-md);
+}
+
+.reactivate-section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    margin-bottom: var(--space-md);
+    font-weight: var(--font-weight-semibold);
+    color: #5ce6a8;
+    font-size: 0.9rem;
+}
+
+.reactivate-section-header i {
+    font-size: 1.1rem;
+}
+
+.reactivate-payment-display {
+    padding: var(--space-md);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--color-border-base);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--gap-md);
+}
+
+/* Loading state */
+.loading-state {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+.loading-state i {
+    color: #5ce6a8;
+}
+
+/* Card display in reactivate (when payment method exists) */
+.reactivate-card-display {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-md);
+}
+
+.reactivate-card-display i {
+    font-size: 2rem;
+    color: #5ce6a8;
+}
+
+.reactivate-card-info {
+    flex: 1;
+}
+
+.reactivate-card-type {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--gap-xs);
+}
+
+.reactivate-card-expiry {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+/* No payment method state */
+.no-payment-method-reactivate {
+    text-align: center;
+    padding: var(--space-md);
+}
+
+.no-payment-method.reactivate i {
+    font-size: 2rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--gap-sm);
+    display: block;
+}
+
+.no-payment-method-reactivate p {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Reactivate confirmation checkbox */
+.reactivate-confirmation {
+    padding: var(--space-md) var(--space-lg);
+    margin-top: var(--space-lg);
+    background: rgba(0, 180, 120, 0.05);
+    border: 1px solid rgba(0, 180, 120, 0.2);
+    border-radius: var(--radius-md);
+}
+
+/* WHY checkbox required?
+   Ensures staff verifies payment before reactivating
+   Prevents billing issues
+   Professional verification step */
+
+/* Reactivate info notice */
+.reactivate-notice {
+    display: flex;
+    gap: var(--gap-md);
+    padding: var(--space-lg);
+    background: rgba(0, 180, 120, 0.05);
+    border-left: 3px solid #5ce6a8;
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+.reactivate-notice i {
+    color: #5ce6a8;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* Success button styling */
+.btn.success {
+    background: #5ce6a8;
+    color: #0a1929;
+    border: 2px solid #5ce6a8;
+    font-weight: var(--font-weight-semibold);
+}
+
+.btn.success:hover {
+    background: #4cd494;
+    border-color: #4cd494;
+    box-shadow: 0 4px 12px rgba(92, 230, 168, 0.3);
+}
+
+.btn.success:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: rgba(92, 230, 168, 0.2);
+    border-color: rgba(92, 230, 168, 0.3);
+}
+
+.btn.success:disabled:hover {
+    background: rgba(92, 230, 168, 0.2);
+    box-shadow: none;
+}
+
+/* WHY disabled state?
+   Button is disabled until checkbox is checked
+   Visual feedback that verification is required
+   Prevents accidental reactivation without payment check */
 
 /* ========================================
    RESPONSIVE: Footer on Mobile
