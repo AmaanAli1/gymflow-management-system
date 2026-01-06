@@ -67,7 +67,31 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Fetch from API
             const response = await fetch(url);
+
+            // CHECK FOR RATE LIMIT BEFORE CHECKING OTHER ERRORS
+            if (response.status === 429) {
+                const data = await response.json();
+                console.error('⏱️ Rate limited:', data.error);
+
+                // Show rate limit message in table
+                membersTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="table-empty">
+                            <i class="fa-solid fa-clock" style="color: #f39c12;"></i>
+                            <p style="color: #f39c12; font-weight: 600;">Too Many Requests</p>
+                            <p style="font-size: 0.9rem; margin-top: 8px">
+                                You've made too many requests. Please wait ${data.retryAfter} before trying again.
+                            </p>
+                            <p style="font-size: 0.8rem; margin-top: 8px; color: var(--color-text-muted);">
+                                This limit helps protect the server from overload.
+                            </p>
+                        </td>
+                    </tr>
+                `;
+                return; // Stop here, don't throw error
+            }
             
+            // Check for other HTTP errors
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -115,6 +139,13 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('📊 Fetching member stats...');
             
             const response = await fetch(`${API_BASE_URL}/members/stats`);
+
+            // Rate limit
+            if (response.status === 429) {
+                const data = await response.json();
+                console.error('⏱️ Rate limited on stats:', data.error);
+                return;
+            }
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -1011,6 +1042,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const result = await response.json();
 
+            // Rate limit
+            if (response.status === 429) {
+                console.error('⏱️ Rate limited on stats:', data.error);
+                return;
+            }
+
             if (!response.ok) {
                 throw new Error(result.error || 'Failed to reactivate member');
             }
@@ -1547,6 +1584,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const result = await response.json();
+
+            // Rate limit
+            if (response.status === 429) {
+                const data = await response.json();
+                console.error('⏱️ Rate limited on stats:', data.error);
+                return;
+            }
 
             if (!response.ok) {
                 throw new Error(result.error || 'Failed to record payment');
