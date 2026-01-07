@@ -20,6 +20,9 @@ require('dotenv').config();
 // SECURITY: Rate limiting to prevent abuse
 const rateLimit = require('express-rate-limit');
 
+// SECURITY: Input validation and sanitization
+const { body, param, validationResult } = require('express-validator');
+
 // ============================================
 // CREATE EXPRESS APP
 // ============================================
@@ -118,6 +121,320 @@ const paymentLimiter = rateLimit({
 // - Normal user makes 1-2 payments per session max
 
 console.log('✅ Rate limiting configured');
+
+/* ============================================
+   VALIDATION ERROR HANDLER
+   Middleware to check validation results
+   ============================================ */
+
+const handleValidationErrors = (req, res, next) => {
+    // Collect all validation errors from the request
+    const errors = validationResult(req);
+
+    // If there are errors, return theme to the client
+    if (!errors.isEmpty()) {
+        // errors.array() returns an array like:
+        // [
+        //    { field: 'email', msg: 'Invalid email format' },
+        //    { field: 'name', msg: 'Name must be 2-100 characters' }
+        // ]
+
+        console.log('❌ Validation failed:',errors.array());
+
+        return res.status(400).json({
+            error: 'Validation failed', 
+            details: errors.array()
+        });
+    }
+
+    // No errors - continue to the route handler
+    next();
+};
+
+// WHY middleware?
+// - Separates validation logic from business logic
+// - Reusable across all routes
+// - Clean, readable code
+// - Easy to test
+
+console.log('✅ Validation middleware configured');
+
+/* ============================================
+   VALIDATION RULES: ADD MEMBER
+   Applied to POST /api/members
+   ============================================ */
+
+const validateAddMember = [
+    // NAME VALIDATION
+    body('name')
+        // .trim() - Remove whitespace from start and end
+        // "   John Doe   " becomes "John Doe"
+        // WHY? Users accidently add spaces, we clean them
+        .trim()
+
+        // .notEmpty() - Must not be empty string
+        // WHY? Name is required for identification
+        .notEmpty()
+        .withMessage('Name is required')
+
+        // .isLength() - Check character count
+        // min: 2 - Prevents "J" (too short, probably mistake)
+        // max: 100 - Prevents 1000-character attack
+        // WHY? Realistic human names are 2-100 characters
+        .isLength({ min: 2, max: 100})
+        .withMessage('Name must be between 2 and 100 characters')
+
+        // .matches() - Must match regex pattern
+        // ^[a-zA-Z\s'-]+$ means:
+        // ^ = start of string
+        // [a-zA-Z] = uppercase or lowercase letters
+        // \s = spaces (for "John Doe")
+        // ' = apostrophes (for "O'Brian")
+        // - = hyphens (for "Mary-Jane")
+        // + = one or more of these characters
+        // $ = end of string
+        // WHY? Prevents SQL injections, XSS, weird characters
+        .matches(/^[a-zA-Z\s'-]+$/)
+        .withMessage('Name can only contain letters, spaces, hyphens, and apostrophes'), 
+
+    // EMAIL VALIDATION
+    body('email')
+        .trim()
+        .notEmpty()
+        .withMessage('Email is required')
+
+        // .isEmail() - Built-in email validator
+        // Checks for: something@domain.com format
+        // Handles edge case: dots, plus signs, subdomains
+        // WHY? Emails must be deliverable for communication
+        .isEmail()
+        .withMessage('Invalid email format')
+
+        // .normalizeEmail() - Standardizes format
+        // "John.Doe@GMAIL.COM" becomes "johndoe@gmail.com"
+        // WHY? Prevents duplicate accounts (John@gmail vs john@gmail)
+        .normalizeEmail()
+
+        // .custom() - Custom validation logic
+        // We check if email already exists in databse
+        // WHY? Each email must be unique (business rule)
+        .custom(async (email) => {
+            return new Promise((resolve, reject) => {
+                const query = 'SELECT id FROM members WHERE email = ?';
+                db.query(query, [email], (err, results) => {
+                    if (err) {
+                        reject(new Error('Database error'));
+                    }
+                    if (results.length > 0) {
+                        // Email exists - reject!
+                        reject(new Error('Email already exists'));
+                    }
+                    // Email is unique - accept!
+                    resolve();
+                });
+            });
+        }),
+
+    // PHONE VALIDATION
+    body('phone')
+        .trim()
+        .notEmpty()
+        .withMessage('Phone number is required')
+
+        // .matches() - Must match exact phone format
+        // ^\(\d{3}\) \d{3}-\d{4}$ means:
+        // ^ = start
+        // \( = literal opening parenthesis
+        // \d{3} = exactly 3 digits (area code)
+        // \) = literal closing parenthesis
+        // (space)
+        // \d{3} = exactly 3 digits (prefix)
+        // - = literal hyphen
+        // \d{4} = exactly 4 digits (line number)
+        // $ = end
+        // Result : (555) 123-4567
+        // WHY? Consistent format makes calling easier, prevents typos
+        .matches(/^\(\d{3}\) \d{3}-\d{4}$/)
+        .withMessage('Phone must be in format: (555) 123-4567'),
+
+    // EMERGENCY CONTACT VALIDATION
+    body('emergency_contact')
+        // .optional() - This field is not required
+        // If provided, it must pass validation
+        // If not provided, skip validation
+        // WHY? Some people don't have emergency contacts
+        .optional()
+        .trim()
+        .matches(/^\(\d{3}\) \d{3}-\d{4}$/)
+        .withMessage('Emergency contact must be in format: (555) 123-4567'),
+
+    // PLAN VALIDATION
+    body('plan')
+        .notEmpty()
+        .withMessage('Plan is required')
+
+        // .isIn() - Must be one of these exact values
+        // ['Basic', 'Premium', 'Elite'] - our three plans
+        // WHY? Prevents:
+        // - User editing HTML to add "Free" plan
+        // - Typos like "Premim" breaking reports
+        // - SQL injection via plan field
+        .isIn(['Basic', 'Premium', 'Elite'])
+        .withMessage('Plan must be Basic, Premium, or Elite'),
+
+    // LOCATION VALIDATION
+    body('location_id')
+        .notEmpty()
+        .withMessage('Location is required')
+
+        // .isInt() - Must be an integer (whole number)
+        // { min: 1 } - Must be at least 1 (IDs start at 1)
+        // WHY? Location IDs are integers in database
+        .isInt({ min: 1 })
+        .withMessage('Invalid location')
+];
+
+// SECURITY NOTE: Why validate on server even though form validates on client?
+// - Client validation CAN BE BYPASSED (user edits HTML/JS)
+// - Attacker can send requests directly to API (skip frontend entirely)
+// - Server is the LAST LINE OF DEFENSE
+// - NEVER TRUST THE CLIENT!
+
+console.log('✅ Add member validation rules configured');
+
+/* ============================================
+   VALIDATION RULES: EDIT MEMBER
+   Applied to PUT /api/members/:id
+   ============================================ */
+
+const validateEditMember = [
+    // Validate the member ID in the URL
+    // /api/members/123 - we validate the "123"
+    param('id')
+        .isInt({ min: 1 })
+        .withMessage('Invalid member ID'),
+
+    // Same validation as add member, but email uniqueness check
+    // must exclude the current member (they can keep their own email)
+    body('name')
+        .trim()
+        .notEmpty()
+        .withMessage('Name is required')
+        .isLength({ min: 2, max: 100 })
+        .withMessage('Name must be between 2 and 100 characters')
+        .matches(/^[a-zA-Z\s'-]+$/)
+        .withMessage('Name can only contain letters, spaces, hyphens, and apostrophes'),
+
+    body('email')
+        .trim()
+        .notEmpty()
+        .withMessage('Email is required')
+        .isEmail()
+        .withMessage('Invalid email format')
+        .normalizeEmail()
+        .custom(async (email, { req }) => {
+            return new Promise((resolve, reject) => {
+                // Check if email exists for a DIFFERENT member
+                const query = 'SELECT id FROM members WHERE email = ? AND id != ?';
+                db.query(query, [email, req.params.id], (err, results) => {
+                    if (err) reject(new Error('Database error'));
+                    if (results.length > 0) {
+                        reject(new Error('Email already exists'));
+                    }
+                    resolve();
+                });
+            });
+        }),
+
+    body('phone')
+        .trim()
+        .notEmpty()
+        .withMessage('Phone number is required')
+        .matches(/^\(\d{3}\) \d{3}-\d{4}$/)
+        .withMessage('Phone must be in format: (555) 123-4567'),
+
+    body('emergency_contact')
+        .optional()
+        .trim()
+        .matches(/^\(\d{3}\) \d{3}-\d{4}$/)
+        .withMessage('Emergency contact must be in format: (555) 123 4567'),
+
+    body('plan')
+        .notEmpty()
+        .withMessage('Plan is required')
+        .isIn(['Basic', 'Premium', 'Elite'])
+        .withMessage('Plan must be Basic, Premium, or Elite'),
+
+    body('location_id')
+        .notEmpty()
+        .withMessage('Location is required')
+        .isInt({ min: 1 })
+        .withMessage('Invalid location')
+];
+
+console.log('✅ Edit member validation rules configured');
+
+/* ============================================
+   VALIDATION RULES: RECORD PAYMENT
+   Applied to POST /api/members/:id/payments
+   ============================================ */
+
+const validateRecordPayment = [
+    // Validate member ID in URL
+    param('id')
+        .isInt({ min: 1 })
+        .withMessage('Invalid member ID'),
+
+    // AMOUNT VALIDATION
+    body('amount')
+        .notEmpty()
+        .withMessage('Amount is required')
+
+        // .isFloat() - Must be a decimal number
+        // { min: 0.01 } - Must be at least 1 cent
+        // { max: 10000 } - Cap at $10,000 (prevents accidents/attacks)
+        // WHY? Prevents negative amounts, zero amounts, unrealistic amounts
+        .isFloat({ min: 0.01, max: 10000 })
+        .withMessage('Amount must be between $0.01 and $10,000'),
+
+    // DATE VALIDATION
+    body('payment_date')
+        .notEmpty()
+        .withMessage('Payment date is required')
+
+        // isISO8601() - Must be valid date format
+        // Accepts: YYYY-MM-DD, YYYY-MM-DDTHH:MM:SS
+        // WHY? Consistent date formats prevents errors
+        .isISO8601()
+        .withMessage('Invalid date format'),
+
+    // PAYMENT METHOD VALIDATION
+    body('payment_method')
+        .notEmpty()
+        .withMessage('Payment method is required')
+
+        // Whitelist of allowed payment methods
+        .isIn(['Cash', 'Cheque', 'Credit Card', 'Bank Transfer', 'Other'])
+        .withMessage('Invalid payment method'),
+
+    // STATUS VALIDATION
+    body('status')
+        .optional()
+        .isIn(['success', 'pending', 'failed', 'refunded'])
+        .withMessage('Invalid payment status'),
+
+    // NOTES VALIDATION
+    body('notes')
+        .optional()
+        .trim()
+
+        // Limit ntoes to 500 characters
+        // WHY? Prevents database overflow, DoS attacks
+        .isLength({ max: 500 })
+        .withMessage('Notes must be less than 500 characters')
+];
+
+console.log('✅ Record payment validation rules configured');
 
 // ============================================
 // MIDDLEWARE (Functions that run on every request)
@@ -297,7 +614,7 @@ app.get('/api/members/stats', (req, res) => {
    Add new member
    ============================================ */
 
-app.post('/api/members', (req, res) => {
+app.post('/api/members', validateAddMember, handleValidationErrors, (req, res) => {
     const { name, email, location_id, plan } = req.body;
 
     // Validate required fields
@@ -361,7 +678,7 @@ app.post('/api/members', (req, res) => {
    Update member details
    ============================================ */
 
-app.put('/api/members/:id', (req, res) => {
+app.put('/api/members/:id', validateEditMember, handleValidationErrors, (req, res) => {
     const memberId = req.params.id;
     const { name, email, phone, emergency_contact, location_id, plan, notes } = req.body;
 
@@ -886,7 +1203,7 @@ app.get('/api/members/:id/payments', paymentLimiter, (req, res) => {
    Record a new payment
    ============================================ */
 
-app.post('/api/members/:id/payments', (req, res) => {
+app.post('/api/members/:id/payments', paymentLimiter, validateRecordPayment, handleValidationErrors, (req, res) => {
     const memberId = req.params.id;
     const { amount, payment_date, payment_method, status, notes } = req.body;
 
@@ -989,7 +1306,7 @@ app.get('/api/members/:id/payment-method', paymentLimiter, (req, res) => {
    Update payment method on file
    ============================================ */
 
-app.put('/api/members/:id/payment-method', (req, res) => {
+app.put('/api/members/:id/payment-method', paymentLimiter, (req, res) => {
     const memberId = req.params.id;
     const { card_type, last_four, expiry_month, expiry_year, cardholder_name, billing_zip } = req.body;
 
