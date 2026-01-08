@@ -436,6 +436,225 @@ const validateRecordPayment = [
 
 console.log('✅ Record payment validation rules configured');
 
+/* ============================================
+   VALIDATION RULES: FREEZE MEMBER
+   Applied to POST /api/members/:id/freeze
+   ============================================ */
+
+const validateFreezeMember = [
+    // Validate member ID in URL
+    param('id')
+        .isInt({ min: 1 })
+        .withMessage('Invalid member ID'),
+
+    // FREEZE START DATE VALIDATION
+    body('freeze_start_date')
+        .notEmpty()
+        .withMessage('Freeze start date is required')
+
+        // Must be valid ISO date format (YYYY-MM-DD)
+        .isISO8601()
+        .withMessage('Invalid start date format')
+
+        // Custom validation: Must not be in the past
+        // WHY? Can't freeze membership retroactively
+        .custom((value) => {
+            const startDate = new Date(value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Remove time component
+
+            if (startDate < today) {
+                throw new Error('Start date cannot be in the past');
+            }
+
+            return true;
+        }),
+
+    // FREEZE END DATE VALIDATION
+    body('freeze_end_date')
+        .notEmpty()
+        .withMessage('Freeze end date is required')
+
+        .isISO8601()
+        .withMessage('Invalid end date format')
+
+        // Custom validation: End must be after start
+        // WHY? End date before start date makes no logical sense
+        .custom((value, { req }) => {
+            const startDate = new Date(req.body.freeze_start_date);
+            const endDate = new Date(value);
+
+            if (endDate <= startDate) {
+                throw new Error('End date must be after start date');
+            }
+
+            // Optional: Limit freeze duration to 6 months max
+            // WHY? Business rule - prevents indefinite freezes
+            const sixMonthsLater = new Date(startDate);
+            sixMonthsLater.setMonth(sixMonthsLater.getMonth() + 6);
+
+            if (endDate > sixMonthsLater) {
+                throw new Error('Freeze period cannot exceed 6 months');
+            }
+
+            return true;
+        }),
+
+    // FREEZE REASON VALIDATION
+    body('freeze_reason')
+        .notEmpty()
+        .withMessage('Freeze reason is required')
+
+        // Whitelist of allowed freeze reasons
+        // WHY? Standardizes data, prevents free-form text issues
+        .isIn(['Medical', 'Injury', 'Travel', 'Financial', 'Personal', 'Other'])
+        .withMessage('Invalid freeze reason'),
+
+    // NOTES VALIDATION
+    body('notes')
+        .optional()
+        .trim()
+
+        // Limit notes length
+        // WHY? Prevents database overflow, DoS attacks
+        .isLength({ max: 500 })
+        .withMessage('Notes must be less than 500 characters')
+];
+
+console.log('✅ Freeze member validation rules configured');
+
+/* ============================================
+   VALIDATION RULES: UNFREEZE MEMBER
+   Applied to POST /api/members/:id/unfreeze
+   ============================================ */
+
+const validateUnfreezeMember = [
+    // Validate member ID in URL
+    param('id')
+        .isInt({ min: 1 })
+        .withMessage('Invalid member ID')
+
+        // Custom validation: Member must exist and be frozen
+        // WHY? Can't unfreeze someone who isn't frozen
+        .custom(async (memberId) => {
+            return new Promise((resolve, reject) => {
+                const query = 'SELECT status FROM members WHERE id = ?';
+                db.query(query, [memberId], (err, results) => {
+                    if (err) {
+                        reject(new Error('Database error'));
+                    }
+
+                    if (results.length === 0) {
+                        reject(new Error('Member not found'));
+                    }
+
+                    if (results[0].status !== 'frozen') {
+                        reject(new Error('Member is not frozen'));
+                    }
+
+                    resolve();
+                });
+            });
+        })
+];
+
+console.log('✅ Unfreeze member validation rules configured');
+
+/* ============================================
+   VALIDATION RULES: REACTIVATE MEMBER
+   Applied to POST /api/members/:id/reactivate
+   ============================================ */
+
+const validateReactivateMember = [
+    // Validate member ID in URL
+    param('id')
+        .isInt({ min: 1 })
+        .withMessage('Invalid member ID')
+
+        // Custom validation: Member must exist and be cancelled
+        // WHY? Can only reactivate cancelled members
+        .custom(async (memberId) => {
+            return new Promise((resolve, reject) => {
+                const query = 'SELECT status FROM members WHERE id = ?';
+                db.query(query, [memberId], (err, results) => {
+                    if (err) {
+                        reject(new Error('Database error'));
+                    }
+
+                    if (results.length === 0) {
+                        reject(new Error('Member not found'));
+                    }
+
+                    if (results[0].status !== 'cancelled') {
+                        reject(new Error('Member is not cancelled'));
+                    }
+
+                    resolve();
+                });
+            });
+        }),
+
+    // REASON FOR RETURN VALIDATION
+    body('reason')
+        .notEmpty()
+        .withMessage('Reason for return is required')
+
+        // Whitelist of allowed return reasons
+        // Matches dropdown options from the reactivate form
+        .isIn([
+            'Resolved Previous Issue', 
+            'Ready to Resume', 
+            'Financial Situation Improved', 
+            'New Fitness Goals', 
+            'Missed the Gym', 
+            'Special Offer', 
+            'Other'
+        ])
+        .withMessage('Invalid reason for return'),
+
+    // RESTART DATE VALIDATION
+    body('start_date')
+        .notEmpty()
+        .withMessage('Restart date is required')
+
+        .isISO8601()
+        .withMessage('Invalid date format')
+
+        // Custom validation: Must not be in past
+        // WHY? Can't reactivate membership retroactively
+        .custom((value) => {
+            const startDate = new Date(value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (startDate < today) {
+                throw new Error('Restart date cannot be in the past');
+            }
+
+            // Optional: Limit to 30 days in future max
+            // WHY? Prevents scheduling reactivation too far ahead
+            const thirtyDaysLater = new Date(today);
+            thirtyDaysLater.setDate(thirtyDaysLater.getDate() + 30);
+
+            if (startDate > thirtyDaysLater) {
+                throw new Error('Restart date cannot be more than 30 days in the future');
+            }
+
+            return true;
+        }),
+
+    // NOTES VALIDATION
+    body('notes')
+        .optional()
+        .trim()
+
+        // Limit notes length
+        .isLength({ max: 500 })
+        .withMessage('Notes must be less than 500 characters')
+];
+
+console.log('✅ Reactivate member validation rules configured');
+
 // ============================================
 // MIDDLEWARE (Functions that run on every request)
 // ============================================
@@ -822,7 +1041,7 @@ app.delete('/api/members/:id', (req, res) => {
    Freeze a member's membership
    ============================================ */
 
-app.post('/api/members/:id/freeze', (req, res) => {
+app.post('/api/members/:id/freeze', validateFreezeMember, handleValidationErrors, (req, res) => {
     const memberId = req.params.id;
     const { freeze_start_date, freeze_end_date, freeze_reason, notes } = req.body;
 
@@ -927,7 +1146,7 @@ app.post('/api/members/:id/freeze', (req, res) => {
    Unfreeze a member's membership
    ============================================ */
 
-app.post('/api/members/:id/unfreeze', (req, res) => {
+app.post('/api/members/:id/unfreeze', validateUnfreezeMember, handleValidationErrors, (req, res) => {
     const memberId = req.params.id;
 
     console.log(`🔥 Unfreezing member ${memberId}`);
@@ -998,7 +1217,7 @@ app.post('/api/members/:id/unfreeze', (req, res) => {
    Reactivate a cancelled member
    ============================================ */
 
-app.post('/api/members/:id/reactivate', (req, res) => {
+app.post('/api/members/:id/reactivate', validateReactivateMember, handleValidationErrors, (req, res) => {
     const memberId = req.params.id;
     const { reason, start_date, notes } = req.body;
 
