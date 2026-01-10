@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Staff Mangement - GymFlow</title>
+
+        <!-- Font Awesome Icons -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+        <!-- Google Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+        <!-- ============================================
+             MODULAR CSS IMPORTS
+             Shared across all admin pages
+             ============================================ -->
+        <!-- Design tokens (colors, spacing, typography) -->
+        <link rel="stylesheet" href="../css/variables.css">
+
+        <!-- Base styles (resets, body, fundamentals) -->
+        <link rel="stylesheet" href="../css/base.css">
+
+        <!-- Layout (sidebar, topbar, main content structure) -->
+        <link rel="stylesheet" href="../css/layout.css">
+
+        <!-- Reusable components -->
+        <link rel="stylesheet" href="../css/components/buttons.css">
+        <link rel="stylesheet" href="../css/components/cards.css">
+        <link rel="stylesheet" href="../css/components/modals.css">
+        <link rel="stylesheet" href="../css/components/tables.css">
+        <link rel="stylesheet" href="../css/components//slide-panel.css">
+
+        <!-- Page-Specific Styles -->
+        <link rel="stylesheet" href="../css/pages/staff.css">
+    </head>
+    <body>
+
+        <!-- ============================================ 
+             SIDEBAR NAVIGATION
+             Shared across all pages
+             ============================================ -->
+        <aside class="sidebar">
+            <!-- Sidebar Header (Logo + Pin Button) -->
+            <div class="sidebar-header">
+                <div class="sidebar-logo-icon">GF</div>
+                <div class="sidebar-logo-text">GymFlow</div>
+
+                <button class="sidebar-pin-btn" id="sidebarPinBtn" 
+                        title="Pin / Unpin sidebar" 
+                        aria-label="Toggle sidebar pin">
+                    <i class="fa-solid fa-thumbtack"></i>
+                </button>
+            </div>
+
+            <!-- ============================================
+                 NAVIGATION MENU
+                 ============================================ -->
+            <nav class="sidebar-nav">
+                <!-- Dashboard -->
+                <a href="./dashboard.html" class="nav-item">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <!-- Members (Active/Expanded) -->
+                <div class="nav-group">
+                    <a href="#" class="nav-item has-sub" aria-expanded="false">
+                        <i class="fa-solid fa-users"></i>
+                        <span>Members</span>
+                        <i class="fa-solid fa-chevron-down caret"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="./members.html" class="submenu-item" aria-current="page">All Members</a>
+                        <a href="#" class="submenu-item" data-modal="add-member-modal">Add Member</a>
+                        <a href="#" class="submenu-item" data-modal="checkin-modal">Member Check-In</a>
+                    </div>
+                </div>
+
+                <!-- Staff -->
+                <div class="nav-group">
+                    <a href="#" class="nav-item has-sub open" aria-expanded="true">
+                        <i class="fa-solid fa-user-gear"></i>
+                        <span>Staff</span>
+                        <i class="fa-solid fa-chevron-down caret"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="./staff.html" class="submenu-item active">All Staff</a>
+                        <a href="#" class="submenu-item" data-modal="add-staff-modal">Add Staff</a>
+                        <a href="#" class="submenu-item" data-modal="add-trainer-modal">Add Trainer</a>
+                    </div>
+                </div>
+
+                <!-- Inventory -->
+                <div class="nav-group">
+                    <a href="./inventory.html" class="nav-item has-sub" aria-expanded="false">
+                        <i class="fa-solid fa-box"></i>
+                        <span>Inventory</span>
+                        <i class="fa-solid fa-chevron-down caret"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="./inventory.html" class="submenu-item">Stock Overview</a>
+                        <a href="./inventory-reorders.html" class="submenu-item">Reorder Requests</a>
+                        <a href="./inventory-vendors.html" class="submenu-item">Vendors</a>
+                    </div>
+                </div>
+
+                <!-- Locations -->
+                <div class="nav-group">
+                    <a href="./locations.html" class="nav-item has-sub" aria-expanded="false">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <span>Locations</span>
+                        <i class="fa-solid fa-chevron-down caret"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="./locations.html" class="submenu-item">All Branches</a>
+                        <a href="./locations-capacity.html" class="submenu-item">Capacity Overview</a>
+                        <a href="./locations-performance.html" class="submenu-item">Performance Stats</a>
+                    </div>
+                </div>
+
+                <!-- Analytics -->
+                <div class="nav-group">
+                    <a href="./analytics.html" class="nav-item has-sub" aria-expanded="false">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Analytics</span>
+                        <i class="fa-solid fa-chevron-down caret"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="./analytics.html" class="submenu-item">Power BI Dashboard</a>
+                        <a href="./analytics-revenue.html" class="submenu-item">Revenue Trends</a>
+                        <a href="./analytics-retention.html" class="submenu-item">Member Retention</a>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div class="nav-group">
+                    <a href="./settings.html" class="nav-item has-sub" aria-expanded="false">
+                        <i class="fa-solid fa-gear"></i>
+                        <span>Settings</span>
+                        <i class="fa-solid fa-chevron-down caret"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="./settings-profile.html" class="submenu-item">Profile Settings</a>
+                        <a href="./settings-preferences.html" class="submenu-item"> App Preferences</a>
+                        <a href="./settings-security.html" class="submenu-item">Secruity</a>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- ============================================ 
+                 SIDEBAR FOOTER (user Profile + Logout)
+                 ============================================ -->
+            <div class="sidebar-footer">
+                <div class="profile">
+                    <img src="https://i.pravatar.cc/40?img=12" alt="Admin Profile Picture">
+                    <span class="profile-name">Admin</span>
+                </div>
+                <button class="logout-btn" aria-label="Logout">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ============================================ 
+             MAIN CONTENT AREA
+             ============================================ -->
+        <div class="main-content">
+            <!-- ============================================ 
+                TOPBAR
+                ============================================ -->
+            <header class="topbar">
+                <h1>Staff Management</h1>
+                <div class="topbar-actions">
+                    <button class="topbar-icon-btn" aria-label="Notifications">
+                        <i class="fa-regular fa-bell"></i>
+                    </button>
+                    <img src="https://i.pravatar.cc/100?img=12" alt="Admin" class="topbar-profile">
+                </div>
+            </header>
+
+            <!-- ============================================ 
+                 STAFF PAGE CONTENT
+                 ============================================ -->
+            <section class="staff-page">
+
+                <!-- ============================================ 
+                     TOOLBAR: (Filters + Search + Actions)
+                     ============================================ -->
+                <div class="staff-toolbar">
+                    <!-- Filter Dropdown -->
+                    <div class="staff-filters">
+
+                        <!-- Filter by Role -->
+                        <select id="filterRote" aria-label="Filter by role">
+                            <option value="all">All Roles</option>
+                            <option value="Front Desk CSR">Front Desk CSR</option>
+                            <option value="Sales">Sales</option>
+                            <option value="Operations">Operations</option>
+                            <option value="Manager">Manager</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+
+                        <!-- Filter by Location -->
+                        <select id="filterLocation" aria-label="Filter by location">
+                            <option value="all">All Locations</option>
+                            <!-- Options populate by Javascript from API -->
+                        </select>
+
+                        <!-- Filter by Status -->
+                        <select id="filterStatus" aria-label="Filter by status">
+                            <option value="all">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+
+
+                    </div>
+
+                    <!-- Right Side: Search + Add Button -->
+                    <div class="staff-actions">
+
+                        <!-- Search Bar -->
+                        <div class="staff-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input
+                                type="text"
+                                id="searchStaff"
+                                placeholder="Search by name or email..."
+                                aria-label="Search staff">
+                        </div>
+
+                        <!-- Add Staff Button -->
+                        <button class="add-btn" data-modal="add-staff-modal" aria-label="Add new staff member">
+                            <i class="fa-solid fa-plus"></i>
+                            Add Staff
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ============================================ 
+                     KPI CARDS (Key Performance Indicators)
+                     Shows quick stats at a glance
+                     ============================================ -->
+                <div class="staff-kpi-row">
+                    <div class="kpi-card small">
+                        <p class="kpi-label">Total Staff</p>
+                        <p class="kpi-value" data-stat="totalStaff">---</p>
+                        <p class="kpi-sub">All employees</p>
+                    </div>
+                    <div class="kpi-card small">
+                        <p class="kpi-label">New This Month</p>
+                        <p class="kpi-value" data-stat="newThisMonth">---</p>
+                        <p class="kpi-sub">Compared to last month</p>
+                    </div>
+                    <div class="kpi-card small">
+                        <p class="kpi-label">Active Staff</p>
+                        <p class="kpi-value" data-stat="activeStaff">---</p>
+                        <p class="kpi-sub">Currently employed</p>
+                    </div>
+                    <div class="kpi-card small">
+                        <p class="kpi-label">By Role</p>
+                        <p class="kpi-value" data-stat="cancelledStaff">---</p>
+                        <p class="kpi-sub">Role breakdown</p>
+                    </div>
+                </div>
+
+                <!-- ============================================ 
+                     STAFF TABLE
+                     ============================================ -->
+                <div class="table-container">
+                    <table class="data-table" id="staffTable">
+
+                        <!-- Table Header -->
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-sort="name">
+                                    Name
+                                    <i class="fa-solid fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="email">
+                                    Email
+                                    <i class="fa-solid fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="email">
+                                    Phone
+                                    <i class="fa-solid fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="email">
+                                    Role
+                                    <i class="fa-solid fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="email">
+                                    Location
+                                    <i class="fa-solid fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="email">
+                                    Hire Date
+                                    <i class="fa-solid fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="email">
+                                    Status
+                                    <i class="fa-solid fa-sort"></i>
+                                </th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <!-- Table Body (Populated by JavaScript) -->
+                        <tbody id="staffTableBody">
+                            <!-- Rows inserted here by staff.js -->
+                            <tr>
+                                <td colspan="8" class="table-loading">
+                                    <i class="fa-solid fa-spinner fa-spin"></i>
+                                    <p>Loading Staff...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- ============================================ 
+             MODALS
+             ============================================ -->
+        
+        <!-- Add Member Modal -->
+        <div class="modal-overlay" id="add-member-modal" aria-hidden="true">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2>Add New Member</h2>
+                    <button class="modal-close" data-close-modal aria-label="Close modal">&times;</button>
+                </div>
+
+                <form id="addMemberForm">
+                    <div class="modal-body">
+                        <div class="modal-grid">
+                            <div class="field">
+                                <label for="memberName">Full Name *</label>
+                                <input type="text" id="memberName" name="name" required placeholder="John Doe">
+                            </div>
+                            <div class="field">
+                                <label for="memberEmail">Email *</label>
+                                <input type="email" id="memberEmail" name="email" required placeholder="john@example.com">
+                            </div>
+                            <div class="field">
+                                <label for="memberLocation">Location *</label>
+                                <select id="memberLocation" name="location_id" required>
+                                    <!-- Options populated by JavaScript -->
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="memberPlan">Membership Plan *</label>
+                                <select id="memberPlan" name="plan" required>
+                                    <option value="Basic">Basic</option>
+                                    <option value="Premium">Premium</option>
+                                    <option value="Elite">Elite</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="memberNotes">Notes (Optional)</label>
+                            <textarea id="memberNotes" name="notes" rows="3" placeholder="Goals, referral source, special requests..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn ghost" data-close-modal>Cancel</button>
+                        <button type="submit" class="btn primary">Save Member</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Member Check-In Modal -->
+        <div class="modal-overlay" id="checkin-modal" aria-hidden="true">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2>Member Check-In</h2>
+                    <button class="modal-close" data-close-modal aria-label="Close modal">&times;</button>
+                </div>
+
+                <form id="checkinForm">
+                    <div class="modal-body">
+                        <div class="field">
+                            <label for="checkinSearch">Search Member</label>
+                            <input type="text" id="checkinSearch" placeholder="Type name, email, or member ID">
+                            <!-- Hidden field to store selected member ID -->
+                            <input type="hidden" id="checkInMemberId" name="member_id">
+                            <!-- Hidden field to store member's home location -->
+                            <input type="hidden" id="checkInMemberLocationId">
+                        </div>
+                        <div class="field">
+                            <label for="checkinLocation">Location</label>
+                            <select id="checkinLocation" name="location_id">
+                                <!-- Options populated by JavaScript -->
+                            </select>
+                            <!-- Warning message (hidden by default) -->
+                            <div id="locationWarning" class="field-warning" style="display: none;">
+                                <i class="fa-solid fa-exclamation-triangle"></i>
+                                <span>This is not the member's home location</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn ghost" data-close-modal>Close</button>
+                        <button type="submit" class="btn primary" id="confirmCheckInBtn">Confirm Check-In</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Add Trainer Modal -->
+        <div class="modal-overlay" id="add-trainer-modal" role="dialog" aria-labelledby="addTrainer Title" aria-hidden="true">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2 id="addTrainerTitle">Add Trainer</h2>
+                    <button class="modal-close" data-close-modal aria-label="Close modal">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="addTrainerForm">
+                        <div class="modal-grid">
+                            <div class="field">
+                                <label for="trainerName">Full Name</label>
+                                <input type="text"
+                                       id="trainerName"
+                                       name="name"
+                                       placeholder="Jane Doe"
+                                       required>
+                            </div>
+                            <div class="field">
+                                <label for="trainerEmail">Email</label>
+                                <input type="email"
+                                       id="trainerEmail"
+                                       name="email"
+                                       placeholder="jame@gymflow.com"
+                                       required>
+                            </div>
+                            <div class="field">
+                                <label for="trainerLocation">Location</label>
+                                <select id="trainerLocation" name="location" required>
+                                    <option value="">Select location</option>
+                                    <option value="downtown">Downtown</option>
+                                    <option value="midtown">Midtown</option>
+                                    <option value="eastside">Eastside</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="trainerSpecialty">Specialty</label>
+                                <select id="trainerSpecialty" name="specialty" required>
+                                    <option value="">Select specialty</option>
+                                    <option value="strength">Strength</option>
+                                    <option value="hypertrophy">Hypertrophy</option>
+                                    <option value="weightloss">Weight Loss</option>
+                                    <option value="conditioning">Conditioning</option>
+                                    <option value="yoga">Yoga / Mobility</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="trainerRate">Hourly Rate</label>
+                                <input type="number" 
+                                       id="trainerRate" 
+                                       name="rate"
+                                       placeholder="e.g. 65" 
+                                       min="0" 
+                                       step="5">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="trainerNotes">Notes</label>
+                            <textarea id="trainerNotes"
+                                      name="notes"
+                                      rows="3"
+                                      placeholder="Certifications, preferences, languages..."></textarea>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn ghost" data-close-modal type="button">Cancel</button>
+                    <button class="btn primary" type="submit" form="addTrainerForm">Save Trainer</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Staff Modal -->
+        <div class="modal-overlay" id="add-staff-modal" role="dialog" aria-labelledby="addStaffTitle" aria-hidden="true">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2 id="addStaffTitle">Add Staff Member</h2>
+                    <button class="modal-close" data-close-modal aria-label="Close modal">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="addStaffForm">
+                        <div class="modal-grid">
+                            <div class="field">
+                                <label for="staffName">Full Name</label>
+                                <input type="text" 
+                                       id="staffName" 
+                                       name="name"
+                                       placeholder="e.g. Sarah Lee" 
+                                       required>
+                            </div>
+                            <div class="field">
+                                <label for="staffEmail">Email (Login)</label>
+                                <input type="email" 
+                                       id="staffEmail" 
+                                       name="email"
+                                       placeholder="staff@gymflowhq.com" 
+                                       required>
+                            </div>
+                            <div class="field">
+                                <label for="staffRole">Primary Role</label>
+                                <select id="staffRole" name="role" required>
+                                    <option value="">Select role</option>
+                                    <option value="front-desk">Front Desk / CSR</option>
+                                    <option value="sales">Sales</option>
+                                    <option value="operations">Operations</option>
+                                    <option value="manager">Manager</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="staffLocation">Home Location</label>
+                                <select id="staffLocation" name="location" required>
+                                    <option value="">Select location</option>
+                                    <option value="downtown">Downtown</option>
+                                    <option value="midtown">Midtown</option>
+                                    <option value="eastside">Eastside</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="staffEmployment">Employment Type</label>
+                                <select id="staffEmployment" name="employment" required>
+                                    <option value="">Select type</option>
+                                    <option value="full-time">Full-time</option>
+                                    <option value="part-time">Part-time</option>
+                                    <option value="contract">Contract</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="staffAccess">Access Level</label>
+                                <select id="staffAccess" name="access" required>
+                                    <option value="">Select level</option>
+                                    <option value="standard">Standard</option>
+                                    <option value="manager">Manager</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="staffNotes">Notes</label>
+                            <textarea id="staffNotes" 
+                                      name="notes"
+                                      rows="3" 
+                                      placeholder="Certifications, languages, special permissions, etc."></textarea>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn ghost" data-close-modal type="button">Cancel</button>
+                    <button class="btn primary" type="submit" form="addStaffForm">Create Staff Account</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide-Out Panel: Staff Details -->
+        <div class="slide-panel-overlay" id="staffDetailPanel">
+            <div class="slide-panel">
+
+                <!-- Header: Staff name, email, close button -->
+                <div class="slide-panel-header">
+                    <div class="slide-panel-info">
+                        <div class="slide-panel-label">Staff Profile</div>
+                        <div class="slide-panel-name" id="panelStaffName">---</div>
+                        <div class="slide-panel-id" id="panelStaffEmail">---</div>
+                    </div>
+                    <button class="slide-panel-close" id="closeStaffPanel" aria-label="Close panel">
+                        &times;
+                    </button>
+                </div>
+
+                <!-- Body: Staff details -->
+                <div class="slide-panel-body">
+
+                    <!-- VIEW MODE (Read-Only) -->
+                    <div class="slide-panel-view">
+
+                        <!-- Detail Rows -->
+                        <div class="slide-panel-row">
+                            <span class="slide-panel-key">Phone</span>
+                            <span class="slide-panel-value" id="panelStaffPhone">---</span>
+                        </div>
+
+                        <div class="slide-panel-row">
+                            <span class="slide-panel-key">Role</span>
+                            <span class="slide-panel-value" id="panelStaffRole">---</span>
+                        </div>
+
+                        <div class="slide-panel-row">
+                            <span class="slide-panel-key">Location</span>
+                            <span class="slide-panel-value" id="panelStaffLocation">---</span>
+                        </div>
+
+                        <div class="slide-panel-row">
+                            <span class="slide-panel-key">Hire Date</span>
+                            <span class="slide-panel-value" id="panelStaffHireDate">---</span>
+                        </div>
+
+                        <div class="slide-panel-row">
+                            <span class="slide-panel-key">Status</span>
+                            <span class="slide-panel-value" id="panelStaffStatus">
+                                <span class="pill check">---</span>
+                            </span>
+                        </div>
+
+                        <div class="slide-panel-row">
+                            <span class="slide-panel-key">Employment Duration</span>
+                            <span class="slide-panel-value" id="panelStaffDuration">---</span>
+                        </div>
+
+                    </div>
+                    <!-- End of slide-panel-view -->
+                    
+                    <!-- EDIT MODE (Form) -->
+                    <div class="slide-panel-edit">
+
+                        <!-- Error/Success Message -->
+                        <div id="editErrorMessage" class="slide-panel-error" style="display: none;"></div>
+                        <div id="editSuccessMessage" class="slide-panel-success" style="display: none;"></div>
+
+                        <form id="editStaffForm" class="slide-panel-form">
+
+                            <!-- Staff ID (Hidden) -->
+                            <input type="hidden" id="editStaffId">
+
+                            <!-- Name -->
+                            <div class="slide-panel-field required">
+                                <label for="editName">Full Name</label>
+                                <input type="text" id="editName" name="name" required>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="slide-panel-field required">
+                                <label for="editEmail">Email Address</label>
+                                <input type="email" id="editEmail" name="email" required>
+                            </div>
+
+                            <!-- Phone -->
+                            <div class="slide-panel-field">
+                                <label for="editPhone">Phone Number</label>
+                                <input type="tel" id="editPhone" name="phone" placeholder="(555) 123-4567">
+                            </div>
+
+                            <!-- Role -->
+                            <div class="slide-panel-field required">
+                                <label for="editRole">Role</label>
+                                <select id="editRole" name="role" required>
+                                    <option value="">Select role...</option>
+                                    <option value="Front Desk CSR">Front Desk CSR</option>
+                                    <option value="Sales">Sales</option>
+                                    <option value="Operations">Operations</option>
+                                    <option value="Manager">Manager</option>
+                                    <option value="Admin">Admin</option>
+                                </select>
+                            </div>
+
+                            <!-- Location -->
+                            <div class="slide-panel-field required">
+                                <label for="editLocation">Location</label>
+                                <select id="editLocation" name="location_id" required>
+                                    <!-- Options populated by JavaScript -->
+                                </select>
+                            </div>
+
+                            <!-- Hire Date -->
+                            <div class="slide-panel-field required">
+                                <label for="editHireDate">Hire Date</label>
+                                <input type="date" id="editHireDate" name="hire_date" required>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="slide-panel-field required">
+                                <label for="editStatus">Status</label>
+                                <select id="editStatus" name="status" required>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+
+                        </form>
+
+                    </div>
+                    <!-- End of slide-panel-edit -->
+                    
+                    <!-- DELETE MODE (Confirmation) -->
+                    <div class="slide-panel-delete">
+
+                        <!-- Error/Success Message -->
+                        <div id="deleteErrorMessage" class="slide-panel-error" style="display: none;"></div>
+                        <div id="deleteSuccessMessage" class="slide-panel-success" style="display: none;"></div>
+
+                        <!-- Warning Banner -->
+                        <div class="delete-warning-banner">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <div>
+                                <strong>Warning: This action will remove the staff member</strong>
+                                <p>The staff member will be permanently deleted from the system. This action cannot be undone.</p>
+                            </div>
+                        </div>
+
+                        <!-- Staff Info Being Deleted -->
+                        <div class="delete-member-info">
+                            <div class="delete-info-label">Removing Staff Member:</div>
+                            <div class="delete-info-name" id="deleteStaffName">---</div>
+                            <div class="delete-info-id" id="deleteStaffEmail">---</div>
+                            <div class="delete-info-details" id="deleteStaffDetails">---</div>
+                        </div>
+
+                        <form id="deleteStaffForm" class="slide-panel-form" novalidate>
+
+                           <!-- Reason for Deletion -->
+                            <div class="slide-panel-field required">
+                                <label for="deleteReason">Reason for Removal</label>
+                                <select id="deleteReason" name="reason" required>
+                                    <option value="">Select reason...</option>
+                                    <option value="Resignation">Resignation</option>
+                                    <option value="Termination">Termination</option>
+                                    <option value="Retirement">Retirement</option>
+                                    <option value="Relocation">Relocation</option>
+                                    <option value="Performance Issues">Performance Issues</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <!-- Optional Notes -->
+                            <div class="slide-panel-field">
+                                <label for="deleteNotes">Additional Notes (Optional)</label>
+                                <textarea id="deleteNotes" name="notes" rows="3" placeholder="Any additional context about this removal..."></textarea>
+                            </div>
+
+                            <!-- Admin Authentication -->
+                            <div class="delete-auth-section">
+                                <div class="delete-auth-header">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                    <span>Admin Authentication Required</span>
+                                </div>
+
+                                <div class="slide-panel-field required">
+                                    <label for="deleteAdminUsername">Admin Username</label>
+                                    <input type="text" id="deleteAdminUsername" name="admin_username" value="admin" required autocomplete="username">
+                                </div>
+
+                                <div class="slide-panel-field required">
+                                    <label for="deleteAdminPassword">Admin Password</label>
+                                    <input type="password" id="deleteAdminPassword" name="admin_password" required autocomplete="current-password" placeholder="Enter your admin password">
+                                </div>
+                            </div>
+
+                            <!-- Confirmation Checkbox -->
+                            <div class="delete-confirmation">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="deleteConfirmCheckbox" required>
+                                    <span>I understand this will permanently delete the staff member from the system</span>
+                                </label>
+                            </div>
+
+                        </form>
+
+                    </div>
+                    <!-- End of slide-panel-delete -->
+                    
+                    </div>
+                <!-- End of slide-panel-body -->
+
+                <!-- Footer: Action buttons -->
+                <div class="slide-panel-footer" id="panelFooter">
+
+                    <!-- VIEW MODE BUTTONS -->
+                    <div id="viewModeButtons">
+                        <button class="btn primary" id="editStaffBtn">
+                            <i class="fa-solid fa-pen"></i>
+                            Edit
+                        </button>
+
+                        <button class="btn ghost danger" id="deleteStaffBtn">
+                            <i class="fa-solid fa-trash"></i>
+                            Delete
+                        </button>
+                     </div>
+
+                    <!-- EDIT MODE BUTTONS -->
+                    <div id="editModeButtons" style="display: none;">
+                        <button type="button" class="btn ghost cancel" id="cancelEditBtn">
+                            <i class="fa-solid fa-times"></i>
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn primary" id="saveEditBtn">
+                            <i class="fa-solid fa-check"></i>
+                            Save Changes
+                        </button>
+                    </div>
+
+                    <!-- DELETE MODE BUTTONS -->
+                    <div id="deleteModeButtons" style="display: none;">
+                        <button type="button" class="btn ghost cancel" id="cancelDeleteBtn">
+                            <i class="fa-solid fa-times"></i>
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn danger" id="confirmDeleteBtn" disabled>
+                            <i class="fa-solid fa-trash"></i>
+                            Confirm Delete
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ============================================ 
+             JAVASCRIPT FILES
+             ============================================ -->
+        <!-- Shared JS: Used by all admin pages -->
+        <script src="../js/main.js"></script>
+        <script src="../js/sidebar.js"></script>
+        <script src="../js/modals.js"></script>
+
+        <!-- Staff-specific JS: Fetch and display staff data -->
+        <script src="../js/pages/staff.js"></script>
+
+    </body>
+</html>

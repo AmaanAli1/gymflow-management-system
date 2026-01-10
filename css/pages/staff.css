@@ -1,0 +1,352 @@
+/* ============================================
+   STAFF PAGE STYLES
+   Staff list, filters, search, KPIs
+   ============================================ */
+
+
+/* ============================================
+   PAGE CONTAINER
+   ============================================ */
+
+.staff-page {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-xl);
+    padding: var(--space-3xl) var(--space-4xl);
+    padding-bottom: var(--space-5xl);
+}
+
+/* ============================================
+   TOOLBAR (Filters + Search + Actions)
+   ============================================ */
+
+.staff-toolbar {
+    /* Layout */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--gap-xl);
+    flex-wrap: wrap;    /* Wraps on smaller screens */
+}
+
+/* Filter Dropdowns Group */
+.staff-filters {
+    /* Layout */
+    display: flex;
+    gap: var(--gap-md);
+    flex-wrap: wrap;
+}
+
+.staff-filters select {
+    /* Layout */
+    min-width: 150px;
+    padding: var(--space-md) var(--space-lg);
+
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border: 1px solid var(--color-border-base);
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+
+    /* Typography */
+    font-size: 0.85rem;
+
+    /* Animation */
+    transition: all var(--transition-base);
+    cursor: pointer;
+}
+
+.staff-filters select:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.staff-filters select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(230, 0, 48, 0.1);
+}
+
+/* Action Group (Search + Add Button) */
+.staff-actions {
+    /* Layout */
+    display: flex;
+    gap: var(--gap-md);
+    align-items: center;
+}
+
+/* Search Bar */
+.staff-search {
+    /* Layout */
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.staff-search i {
+    /* Icon positioning */
+    position: absolute;
+    left: var(--space-lg);
+    color: var(--color-text-muted);
+    pointer-events: none;   /* Allows clicking through icon to input */
+}
+
+
+.staff-search input {
+    /* Layout */
+    padding: var(--space-md) var(--space-lg) var(--space-md) 40px;
+    min-width: 300px;
+
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border: 1px solid var(--color-border-base);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+
+    /* Typography */
+    font-size: 0.85rem;
+
+    /* Animation */
+    transition: all var(--transition-base);
+}
+
+.staff-search input::placeholder {
+    color: var(--color-text-dim);
+}
+
+.staff-search input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(230, 0, 48, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* ============================================
+   STAFF MINI KPIS
+   Quick stats row above table
+   ============================================ */
+
+.staff-kpi-row {
+    /* Layout */
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--gap-xl);
+}
+
+/* WHY grid-template-columns: repeat(4, minmax(0, 1fr))?
+   
+   repeat(4, ...) = 4 columns
+   minmax(0, 1fr) = Each column takes equal space (1 fraction)
+   
+   The minmax(0, ...) prevents overflow issues with long text.
+   Without the 0, grid items won't shrink below their content size.
+   
+   This creates 4 perfectly equal columns that resize together! */
+
+/* Small KPI Card Variant */
+.kpi-card.small {
+    /* Layout */
+    padding: var(--space-lg);
+
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border-radius: 12px;
+    border: 1px solid #232323;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+
+    /* Animation */
+    transition: all var(--transition-base);
+}
+
+.kpi-card.small:hover {
+    /* Hover glow effect */
+    border-color: rgba(230, 0, 48, 0.3);
+    box-shadow: 0 0 20px rgba(230, 0, 48, 0.15);
+    transform: translateY(-2px);
+}
+
+
+.kpi-card.small .kpi-label {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.kpi-card.small .kpi-value {
+    font-size: 1.5rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin-bottom: 2px;
+}
+
+.kpi-card.small .kpi-sub {
+    font-size: 0.7rem;
+    color: var(--color-text-dim);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+/* Tablet (1024px and below) */
+@media (max-width: 1024px) {
+    .staff-toolbar {
+        /* Stack toolbar vertically on tablets */
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .staff-filters, 
+    .staff-actions {
+        /* Make filters and actions full width */
+        width: 100%;
+    }
+
+    .staff-search input {
+        /* Search bar takes full width */
+        width: 100%;
+        min-width: 0;
+    }
+
+    .staff-kpi-row {
+        /* 2 columns on tablets */
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* Mobile (768px and below) */
+@media (max-width: 768px) {
+    .staff-page {
+        /* Reduce padding on mobile */
+        padding: var(--space-2xl) var(--space-xl);
+    }
+
+    .staff-kpi-row {
+        /* Single column on mobile */
+        grid-template-columns: 1fr;
+    }
+
+    .staff-filters {
+        /* Stack filters vertically on mobile */
+        flex-direction: column;
+    }
+
+    .staff-filters select {
+        /* Full width dropdowns on mobile */
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* WHY responsive breakpoints?
+   
+   Your staff page needs to work on:
+   - Desktop (1920px+) - 4 columns
+   - Laptop (1366px) - 4 columns
+   - Tablet (768px) - 2 columns
+   - Mobile (375px) - 1 column
+   
+   Without responsive design, mobile users would see:
+   - Tiny unreadable KPI cards
+   - Overlapping filters
+   - Horizontal scrolling (bad UX!)
+   
+   These breakpoints ensure your page looks great everywhere. */
+
+/* ============================================
+   PAGINATION (Future Enhancement)
+   ============================================ */
+
+.staff-pagination {
+    /* Layout */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-xl);
+
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border-radius: 14px;
+    border: 1px solid #232323;
+}
+
+.pagination-info {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: var(--gap-sm);
+}
+
+.pagination-btn {
+    padding: var(--space-sm) var(--space-lg);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-border-base);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-text-primary);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.pagination-btn.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+/* ============================================
+   LOADING STATES (Handled by tables.css)
+   ============================================ */
+
+/* The spinner and loading states are defined in:
+   - components/tables.css (.table-loading)
+   
+   No need to duplicate here! This is why modular CSS rocks.
+   Each component handles its own states. */
+
+/* ============================================
+   NOTES FOR FUTURE DEVELOPMENT
+   ============================================
+   
+   FEATURES TO ADD LATER:
+   
+   1. Staff schedule view:
+      - Weekly calendar grid
+      - Drag-and-drop shifts
+      - Conflict detection
+   
+   2. Performance metrics:
+      - Sales numbers (for sales staff)
+      - Customer satisfaction scores
+      - Attendance tracking
+   
+   3. Certification tracking:
+      - Expiration warnings
+      - Renewal reminders
+      - Required training alerts
+   
+   4. Bulk actions:
+      - Select multiple staff
+      - Bulk status updates
+      - Export to CSV
+      
+   5. Advanced filters:
+      - Hire date range
+      - Tenure (< 6 months, 1+ year, etc.)
+      - Role + Location combination
+      
+   ============================================ */
