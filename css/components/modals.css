@@ -321,3 +321,383 @@
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
 }
+
+/* ========================================
+   CHECK-IN SEARCH AUTOCOMPLETE
+   Universal dropdown for check-in modal member search
+   ======================================== */
+
+.search-results-dropdown {
+    /* Positioning */
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+
+    /* Sizing */
+    margin-top: 4px;
+    max-height: 300px;
+
+    /* Layout */
+    overflow-y: auto;
+    display: none;  /* Hidden by default, shown via JavaScript */
+
+    /* Styling */
+    background-color: var(--color-bg-sidebar);
+    border: 1px solid var(--color-bg-input);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.search-result-item {
+    /* Sizing */
+    padding: 12px 16px;
+
+    /* Styling */
+    border-bottom: 1px solid var(--color-bg-input);
+    cursor: pointer;
+
+    /* Animation */
+    transition: background 0.2s ease;
+}
+
+.search-result-item:hover {
+    /* Styling */
+    background: rgba(var(--color-primary-rgb), 0.1);
+}
+
+.search-result-item:last-child {
+    /* Styling */
+    border-bottom: none;
+}
+
+.search-result-name {
+    /* Sizing */
+    font-size: 0.9rem;
+
+    /* Styling */
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.search-result-details {
+    /* Sizing */
+    font-size: 0.75rem;
+    margin-top: 4px;
+
+    /* Styling */
+    color: var(--color-text-muted);
+}
+
+.search-no-results {
+    /* Sizing */
+    padding: 16px;
+    font-size: 0.85rem;
+
+    /* Layout */
+    text-align: center;
+
+    /* Styling */
+    color: var(--color-text-muted);
+}
+
+/* ========================================
+   CHECK-IN NOTIFICATION CARDS
+   Universal notifications for member check-ins (all pages)
+   ======================================== */
+
+.check-in-notifications {
+    /* Positioning */
+    position: fixed;
+    bottom: 20px;  /* Below header */
+    right: 20px;
+    z-index: 10000; /* Above everything */
+
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    /* Styling */
+    pointer-events: none;   /* Don't block clicks on page */
+}
+
+.check-in-notification {
+    /* Sizing */
+    min-width: 300px;
+    max-width: 350px;
+    padding: 16px 20px;
+
+    /* Styling */
+    background: var(--color-bg-card);
+    border-radius: 12px;
+    border-left: 4px solid var(--color-primary);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    pointer-events: auto;   /* Re-enable for this element */
+
+    /* Animation */
+    animation: slideInRight 0.3s ease-out;
+}
+
+/* Success variant (green border) */
+.check-in-notification.success {
+    /* Styling */
+    border-left-color: var(--color-success);
+}
+
+/* Notification Header */
+.notification-header {
+    /* Sizing */
+    margin-bottom: 12px;
+    
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notification-icon {
+    /* Sizing */
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+    
+    /* Layout */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    
+    /* Styling */
+    border-radius: 50%;
+    background: var(--color-success);
+    color: white;
+}
+
+.notification-title {
+    /* Sizing */
+    font-size: 14px;
+    
+    /* Styling */
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+/* Notification Body */
+.notification-body {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.notification-member {
+    /* Sizing */
+    font-size: 16px;
+    
+    /* Styling */
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.notification-details {
+    /* Sizing */
+    font-size: 13px;
+    
+    /* Layout */
+    display: flex;
+    gap: 16px;
+    
+    /* Styling */
+    color: var(--color-text-muted);
+}
+
+.notification-time,
+.notification-location {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.notification-time i,
+.notification-location i {
+    /* Sizing */
+    font-size: 12px;
+    
+    /* Styling */
+    color: var(--color-success);
+}
+
+/* Fade out state (triggered by JavaScript) */
+.check-in-notification.fade-out {
+    /* Animation */
+    animation: fadeOut 0.5s ease-out forwards;
+}
+
+/* ========================================
+   NOTIFICATION ANIMATIONS
+   ======================================== */
+
+@keyframes slideInRight {
+    from {
+        /* Positioning */
+        transform: translateX(400px);
+        
+        /* Styling */
+        opacity: 0;
+    }
+    to {
+        /* Positioning */
+        transform: translateX(0);
+        
+        /* Styling */
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        /* Positioning */
+        transform: translateX(0);
+        
+        /* Styling */
+        opacity: 1;
+    }
+    to {
+        /* Positioning */
+        transform: translateX(100px);
+        
+        /* Styling */
+        opacity: 0;
+    }
+}
+
+/* ========================================
+   RESPONSIVE (Mobile)
+   ======================================== */
+
+@media (max-width: 768px) {
+    .check-in-notifications {
+        /* Positioning */
+        right: 10px;
+        left: 10px;
+        top: 70px;
+    }
+    
+    .check-in-notification {
+        /* Sizing */
+        min-width: auto;
+        max-width: none;
+    }
+}
+
+/* ========================================
+   TOAST NOTIFICATIONS (Errors, Warnings)
+   ======================================== */
+
+.toast-notification {
+    /* Positioning */
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    z-index: 10001;
+
+    /* Sizing */
+    min-width: 300px;
+    max-width: 500px;
+    padding: 14px 18px;
+
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    /* Styling */
+    background: var(--color-bg-card);
+    border-radius: var(--radius-lg);
+    border-left: 4px solid var(--color-primary);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+    /* Animation */
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.toast-notification.show {
+    /* Positioning */
+    transform: translateX(-50%) translateY(0);
+
+    /* Styling */
+    opacity: 1;
+}
+
+.toast-notification.error {
+    /* Styling */
+    border-left-color: #ff4444;
+}
+
+.toast-notification-info {
+    /* Styling */
+    border-left-color: var(--color-primary);
+}
+
+.toast-icon {
+    /* Sizing */
+    font-size: 20px;
+
+    /* Styling */
+    color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+.toast-notification.error .toast-icon {
+    /* Styling */
+    color: #ff4444;
+}
+
+.toast-message {
+    /* Sizing */
+    font-size: 0.9rem;
+
+    /* Styling */
+    color: var(--color-text-primary);
+    flex: 1;
+}
+
+/* ========================================
+   FIELD WARNING (Location Mismatch Alert)
+   ======================================== */
+
+.field-warning {
+    /* Sizing */
+    font-size: 0.75rem;
+    margin-top: 6px;
+    padding: 8px 10px;
+    
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    /* Styling */
+    color: #f39c12;
+    background: rgba(243, 156, 18, 0.1);
+    border-left: 3px solid #f39c12;
+    border-radius: var(--radius-sm);
+}
+
+.field-warning i {
+    /* Sizing */
+    font-size: 0.85rem;
+    
+    /* Styling */
+    flex-shrink: 0;
+}
+
+.field-warning span {
+    /* Styling */
+    flex: 1;
+}

@@ -120,6 +120,24 @@ const paymentLimiter = rateLimit({
 // - Prevents accidental duplicate charges
 // - Normal user makes 1-2 payments per session max
 
+// CHECK-IN RATE LIMITER
+// Prevents spam check-ins from the same IP
+const checkInLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,   // 15 minutes
+    max: 50,    // 50 check-ins per 15 minutes (generous for front desk staff)
+    message: {
+        error: 'Too many check-in attempts. Please wait before trying again.', 
+        retryAfter: '15 minutes'
+    }, 
+    standardHeaders: true, 
+    legacyHeaders: false,
+});
+
+// WHY 50 check-ins per 15 minutes?
+// - Front desk staff might check in many members quickly
+// - 50 / 15 = ~3 check-ins per minute (reasonable for busy times)
+// - Still prevents automated abuse (bots checking in thousands)
+
 console.log('✅ Rate limiting configured');
 
 /* ============================================
@@ -223,14 +241,14 @@ const validateAddMember = [
                 const query = 'SELECT id FROM members WHERE email = ?';
                 db.query(query, [email], (err, results) => {
                     if (err) {
-                        reject(new Error('Database error'));
+                        return reject(new Error('Database error'));
                     }
                     if (results.length > 0) {
                         // Email exists - reject!
-                        reject(new Error('Email already exists'));
+                        return reject(new Error('Email already exists'));
                     }
                     // Email is unique - accept!
-                    resolve();
+                    return resolve();
                 });
             });
         }),
@@ -339,9 +357,9 @@ const validateEditMember = [
                 db.query(query, [email, req.params.id], (err, results) => {
                     if (err) reject(new Error('Database error'));
                     if (results.length > 0) {
-                        reject(new Error('Email already exists'));
+                        return reject(new Error('Email already exists'));
                     }
-                    resolve();
+                    return resolve();
                 });
             });
         }),
@@ -541,18 +559,18 @@ const validateUnfreezeMember = [
                 const query = 'SELECT status FROM members WHERE id = ?';
                 db.query(query, [memberId], (err, results) => {
                     if (err) {
-                        reject(new Error('Database error'));
+                        return reject(new Error('Database error'));
                     }
 
                     if (results.length === 0) {
-                        reject(new Error('Member not found'));
+                        return reject(new Error('Member not found'));
                     }
 
                     if (results[0].status !== 'frozen') {
-                        reject(new Error('Member is not frozen'));
+                        return reject(new Error('Member is not frozen'));
                     }
 
-                    resolve();
+                    return resolve();
                 });
             });
         })
@@ -578,18 +596,18 @@ const validateReactivateMember = [
                 const query = 'SELECT status FROM members WHERE id = ?';
                 db.query(query, [memberId], (err, results) => {
                     if (err) {
-                        reject(new Error('Database error'));
+                        return reject(new Error('Database error'));
                     }
 
                     if (results.length === 0) {
-                        reject(new Error('Member not found'));
+                        return reject(new Error('Member not found'));
                     }
 
                     if (results[0].status !== 'cancelled') {
-                        reject(new Error('Member is not cancelled'));
+                        return reject(new Error('Member is not cancelled'));
                     }
 
-                    resolve();
+                    return resolve();
                 });
             });
         }),
@@ -654,6 +672,121 @@ const validateReactivateMember = [
 ];
 
 console.log('✅ Reactivate member validation rules configured');
+
+/* ============================================
+   VALIDATION RULES: MEMBER CHECK-IN
+   Applied to POST /api/members/:id/check-in
+   ============================================ */
+
+const validateCheckIn = [
+    // Validate member ID in URL
+    param('id')
+        .isInt({ min: 1 })
+        .withMessage('Invalid member ID')
+
+        // Custom validation: Member must exist and be active
+        // WHY? Can't check in if frozen/cancelled
+        .custom(async (memberId) => {
+            return new Promise((resolve, reject) => {
+                const query = 'SELECT status FROM members WHERE id = ?';
+                db.query(query, [memberId], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length === 0) {
+                        return reject(new Error('Member not found'));
+                    }
+
+                    // Only active members can check in
+                    if (results[0].status !== 'active') {
+                        return reject(new Error(`Cannot check in: Member is ${results[0].status}`));
+                    }
+
+                    return resolve();
+                });
+            });
+        }),
+
+    // LOCATION ID VALIDATION
+    body('location_id')
+        .notEmpty()
+        .withMessage('Location is required')
+
+        // Must be valid integer
+        .isInt({ min: 1 })
+        .withMessage('Invalid location')
+
+        // Custom validation: Location must exist
+        // WHY? Can't check in to non-existent location
+        .custom(async (locationId) => {
+            return new Promise((resolve, reject) => {
+                const query = 'SELECT id FROM locations WHERE id = ?';
+                db.query(query, [locationId], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length === 0) {
+                        return reject(new Error('Location not found'));
+                    }
+
+                    return resolve();
+                });
+            });
+        }),
+
+    // DUPLICATE CHECK-IN VALIDATION
+    // Prevents checking in twice within 1 hour
+    // WHY? Prevents accidents (double-click) and spam
+    param('id')
+        .custom(async (memberId) => {
+            return new Promise((resolve, reject) => {
+                // Check if member has checked in within last hour
+                const query = `
+                    SELECT check_in_time
+                    FROM check_ins
+                    WHERE member_id = ?
+                        AND check_in_time > DATE_SUB(NOW(), INTERVAL 1 HOUR)
+                    ORDER BY check_in_time DESC
+                    LIMIT 1
+                `;
+
+                db.query(query, [memberId], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length > 0) {
+                        // Calculate minutes ago
+                        const lastCheckIn = new Date(results[0].check_in_time);
+                        const now = new Date();
+                        const minutesAgo = Math.floor((now - lastCheckIn) / 1000 / 60);
+
+                        return reject(new Error(`Already checked in ${minutesAgo} minutes ago. Please wait ${60 - minutesAgo} more minutes.`));
+                    }
+
+                    return resolve();
+                });
+            });
+        })
+];
+
+console.log('✅ Check-in validation rules configured');
+
+/* ============================================
+   VALIDATION RULES: GET CHECK-IN HISTORY
+   Applied to GET /api/members/:id/check-ins
+   ============================================ */
+
+const validateGetCheckIns = [
+    // Validate member ID in URL
+    param('id')
+        .isInt({ min: 1 })
+        .withMessage('Invalid member ID')
+];
+
+console.log('✅ Get check-in history validation rules configured');
 
 // ============================================
 // MIDDLEWARE (Functions that run on every request)
@@ -785,6 +918,7 @@ app.get('/api/members', (req, res) => {
     });
 });
 
+
 /* ============================================
    GET /api/members/stats
    GET KPI statistics
@@ -825,6 +959,75 @@ app.get('/api/members/stats', (req, res) => {
         const stats = results[0];
         console.log('📊 Member stats:', stats);
         res.json(stats);
+    });
+});
+
+/* ============================================
+   GET /api/members/:id
+   Get single member details with check-in count
+   ============================================ */
+
+app.get('/api/members/:id', (req, res) => {
+    const memberId = req.params.id;
+
+    console.log(`👁️ Fetching details for member ${memberId}`);
+
+    // Fetch member details with location
+    const memberQuery = `
+        SELECT
+            m.id,
+            m.member_id,
+            m.name,
+            m.email,
+            m.phone,
+            m.emergency_contact,
+            m.location_id,
+            l.name AS location_name,
+            m.plan,
+            m.status,
+            m.freeze_start_date,
+            m.freeze_end_date,
+            m.freeze_reason,
+            m.notes,
+            m.created_at,
+            m.updated_at
+        FROM members m
+        LEFT JOIN locations l ON m.location_id = l.id
+        WHERE m.id = ?
+    `;
+
+    db.query(memberQuery, [memberId], (err, members) => {
+        if (err) {
+            console.error('❌ Database error:', err);
+            return res.status(500).json({ error: 'Failed to fetch member '});
+        }
+
+        if (members.length === 0) {
+            console.log(`❌ Member ${memberId} not found`);
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        const member = members[0];
+
+        // Get total check-in count for this member
+        // WHY? For "Total Check-ins" stat in slide panel
+        const countQuery = 'SELECT COUNT(*) AS total_check_ins FROM check_ins WHERE member_id = ?';
+
+        db.query(countQuery, [memberId], (err, countResult) => {
+            if (err) {
+                console.error('❌ Failed to count check-ins:', err);
+                // Return member anyway, just without check-in count
+                member.total_check_ins = 0;
+                return res.json(member);
+            }
+
+            // Add check-in count to member object
+            member.total_check_ins = countResult[0].total_check_ins;
+
+            console.log(`✅ Member ${member.name} - ${member.total_check_ins} total check-ins`);
+
+            res.json(member);
+        });
     });
 });
 
@@ -1598,6 +1801,149 @@ app.put('/api/members/:id/payment-method', paymentLimiter, (req, res) => {
                     success: true, 
                     message: 'Payment method updated successfully', 
                     payment_method: methods[0]
+                });
+            });
+        });
+    });
+});
+
+/* ============================================
+   POST /api/members/:id/check-in
+   Record member gym check-in
+   ============================================ */
+
+app.post('/api/members/:id/check-in', checkInLimiter, validateCheckIn, handleValidationErrors, (req, res) => {
+    const memberId = req.params.id;
+    const { location_id } = req.body;
+
+    console.log(`🏋️ Processing check-in: Member ${memberId} at Location ${location_id}`);
+
+    // Insert check-in record
+    // check_in_time defaults to NOW() in database
+    const insertQuery = `
+        INSERT INTO check_ins (member_id, location_id)
+        VALUES (?, ?)
+    `;
+
+    db.query(insertQuery, [memberId, location_id], (err, result) => {
+        if (err) {
+            console.error('❌ Check-in insert error:', err);
+            return res.status(500).json({ error: 'Failed to record check-in' });
+        }
+
+        // Get the check-in ID that was just created
+        const checkInId = result.insertId;
+
+        // Fetch the complete check-in record with member and location details
+        // This data will be used for the notification card
+        const fetchQuery = `
+            SELECT
+                c.id,
+                c.check_in_time,
+                m.id AS member_id,
+                m.member_id AS member_code,
+                m.name AS member_name,
+                l.id AS location_id,
+                l.name AS location_name
+            FROM check_ins c
+            JOIN members m ON c.member_id = m.id
+            JOIN locations l ON c.location_id = l.id
+            WHERE c.id = ?
+        `;
+
+        db.query(fetchQuery, [checkInId], (err, checkIns) => {
+            if (err) {
+                console.error('❌ Fetch check-in error:', err);
+                return res.status(500).json({ error: 'Check-in recorded but failed to fetch details' });
+            }
+
+            const checkIn = checkIns[0];
+
+            console.log(`✅ Check-in successful: ${checkIn.member_name} at ${checkIn.location_name}`);
+
+            // Return success with check-in details
+            res.status(201).json({
+                success: true,
+                message: 'Check-in recorded successfully', 
+                check_in: checkIn
+            });
+        });
+    });
+});
+
+/* ============================================
+   GET /api/members/:id/check-ins
+   Get member's check-in history
+   ============================================ */
+
+app.get('/api/members/:id/check-ins', validateGetCheckIns, handleValidationErrors, (req, res) => {
+    const memberId = req.params.id;
+
+    console.log(`📋 Fetching check-in history for member ${memberId}`);
+
+    // First, verify member exists
+    // WHY? Better error message if member doesn't exist
+    const memberQuery = 'SELECT id, name FROM members WHERE id = ?';
+
+    db.query(memberQuery, [memberId], (err, members) => {
+        if (err) {
+            console.error('❌ Database error:', err);
+            return res.status(500).json({ error: 'Failed to fetch member' });
+        }
+
+        if (members.length === 0) {
+            console.log(`❌ Member ${memberId} not found`);
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        // Fetch check-in history
+        // Join with locations to get location names
+        // Order by most recent first
+        // Limit to last 50 check-ins (pagination - can be adjusted)
+        const checkInsQuery = `
+            SELECT
+                c.id,
+                c.check_in_time,
+                l.id AS location_id,
+                l.name AS location_name
+            FROM check_ins c
+            JOIN locations l ON c.location_id = l.id
+            WHERE c.member_id = ?
+            ORDER BY c.check_in_time DESC
+            LIMIT 50
+        `;
+
+        db.query(checkInsQuery, [memberId], (err, checkIns) => {
+            if (err) {
+                console.error('❌ Failed to fetch check-ins:', err);
+                return res.status(500).json({ error: 'Failed to fetch check-in history' });
+            }
+
+            // Get total count (for "Total Check-ins" stat)
+            // WHY separate query? Because LIMIT 50 only shows 50, but total might be 145
+            const countQuery = 'SELECT COUNT(*) AS total FROM check_ins WHERE member_id = ?';
+
+            db.query(countQuery, [memberId], (err, countResult) => {
+                if (err) {
+                    console.error('❌ Failed to count check-ins:', err);
+                    // Return check-ins anyway, just without total count
+                    return res.json({
+                        check_ins: checkIns, 
+                        total: checkIns.length  // Fallback to returned count
+                    });
+                }
+
+                const total = countResult[0].total;
+
+                console.log(`✅ Found ${checkIns.length} recent check-ins (${total} total) for ${members[0].name}`);
+
+                // Return check-in history
+                res.json({
+                    member_id: memberId, 
+                    member_name: members[0].name, 
+                    check_ins: checkIns, 
+                    total: total, 
+                    showing: checkIns.length    // How many we're showing (max 50)
                 });
             });
         });

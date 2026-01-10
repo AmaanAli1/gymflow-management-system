@@ -366,18 +366,27 @@
                         <div class="field">
                             <label for="checkinSearch">Search Member</label>
                             <input type="text" id="checkinSearch" placeholder="Type name, email, or member ID">
+                            <!-- Hidden field to store selected member ID -->
+                            <input type="hidden" id="checkInMemberId" name="member_id">
+                            <!-- Hidden field to store member's home location -->
+                            <input type="hidden" id="checkInMemberLocationId">
                         </div>
                         <div class="field">
                             <label for="checkinLocation">Location</label>
-                            <select id="checkinLocation">
+                            <select id="checkinLocation" name="location_id">
                                 <!-- Options populated by JavaScript -->
                             </select>
+                            <!-- Warning message (hidden by default) -->
+                            <div id="locationWarning" class="field-warning" style="display: none;">
+                                <i class="fa-solid fa-exclamation-triangle"></i>
+                                <span>This is not the member's home location</span>
+                            </div>
                         </div>
                     </div>
 
                     <div class="modal-footer">
                         <button type="button" class="btn ghost" data-close-modal>Close</button>
-                        <button type="submit" class="btn primary">Confirm Check-In</button>
+                        <button type="submit" class="btn primary" id="confirmCheckInBtn">Confirm Check-In</button>
                     </div>
                 </form>
             </div>
@@ -594,14 +603,20 @@
                         <!-- Quick Stats Section -->
                         <div class="slide-panel-section-label">Quick Stats</div>
                         <div class="slide-panel-stats">
-                            <div class="slide-panel-stat">
+                            <!-- Total Check-ins (Clickable) -->
+                            <div class="slide-panel-stat clickable" onclick="switchToCheckInHistoryMode()">
                                 <div class="slide-panel-stat-label">Total Check-ins</div>
                                 <div class="slide-panel-stat-value" id="panelStatCheckins">--</div>
+                                <div class="slide-panel-stat-hint">Click to view</div>
                             </div>
+
+                            <!-- Days Active (Not Clickable) -->
                             <div class="slide-panel-stat">
                                 <div class="slide-panel-stat-label">Days Active</div>
                                 <div class="slide-panel-stat-value" id="panelStatDaysActive">--</div>
                             </div>
+
+                            <!-- Last Visit (Not Clickable) -->
                             <div class="slide-panel-stat">
                                 <div class="slide-panel-stat-label">Last Visit</div>
                                 <div class="slide-panel-stat-value" id="panelStatLastVisit">--</div>
@@ -859,6 +874,21 @@
                     </div>
                     <!-- End of slide-panel-delete -->
                     
+                    <!-- Check-In History Mode -->
+                    <div class="slide-panel-checkin-history" style="display: none;">
+                        <div class="panel-section">
+                            <h3>Check-In History</h3>
+                            <p class="section-hint" id="historyMemberName">Loading...</p>
+                        </div>
+
+                        <div class="panel-section">
+                            <div class="check-in-history-list" id="checkInHistoryList">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End of slide-panel-checkin-history -->
+                    
                     <!-- REACTIVATE MODE (Form) -->
                     <div class="slide-panel-reactivate">
 
@@ -1018,6 +1048,13 @@
                         </button>
                     </div>
 
+                    <!-- CHECK-IN BUTTONS -->
+                    <div id="checkInHistoryModeButtons" style="display: none;">
+                        <button class="btn ghost" onclick="switchToViewMode()">
+                            <i class="fa-solid fa-arrow-left"></i>
+                            Back to Member
+                        </button>
+                    </div>
                 </div>
 
             </div>
@@ -1364,6 +1401,13 @@
             </div>
         </div>
         <!-- End of unfreeze-modal -->
+        
+        <!-- ============================================
+             CHECK-IN NOTIFICATION CONTAINER
+             Displays success notifications when members check in
+             ============================================ -->
+
+        <div id="checkInNotifications" class="check-in-notifications"></div>
 
         <!-- ============================================ 
              JAVASCRIPT FILES

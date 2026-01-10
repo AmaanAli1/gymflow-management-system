@@ -1220,6 +1220,161 @@
    Prevents accidental reactivation without payment check */
 
 /* ========================================
+   CHECK-IN HISTORY LIST
+   ======================================== */
+
+.check-in-history-list {
+    /* Sizing */
+    max-height: 500px;
+    
+    /* Layout */
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.history-item {
+    /* Sizing */
+    padding: 14px 16px;
+    
+    /* Styling */
+    background: var(--color-bg-elevated);
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--color-success);
+    
+    /* Animation */
+    transition: background 0.2s ease;
+}
+
+.history-item:hover {
+    /* Styling */
+    background: var(--color-bg-input);
+}
+
+.history-item-header {
+    /* Layout */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.history-item-date {
+    /* Sizing */
+    font-size: 0.85rem;
+    
+    /* Styling */
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.history-item-time {
+    /* Sizing */
+    font-size: 0.75rem;
+    
+    /* Styling */
+    color: var(--color-text-muted);
+}
+
+.history-item-location {
+    /* Sizing */
+    font-size: 0.8rem;
+    
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    
+    /* Styling */
+    color: var(--color-text-secondary);
+}
+
+.history-item-location i {
+    /* Sizing */
+    font-size: 0.7rem;
+    
+    /* Styling */
+    color: var(--color-success);
+}
+
+.history-empty {
+    /* Sizing */
+    padding: 40px 20px;
+    
+    /* Layout */
+    text-align: center;
+    
+    /* Styling */
+    color: var(--color-text-muted);
+}
+
+.history-empty i {
+    /* Sizing */
+    font-size: 3rem;
+    margin-bottom: 12px;
+    
+    /* Layout */
+    display: block;
+    
+    /* Styling */
+    color: var(--color-text-dim);
+}
+
+/* ========================================
+   CLICKABLE STAT CARDS
+   ======================================== */
+
+.slide-panel-stat.clickable {
+    /* Styling */
+    cursor: pointer;
+    
+    /* Animation */
+    transition: all 0.2s ease;
+}
+
+.slide-panel-stat.clickable:hover {
+    /* Styling */
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+}
+
+.slide-panel-stat-hint {
+    /* Sizing */
+    font-size: 0.65rem;
+    margin-top: var(--gap-xs);
+    
+    /* Styling */
+    color: var(--color-text-dim);
+    font-style: italic;
+}
+
+/* Hide hint on non-clickable stats */
+.slide-panel-stat:not(.clickable) .slide-panel-stat-hint {
+    display: none;
+}
+
+/* ========================================
+   CHECK-IN HISTORY MODE VISIBILITY
+   ======================================== */
+
+/* Hide check-in history by default */
+.slide-panel-checkin-history {
+    display: none;
+}
+
+/* Show check-in history when in history mode */
+.slide-panel.checkin-history-mode .slide-panel-checkin-history {
+    display: block !important;
+}
+
+/* Hide view content when in history mode */
+.slide-panel.checkin-history-mode .slide-panel-view {
+    display: none;
+}
+
+/* ========================================
    RESPONSIVE: Footer on Mobile
    ======================================== */
 
