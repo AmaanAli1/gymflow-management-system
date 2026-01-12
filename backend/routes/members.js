@@ -226,13 +226,13 @@ router.get('/:id', (req, res) => {
    ============================================ */
 
 router.post('/', validateAddMember, handleValidationErrors, (req, res) => {
-    const { name, email, location_id, plan } = req.body;
+    const { name, email, phone, emergency_contact, location_id, plan } = req.body;
 
     // Validate required fields
-    if (!name || !email || !location_id || !plan) {
+    if (!name || !email || !phone || !location_id || !plan) {
         return res.status(400).json({
             error: 'Missing required fields', 
-            required: ['name', 'email', 'location_id', 'plan']
+            required: ['name', 'email', 'phone', 'location_id', 'plan']
         });
     }
 
@@ -249,11 +249,11 @@ router.post('/', validateAddMember, handleValidationErrors, (req, res) => {
 
         // Insert new member
         const insertQuery = `
-            INSERT INTO members (name, email, location_id, plan, status, created_at)
-            VALUES (?, ?, ?, ?, 'active', NOW())
+            INSERT INTO members (name, email, phone, emergency_contact, location_id, plan, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, 'active', NOW())
         `;
 
-        db.query(insertQuery, [name, email, location_id, plan], (err, results) => {
+        db.query(insertQuery, [name, email, phone, emergency_contact || null, location_id, plan], (err, results) => {
             if (err) {
                 console.error('❌ Insert error:', err);
                 return res.status(500).json({ error: 'Failed to create member' });

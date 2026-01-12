@@ -37,10 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (isPinned) {
             sidebar.classList.add('pinned');
-            console.log('✅ Sidebar pinned');
         } else {
             sidebar.classList.remove('pinned');
-            console.log('📌 Sidebar unpinned');
         }
     });
     
@@ -87,12 +85,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Was open, now close it
                 navItem.classList.remove('open');
                 navItem.setAttribute('aria-expanded', 'false');
-                console.log('📁 Closed dropdown');
             } else {
                 // Was closed, now open it
                 navItem.classList.add('open');
                 navItem.setAttribute('aria-expanded', 'true');
-                console.log('📂 Opened dropdown');
             }
         });
     });
@@ -110,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.classList.remove('open');
                 item.setAttribute('aria-expanded', 'false');
             });
-            console.log('🚪 Sidebar collapsed - closed all dropdowns');
         }
     });
     
@@ -139,8 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 parentNavItem.classList.add('open');
                 parentNavItem.setAttribute('aria-expanded', 'true');
             }
-            
-            console.log(`✨ Current page: ${currentPage}`);
         }
     });
 
@@ -158,35 +151,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (e.key === 'p' || e.key === 'P') {
             pinBtn.click(); // Trigger pin button click
-            console.log('⌨️ Keyboard shortcut: Pin toggled');
         }
     });
-    
-    console.log('🎯 Sidebar module loaded successfully!');
 });
 
-
-/* ============================================
-   NOTES FOR FUTURE DEVELOPMENT
-   ============================================
-   
-   FEATURES YOU COULD ADD LATER:
-   
-   1. Remember pinned state in localStorage:
-      localStorage.setItem('sidebarPinned', isPinned);
-      On load: isPinned = localStorage.getItem('sidebarPinned') === 'true';
-   
-   2. Smooth scroll to sections:
-      When clicking "Dashboard", scroll to top smoothly
-   
-   3. Badge notifications:
-      Show unread count on menu items
-      Example: "Members (5 new)"
-   
-   4. Collapse on mobile automatically:
-      Detect screen size and auto-collapse
-   
-   5. Drag to resize sidebar:
-      Advanced feature for power users
-      
-   ============================================ */
+console.log('✅ Sidebar initialized');

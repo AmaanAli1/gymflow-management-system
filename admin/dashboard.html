@@ -363,43 +363,62 @@
             <div class="modal-body">
                 <form id="addMemberForm">
                     <div class="modal-grid">
+                        <!-- Full Name -->
                         <div class="field">
-                            <label for="memberName">Full Name</label>
+                            <label for="memberName">Full Name *</label>
                             <input type="text" 
                                    id="memberName" 
                                    name="name"
                                    placeholder="John Doe" 
                                    required>
                         </div>
+                        <!-- Email -->
                         <div class="field">
-                            <label for="memberEmail">Email</label>
+                            <label for="memberEmail">Email *</label>
                             <input type="email" 
                                    id="memberEmail" 
                                    name="email"
                                    placeholder="john@example.com" 
                                    required>
                         </div>
+                        <!-- Phone -->
                         <div class="field">
-                            <label for="memberLocation">Location</label>
-                            <select id="memberLocation" name="location" required>
+                            <label for="memberPhone">Phone</label>
+                            <input type="tel"
+                                   id="memberPhone"
+                                   name="phone"
+                                   placeholder="(555) 123-4567"
+                                   required>
+                        </div>
+                        <!-- Emergency Contact (Optional) -->
+                        <div class="field">
+                            <label for="memberEmergencyContact">Emergency Contact</label>
+                            <input type="tel"
+                                   id="memberEmergencyContact"
+                                   name="emergency_contact"
+                                   placeholder="(555) 987-6543">
+                        </div>
+                        <!-- Location -->
+                        <div class="field">
+                            <label for="memberLocation">Location *</label>
+                            <select id="memberLocation" name="location_id" required>
                                 <option value="">Select location</option>
-                                <option value="downtown">Downtown</option>
-                                <option value="midtown">Midtown</option>
-                                <option value="eastside">Eastside</option>
+                                <!-- Options will be populated by populateLocationDropdown -->
                             </select>
                         </div>
+                        <!-- Membership Plan-->
                         <div class="field">
-                            <label for="memberPlan">Membership Plan</label>
+                            <label for="memberPlan">Membership Plan *</label>
                             <select id="memberPlan" name="plan" required>
                                 <option value="">Select plan</option>
-                                <option value="basic">Basic</option>
-                                <option value="premium">Premium</option>
-                                <option value="elite">Elite</option>
+                                <option value="Basic">Basic</option>
+                                <option value="Premium">Premium</option>
+                                <option value="Elite">Elite</option>
                             </select>
                         </div>
                     </div>
                     <div class="field">
-                        <label for="memberNotes">Notes</label>
+                        <label for="memberNotes">Notes (Optional)</label>
                         <textarea id="memberNotes" 
                                   name="notes"
                                   rows="3" 
@@ -416,44 +435,43 @@
     </div>
 
     <!-- Member Check-In Modal -->
-    <div class="modal-overlay" id="checkin-modal" role="dialog" aria-labelledby="checkinTitle" aria-hidden="true">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h2 id="checkinTitle">Member Check-In</h2>
-                <button class="modal-close" data-close-modal aria-label="Close modal">&times;</button>
-            </div>
+        <div class="modal-overlay" id="checkin-modal" aria-hidden="true">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2>Member Check-In</h2>
+                    <button class="modal-close" data-close-modal aria-label="Close modal">&times;</button>
+                </div>
 
-            <div class="modal-body">
                 <form id="checkinForm">
-                    <div class="field">
-                        <label for="searchMember">Search Member</label>
-                        <input type="text" 
-                               id="searchMember" 
-                               name="search"
-                               placeholder="Type name, email, or member ID" 
-                               required>
+                    <div class="modal-body">
+                        <div class="field">
+                            <label for="checkinSearch">Search Member</label>
+                            <input type="text" id="checkinSearch" placeholder="Type name, email, or member ID">
+                            <!-- Hidden field to store selected member ID -->
+                            <input type="hidden" id="checkInMemberId" name="member_id">
+                            <!-- Hidden field to store member's home location -->
+                            <input type="hidden" id="checkInMemberLocationId">
+                        </div>
+                        <div class="field">
+                            <label for="checkinLocation">Location</label>
+                            <select id="checkinLocation" name="location_id">
+                                <!-- Options populated by JavaScript -->
+                            </select>
+                            <!-- Warning message (hidden by default) -->
+                            <div id="locationWarning" class="field-warning" style="display: none;">
+                                <i class="fa-solid fa-exclamation-triangle"></i>
+                                <span>This is not the member's home location</span>
+                            </div>
+                        </div>
                     </div>
-                    <p class="modal-hint">
-                        Later this will search live from the database and confirm access & status.
-                    </p>
-                    <div class="field">
-                        <label for="checkinLocation">Location</label>
-                        <select id="checkinLocation" name="location" required>
-                            <option value="">Select location</option>
-                            <option value="downtown">Downtown</option>
-                            <option value="midtown">Midtown</option>
-                            <option value="eastside">Eastside</option>
-                        </select>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn ghost" data-close-modal>Close</button>
+                        <button type="submit" class="btn primary" id="confirmCheckInBtn">Confirm Check-In</button>
                     </div>
                 </form>
             </div>
-
-            <div class="modal-footer">
-                <button class="btn ghost" data-close-modal type="button">Close</button>
-                <button class="btn primary" type="submit" form="checkinForm">Confirm Check-In</button>
-            </div>
         </div>
-    </div>
 
     <!-- Add Trainer Modal -->
     <div class="modal-overlay" id="add-trainer-modal" role="dialog" aria-labelledby="addTrainerTitle" aria-hidden="true">
@@ -612,6 +630,15 @@
         </div>
     </div>
 
+
+    <!-- ============================================
+         CHECK-IN NOTIFICATION CONTAINER
+         Displays success notifications when members check in
+         ============================================ -->
+
+    <div id="checkInNotifications" class="check-in-notifications"></div>
+
+
     <!-- ============================================
          JAVASCRIPT FILES (Load at end for performance)
          ============================================ -->
@@ -622,6 +649,7 @@
     <script src="../js/main.js"></script>
     <script src="../js/sidebar.js"></script>
     <script src="../js/modals.js"></script>
+    <script src="../js/shared.js"></script>
     
     <!-- Dashboard-specific JS: Mock data & dashboard logic -->
     <script src="../js/pages/admin-dashboard.js"></script>

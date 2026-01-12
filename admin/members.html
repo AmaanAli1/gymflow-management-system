@@ -325,6 +325,14 @@
                                 <input type="email" id="memberEmail" name="email" required placeholder="john@example.com">
                             </div>
                             <div class="field">
+                                <label for="memberPhone">Phone *</label>
+                                <input type="tel" id="memberPhone" name="phone" placeholder="(555) 123-4567" required>
+                            </div>
+                            <div class="field">
+                                <label for="memberEmergencyContact">Emergency Contact</label>
+                                <input type="tel" id="memberEmergencyContact" name="emergency_contact" placeholder="(555) 987-6543">
+                            </div>
+                            <div class="field">
                                 <label for="memberLocation">Location *</label>
                                 <select id="memberLocation" name="location_id" required>
                                     <!-- Options populated by JavaScript -->
@@ -668,7 +676,7 @@
                             <!-- Emergency Contact -->
                             <div class="slide-panel-field">
                                 <label for="editEmergencyContact">Emergency Contact</label>
-                                <input type="text" id="editEmergencyContact" name="emergency_contact" placeholder="Name - Phone">
+                                <input type="tel" id="editEmergencyContact" name="emergency_contact" placeholder="(555) 123-4567">
                             </div>
 
                             <!-- Location -->
@@ -1416,6 +1424,7 @@
         <script src="../js/main.js"></script>
         <script src="../js/sidebar.js"></script>
         <script src="../js/modals.js"></script>
+        <script src="../js/shared.js"></script>
 
         <!-- Members-specific JS: Fetch and display member data -->
         <script src="../js/pages/members.js"></script>

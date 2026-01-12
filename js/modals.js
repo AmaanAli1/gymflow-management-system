@@ -33,8 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Open the modal
             openModal(modal);
-            
-            console.log(`📂 Opened modal: ${modalId}`);
         });
     });
 
@@ -54,7 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (modal) {
                 closeModal(modal);
-                console.log('❌ Closed modal via button');
             }
         });
     });
@@ -71,7 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Only close if clicking the backdrop (not the modal card itself)
             if (e.target === modal) {
                 closeModal(modal);
-                console.log('❌ Closed modal via backdrop click');
             }
         });
     });
@@ -90,7 +86,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (openModals.length > 0) {
                 const lastModal = openModals[openModals.length - 1];
                 closeModal(lastModal);
-                console.log('⌨️ Closed modal via Escape key');
             }
         }
     });
@@ -144,46 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    
-    /* ========================================
-       FORM SUBMISSION HANDLING
-       Prevent default, show validation
-       ======================================== */
-    
-    // Get all forms inside modals
-    const modalForms = document.querySelectorAll('.modal-overlay form');
-    
-    modalForms.forEach(form => {
-        form.addEventListener('submit', (e) => {
-            e.preventDefault(); // Don't actually submit yet
-            
-            // Get form data
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData);
-            
-            console.log('📋 Form submitted with data:', data);
-            
-            // TODO: When backend is ready, send data to API
-            // fetch('/api/members', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(data)
-            // })
-            // .then(response => response.json())
-            // .then(result => {
-            //     console.log('✅ Member added:', result);
-            //     closeModal(form.closest('.modal-overlay'));
-            //     // Refresh dashboard data
-            // })
-            // .catch(error => {
-            //     console.error('❌ Error:', error);
-            //     // Show error message to user
-            // });
-
-            alert('✅ Form submitted! (No backend yet - data logged to console)');
-            closeModal(form.closest('.modal-overlay'));
-        });
-    });
 
     /* ========================================
        SIMPLE FORM VALIDATION
@@ -226,31 +181,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         return isValid;
     }
-    
-    console.log('🎯 Modal system loaded successfully!');
 });
 
-
-/* ============================================
-   NOTES FOR FUTURE DEVELOPMENT
-   ============================================
-   
-   FEATURES YOU COULD ADD LATER:
-   
-   1. Loading state on submit:
-      button.classList.add('loading');
-      button.disabled = true;
-   
-   2. Success/error notifications:
-      Show toast notification instead of alert()
-   
-   3. Multi-step forms:
-      "Next" button advances to step 2, "Back" returns
-   
-   4. Autosave drafts:
-      Save form data to localStorage every few seconds
-   
-   5. Confirmation before closing:
-      "You have unsaved changes. Are you sure?"
-      
-   ============================================ */
+console.log('✅ Modal system initialized');

@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let allMembers = []; // Store ALL members (never filtered)
     let filteredMembers = []; // Current filtered/searched results
     let currentDisplayedMembers =[];
+    let currentMember = null;   // Stores fresh member data from API
 
     // Sort state
     let currentSortColumn = null;
@@ -50,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     async function fetchMembers() {
         try {
-            console.log('🔄 Fetching members from API...');
             
             // Build query string from filters
             const params = new URLSearchParams();
@@ -62,8 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const queryString = params.toString();
             const url = `${API_BASE_URL}/members${queryString ? '?' + queryString : ''}`;
-            
-            console.log('📡 Fetching:', url);
             
             // Fetch from API
             const response = await fetch(url);
@@ -97,8 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             const data = await response.json();
-            
-            console.log(`✅ Received ${data.members.length} members`);
             
             // Store filtered members for display
             allMembers = data.members;
@@ -136,7 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     async function fetchStats() {
         try {
-            console.log('📊 Fetching member stats...');
             
             const response = await fetch(`${API_BASE_URL}/members/stats`);
 
@@ -173,7 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('[data-stat="frozenMembers"]').textContent = stats.frozenMembers;
         document.querySelector('[data-stat="cancelledMembers"]').textContent = stats.cancelledMembers;
         
-        console.log('✅ Member stats updated');
     }
     
     
@@ -260,8 +254,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Add event listeners to action buttons
         attachTableActionListeners();
-        
-        console.log(`✅ Populated table with ${members.length} members`);
     }
 
     /* ========================================
@@ -269,7 +261,6 @@ document.addEventListener('DOMContentLoaded', () => {
        ======================================== */
 
     function sortMembersTable(column) {
-        console.log(`🔄 Sorting by: ${column}`);
 
         // Toggle direction if clicking same column
         if (currentSortColumn === column) {
@@ -329,8 +320,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Re-populate table with sorted data
         populateMembersTable(sortedMembers);
-
-        console.log(`✅ Sorted ${sortedMembers.length} members by ${column} (${currentSortDirection})`);
     }
 
     /* ========================================
@@ -353,8 +342,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const className = currentSortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc';
         activeHeader.classList.add(className);
-
-        console.log(`✅ Sort indicator updated: ${activeColumn} (${currentSortDirection})`);
     }
     
     
@@ -409,7 +396,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    
     /* ========================================
        EVENT LISTENERS: Filters and Search
        ======================================== */
@@ -448,7 +434,6 @@ document.addEventListener('DOMContentLoaded', () => {
        ======================================== */
     
     function viewMemberDetails(memberId) {
-        console.log('👁️ View member:', memberId);
         
         // Find member in allMembers array
         const member = allMembers.find(m => m.id == memberId);
@@ -466,7 +451,6 @@ document.addEventListener('DOMContentLoaded', () => {
        ======================================== */
     
     async function openMemberPanel(member) {
-        console.log('📋 Opening panel for:', member.name);
 
         // Populate header
         document.getElementById('panelMemberName').textContent = member.name;
@@ -505,14 +489,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`${API_BASE_URL}/members/${member.id}`);
             const freshMember = await response.json();
 
+            // Store fresh data globally for edit use
+            currentMember = freshMember;
+
             // Update check-in count with fresh data
             document.getElementById('panelStatCheckins').textContent = freshMember.total_check_ins || 0;
-
-            console.log(`✅ Loaded ${freshMember.total_check_ins} check-ins for ${freshMember.name}`);
 
         } catch (error) {
             console.error('❌ Failed to fetch member details:', error);
             document.getElementById('panelStatCheckins').textContent = '---';
+
+            // FALLBACK: Use table data if API fails
+            currentMember = member;
         }
 
         // Populate stats (placeholder for now)
@@ -555,8 +543,6 @@ document.addEventListener('DOMContentLoaded', () => {
             firstBtn.onclick = null;    // Use event listener
         }
 
-        console.log('✅ Panel opened');
-
     }
 
     /* ========================================
@@ -578,309 +564,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
-    /* ============================================
-       SUBMIT CHECK-IN
-       Handles member check-in form modal
-       ============================================ */
-
-    async function submitCheckIn(memberId, locationId) {
-        console.log(`🏋️ Checking in member ${memberId} at location ${locationId}`);
-
-        try {
-            // Call check-in API
-            const response = await fetch(`${API_BASE_URL}/members/${memberId}/check-in`, {
-                method: 'POST', 
-                headers: {
-                    'Content-Type': 'application/json'
-                }, 
-                body: JSON.stringify({
-                    location_id: locationId
-                })
-            });
-
-            const data = await response.json();
-
-            // Handle validation errors (429, 400, etc)
-            if (!response.ok) {
-                if (data.error === 'Validation failed') {
-                    // Show validation errors
-                    const errorMsg = data.details.map(d => d.msg).join('\n');
-                    showNotification(`Check-in failed: ${errorMsg}`, 'error');
-                } else {
-                    showNotification(data.error || 'Check-in failed', 'error');
-                }
-
-                return false;
-            }
-
-            // Success!
-            console.log('✅ Check-in successful:', data.check_in);
-
-            // Show success notification card
-            showCheckInNotification(data.check_in);
-
-            // Close the modal
-            closeCheckInModal();
-
-            // If member panel is open, update the count
-            const panelMemberId = document.getElementById('editMemberBtn')?.dataset.memberId;
-            if (panelMemberId == memberId) {
-                updateCheckInCount(memberId);
-            }
-
-            return true;
-
-        } catch (error) {
-            console.error('❌ Check-in error:', error);
-            showNotification('Network error. Please try again.', 'error');
-            return false;
-        }
-    }
-
-    /* ========================================
-       SHOW CHECK-IN NOTIFICATION
-       Displays a notification card when member checks in
-       ======================================== */
-
-    function showCheckInNotification(checkIn) {
-        console.log(' Showing check-in notification:', checkIn);
-
-        // Format time (e.g., "10:30 AM")
-        const checkInTime = new Date(checkIn.check_in_time);
-        const timeString = checkInTime.toLocaleTimeString('en-US', {
-            hour: 'numeric', 
-            minute: '2-digit', 
-            hour12: true
-        });
-
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.className = 'check-in-notification success';
-        notification.innerHTML = `
-            <div class="notification-header">
-                <div class="notification-icon">
-                    <i class="fa-solid fa-check"></i>
-                </div>
-                <div class="notification-title">Check-In Successful</div>
-            </div>
-            <div class="notification-body">
-                <div class="notification-member">${checkIn.member_name}</div>
-                <div class="notification-details">
-                    <div class="notification-time">
-                        <i class="fa-regular fa-clock"></i>
-                        <span>${timeString}</span>
-                    </div>
-                    <div class="notification-location">
-                        <i class="fa-solid fa-location-dot"></i>
-                        <span>${checkIn.location_name}</span>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Add to container
-        const container = document.getElementById('checkInNotifications');
-        container.appendChild(notification);
-
-        console.log('✅ Notification displayed');
-
-        // Auto-dismiss after 4 seconds
-        setTimeout(() => {
-            notification.classList.add('fade-out');
-
-            // Remove from DOM after animation
-            setTimeout(() => {
-                notification.remove();
-                console.log('🗑️ Notification removed');
-            }, 500);    // Match fadeOut animation duration
-        }, 4000);
-    }
-
-    /* ========================================
-       GENERIC NOTIFICATION (for errors, etc)
-       Toast-style notifications
-       ======================================== */
-
-    function showNotification(message, type = 'info') {
-        console.log(`${type.toUpperCase()}: ${message}`);
-
-        // Create toast notification
-        const toast = document.createElement('div');
-        toast.className = `toast-notification ${type}`;
-        toast.innerHTML = `
-            <div class=""toast-icon">
-                <i class="fa-solid fa-${type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-            </div>
-            <div class="toast-message">${message}</div>
-        `;
-
-        // Add to body
-        document.body.appendChild(toast);
-
-        // Trigger animation
-        setTimeout(() => toast.classList.add('show'), 10);
-
-        // Auto-dismiss after 3 seconds
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    }
-
-    /* ========================================
-       CLOSE CHECK-IN MODAL
-       ======================================== */
-
-    function closeCheckInModal() {
-        // Close the modal
-        const modal = document.getElementById('checkin-modal');
-        if (modal) {
-            modal.classList.remove('show');
-        }
-
-        console.log('✅ Check-in modal closed');
-    }
-
-    /* ========================================
-       CHECK-IN MEMBER SEARCH
-       Autocomplete search for check-in modal with location auto-fill
-       ======================================== */
-
-    function setupCheckInSearch() {
-        const searchInput = document.getElementById('checkinSearch');
-        const memberIdInput = document.getElementById('checkInMemberId');
-        const memberLocationInput = document.getElementById('checkInMemberLocationId');
-
-        if (!searchInput) return;
-
-        // Create results dropdown
-        const resultsDiv = document.createElement('div');
-        resultsDiv.id = 'checkinSearchResults';
-        resultsDiv.className = 'search-results.dropdown';
-        searchInput.parentElement.appendChild(resultsDiv);
-
-        // Search as user types
-        searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.trim().toLowerCase();
-
-            if (query.length < 2) {
-                resultsDiv.style.display = 'none';
-                return;
-            }
-
-            // Filter active members only
-            const matches = allMembers.filter(member => {
-                if (member.status !== 'active') return false;
-
-                return member.name.toLowerCase().includes(query) || 
-                       member.email.toLowerCase().includes(query) || 
-                       member.member_id.toLowerCase().includes(query);
-            }).slice(0, 5); // Max 5 results
-
-            if (matches.length === 0) {
-                resultsDiv.innerHTML = '<div class="search-no-results">No active members found</div>';
-                resultsDiv.style.display = 'block';
-                return;
-            }
-
-            // Display results
-            resultsDiv.innerHTML = matches.map(member => `
-                <div class="search-result-item" 
-                     data-member-id="${member.id}"
-                     data-location-id="${member.location_id}">
-                    <div class="search-result-name">${member.name}</div>
-                    <div class="search-result-details">${member.member_id} • ${member.location_name}</div>
-                </div>
-            `).join('');
-
-            resultsDiv.style.display = 'block';
-
-            // Handle result clicks
-            resultsDiv.querySelectorAll('.search-result-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    const memberId = item.dataset.memberId;
-                    const memberLocationId = item.dataset.locationId;
-                    const memberName = item.querySelector('.search-result-name').textContent;
-
-                    // Set the hidden field
-                    memberIdInput.value = memberId;
-
-                    // Store original location for comparison
-                    memberLocationInput.value = memberLocationId;
-
-                    // Update search box to show selected member
-                    searchInput.value = memberName;
-
-                    // Auto-fill location dropdown
-                    const locationSelect = document.getElementById('checkinLocation');
-                    locationSelect.value = memberLocationId;
-
-                    // Visual feedback (green border flash)
-                    locationSelect.style.borderColor = 'var(--color-success)';
-                    locationSelect.style.transition = 'border-color 0.3s ease';
-                    setTimeout(() => {
-                        locationSelect.style.borderColor = '';
-                    }, 1500);
-
-                    // Hide location warning (if visible from previous selection)
-                    const warningDiv = document.getElementById('locationWarning');
-                    if (warningDiv) {
-                        warningDiv.style.display = 'none';
-                    }
-
-                    // Hide results
-                    resultsDiv.style.display = 'none';
-
-                    console.log(`✅ Selected member ${memberId} for check-in`);
-                    console.log(`📍 Auto-filled location: ${memberLocationId}`);
-                });
-            });
-        });
-
-        // Hide results when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
-                resultsDiv.style.display = 'none';
-            }
-        });
-
-        // Clear member ID when search is cleared
-        searchInput.addEventListener('change', () => {
-            if (!searchInput.value.trim()) {
-                memberIdInput.value = '';
-                memberLocationInput.value = '';
-            }
-        });
-    }
-
-    /* ============================================
-       SETUP LOCATION WARNING
-       Warns if checking in at different location than home gym
-       ============================================ */
-
-    function setupLocationWarning() {
-        const locationSelect = document.getElementById('checkinLocation');
-        const memberLocationInput = document.getElementById('checkInMemberLocationId');
-        const warningDiv = document.getElementById('locationWarning');
-    
-        if (!locationSelect || !warningDiv) return;
-    
-        locationSelect.addEventListener('change', () => {
-            const selectedLocation = locationSelect.value;
-            const memberHomeLocation = memberLocationInput.value;
-        
-            // Only show warning if:
-            // 1. A member has been selected (memberHomeLocation is set)
-            // 2. Selected location is different from member's home location
-            if (memberHomeLocation && selectedLocation !== memberHomeLocation) {
-                warningDiv.style.display = 'flex';
-                console.log('⚠️ Warning: Checking in at different location');
-            } else {
-                warningDiv.style.display = 'none';
-            }
-        });
-    }
-
     /* ========================================
        CLOSE MEMBER DETAILS PANEL
        ======================================== */
@@ -890,8 +573,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Reset to view mode when closing
         switchToViewMode();
-
-        console.log('✅ Panel closed');
     }
 
     /* Helper: Calculate days since joining */
@@ -903,22 +584,31 @@ document.addEventListener('DOMContentLoaded', () => {
         return diffDays;
     }
     
-    function editMember(memberId) {
-        console.log('✏️ Edit member:', memberId);
+    /* ========================================
+       EDIT MEMBER
+       ======================================== */
+
+    async function editMember(memberId) {
         
-        // Find member in allMembers array
+        // If panel is already open for this member, just switch to edit
+        if (currentMember && currentMember.id == memberId) {
+            switchToEditMode(currentMember);
+            return;
+        }
+
+        // Otherwise, find member and open panel
         const member = allMembers.find(m => m.id == memberId);
 
         if (member) {
-            // First, open the panel with member details (if not already open)
-            openMemberPanel(member);
+            // Wait for panel to fully open and load fresh data
+            await openMemberPanel(member);
 
-            // Then switch to edit mode
-            setTimeout(() => {
-                switchToEditMode(member);
-            }, 100);    // Small delay to ensure panel is rendered
+            // Now currentMember is guaranteed to be populated
+            if (currentMember) {
+                switchToEditMode(currentMember);
+            }
         } else {
-            console.error('Member not found', memberId);
+            console.error('❌ Member not found:', memberId);
         }
     }
 
@@ -927,7 +617,6 @@ document.addEventListener('DOMContentLoaded', () => {
        ======================================== */
     
     function switchToEditMode(member) {
-        console.log('✏️ Switching to edit mode for:', member.name);
 
         // Add edit-mode class to panel
         document.querySelector('.slide-panel').classList.add('edit-mode');
@@ -961,8 +650,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Hide any previous error/success messages
         document.getElementById('editErrorMessage').style.display = 'none';
         document.getElementById('editSuccessMessage').style.display = 'none';
-
-        console.log('✅ Switched to edit mode');
     }
 
     /* ========================================
@@ -970,7 +657,6 @@ document.addEventListener('DOMContentLoaded', () => {
        ======================================== */
 
     function switchToViewMode() {
-        console.log('👁️ Switching to view mode');
 
         // Remove ALL mode classes from panel
         const panel = document.querySelector('.slide-panel');
@@ -997,8 +683,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('deleteSuccessMessage').style.display = 'none';
         document.getElementById('reactivateErrorMessage').style.display = 'none';
         document.getElementById('reactivateSuccessMessage').style.display = 'none';
-
-        console.log('✅ Switched to view mode');
     }
 
     // Make globally accessible for HTML onclick
@@ -1009,7 +693,6 @@ document.addEventListener('DOMContentLoaded', () => {
        ======================================== */
 
     function switchToFreezeMode(member) {
-        console.log('❄️ Switching to freeze mode for:', member.name);
 
         // Add freeze-mode class to panel
         document.querySelector('.slide-panel').classList.add('freeze-mode');
@@ -1041,8 +724,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Hide error/success messages
         document.getElementById('freezeErrorMessage').style.display = 'none';
         document.getElementById('freezeSuccessMessage').style.display = 'none';
-
-        console.log ('❄️ Switched to freeze mode');
     }
 
     /* ========================================
@@ -1250,7 +931,6 @@ document.addEventListener('DOMContentLoaded', () => {
        ============================================ */
 
     function switchToReactivateMode(member) {
-        console.log('🔄 Switching to reactivate mode for:', member.name);
 
         // Set current payment member for payment modal access
         currentPaymentMember = member;
@@ -1293,8 +973,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Hide error/success messages
         document.getElementById('reactivateErrorMessage').style.display = 'none';
         document.getElementById('reactivateSuccessMessage').style.display = 'none';
-
-        console.log('✅ Switched to reactivate mode');
     }
 
     /* ========================================
@@ -1302,7 +980,6 @@ document.addEventListener('DOMContentLoaded', () => {
        ======================================== */
 
     async function switchToCheckInHistoryMode() {
-        console.log('📋 Switching to check-in history mode');
 
         // Get member ID from current panel
         const memberId = document.getElementById('editMemberBtn').dataset.memberId;
@@ -1389,8 +1066,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('checkInHistoryList').innerHTML = historyHTML;
         
-        console.log(`✅ Displayed ${data.check_ins.length} check-ins`);
-        
     } catch (error) {
         console.error('❌ Failed to fetch check-in history:', error);
         document.getElementById('checkInHistoryList').innerHTML = `
@@ -1444,8 +1119,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
                     </div>
                 </div>
             `;
-
-            console.log('✅ Loaded payment method for reactivation');
 
         } catch (error) {
             console.error('❌ Failed to load payment method:', error);
@@ -1560,7 +1233,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
        ======================================== */
 
     function switchToDeleteMode(member) {
-        console.log('🗑️ Switching to delete mode for:', member.name);
 
         // Add delete-mode class to panel
         document.querySelector('.slide-panel').classList.add('delete-mode');
@@ -1591,8 +1263,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
         // Hide error/success messages
         document.getElementById('deleteErrorMessage').style.display = 'none';
         document.getElementById('deleteSuccessMessage').style.display = 'none';
-
-        console.log('✅ Switched to delete mode');
     }
 
     /* ========================================
@@ -1614,8 +1284,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
             admin_username: formData.get('admin_username'), 
             admin_password: formData.get('admin_password')
         };
-
-        console.log('🗑️ Attempting to delete member:', memberId);
 
         // ========== VALIDATION BLOCK ==========
 
@@ -1730,12 +1398,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
 
         // Enable button only if checkbox is checked
         deleteBtn.disabled = !checkbox.checked;
-
-        if (checkbox.checked) {
-            console.log('✅ Delete button enabled');
-        } else {
-            console.log('❌ Delete button disabled');
-        }
     }
 
 
@@ -1750,7 +1412,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
        ======================================== */
 
     async function openPaymentModal(member) {
-        console.log('💰 Opening payment modal for:', member.name);
 
         currentPaymentMember = member;
 
@@ -1764,8 +1425,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
 
         // Show modal
         document.getElementById('paymentModalOverlay').classList.add('active');
-
-        console.log('✅ Payment modal opened');
     }
 
     /* ========================================
@@ -1775,7 +1434,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
     function closePaymentModal() {
         document.getElementById('paymentModalOverlay').classList.remove('active');
         currentPaymentMember = null;
-        console.log('✅ Payment modal closed');
     }
 
     /* ========================================
@@ -1966,7 +1624,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
        ======================================== */
 
     function openRecordPaymentModal() {
-        console.log('📝 Opening record payment modal');
 
         // Set today's date as default
         const today = new Date().toISOString().split('T')[0];
@@ -1983,8 +1640,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
 
         // Show modal
         document.getElementById('recordPaymentModalOverlay').classList.add('active');
-
-        console.log('✅ Record payment modal opened');
     }
 
     /* ========================================
@@ -1993,7 +1648,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
 
     function closeRecordPaymentModal() {
         document.getElementById('recordPaymentModalOverlay').classList.remove('active');
-        console.log('✅ Record payment modal closed');
     }
 
     /* ========================================
@@ -2078,7 +1732,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
        ======================================== */
 
     async function openUpdatePaymentMethodModal() {
-        console.log('💳 Opening update payment method modal');
 
         // Populate year dropdown (current year + 10 years)
         const yearSelect = document.getElementById('expiryYear');
@@ -2124,8 +1777,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
 
         // Show modal
         document.getElementById('updatePaymentMethodModalOverlay').classList.add('active');
-
-        console.log('✅ Update payment method modal opened');
     }
 
     /* ========================================
@@ -2134,7 +1785,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
 
     function closeUpdatePaymentMethodModal() {
         document.getElementById('updatePaymentMethodModalOverlay').classList.remove('active');
-        console.log('✅ Update payment method modal closed');
     }
 
     /* ========================================
@@ -2230,8 +1880,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
             notes: formData.get('notes') || null
         };
 
-        console.log('💾 Saving member changes:', memberData);
-
         // Hide previous messages
         document.getElementById('editErrorMessage').style.display = 'none';
         document.getElementById('editSuccessMessage').style.display = 'none';
@@ -2282,98 +1930,8 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
             errorMsg.style.display = 'block';
         }
     }
-
-    
-    /* ========================================
-       ADD MEMBER FORM SUBMISSION
-       ======================================== */
-    
-    const addMemberForm = document.getElementById('addMemberForm');
-    
-    if (addMemberForm) {
-        addMemberForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            // Get form data
-            const formData = new FormData(addMemberForm);
-            const memberData = {
-                name: formData.get('name'),
-                email: formData.get('email'),
-                location_id: parseInt(formData.get('location_id')),
-                plan: formData.get('plan')
-            };
-            
-            console.log('📝 Submitting new member:', memberData);
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/members`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(memberData)
-                });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Failed to create member');
-                }
-                
-                const result = await response.json();
-                
-                console.log('✅ Member created:', result);
-                
-                // Close modal
-                document.getElementById('add-member-modal').classList.remove('show');
-                
-                // Reset form
-                addMemberForm.reset();
-                
-                // Refresh table and stats
-                fetchMembers();
-                fetchStats();
-                
-            } catch (error) {
-                console.error('❌ Failed to create member:', error);
-            }
-        });
-    }
     
     
-    /* ========================================
-       POPULATE LOCATION DROPDOWNS
-       ======================================== */
-    
-    async function populateLocationDropdowns() {
-        // Fetch locations from database via members query
-        // For now, hardcode (we can create /api/locations later)
-        const locations = [
-            { id: 1, name: 'Downtown' },
-            { id: 2, name: 'Midtown' },
-            { id: 3, name: 'Eastside' }
-        ];
-        
-        // Populate filter dropdown
-        locations.forEach(loc => {
-            const option = document.createElement('option');
-            option.value = loc.id;
-            option.textContent = loc.name;
-            locationFilter.appendChild(option);
-        });
-        
-        // Populate modal dropdowns
-        const modalLocationSelects = document.querySelectorAll('#memberLocation, #checkinLocation, #editLocation');
-        modalLocationSelects.forEach(select => {
-            locations.forEach(loc => {
-                const option = document.createElement('option');
-                option.value = loc.id;
-                option.textContent = loc.name;
-                select.appendChild(option);
-            });
-        });
-    }
-    
-
     /* ========================================
        SLIDE PANEL EVENT LISTENERS
        ======================================== */
@@ -2401,7 +1959,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
 
     // Cancel delete button
     document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
-        console.log(' Canceling delete');
         switchToViewMode();
     });
 
@@ -2417,7 +1974,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
     // Edit button
     document.getElementById('editMemberBtn').addEventListener('click', (e) => {
         const memberId = e.currentTarget.dataset.memberId;
-        console.log('✏️ Edit member:', memberId);
         editMember(memberId);
     });
 
@@ -2443,7 +1999,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
 
     // Cancel edit button
     document.getElementById('cancelEditBtn').addEventListener('click', () => {
-        console.log('❌ Cancelling edit');
         switchToViewMode();
     });
 
@@ -2455,7 +2010,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
 
     // Cancel freeze button
     document.getElementById('cancelFreezeBtn').addEventListener('click', () => {
-        console.log(' Canceling freeze');
         switchToViewMode();
     });
 
@@ -2587,50 +2141,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
             sortMembersTable(column);
         });
     });
-
-    /* ========================================
-       CHECK-IN MODAL EVENT LISTENERS
-       ======================================== */
-
-    // When user clicks "Confirm Check-In" button
-    document.getElementById('confirmCheckInBtn')?.addEventListener('click', async (e) => {
-        e.preventDefault();
-
-        // Get selected member ID and location ID from modal
-        const memberId = document.getElementById('checkInMemberId').value;
-        const locationId = document.getElementById('checkinLocation').value;
-
-        // Validate inputs
-        if (!memberId) {
-            showNotification('Please select a member', 'error');
-            return;
-        }
-
-        if (!locationId) {
-            showNotification('Please select a location', 'error');
-            return;
-        }
-
-        // Show loading state
-        const btn = e.target;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking in...';
-        btn.disabled = true;
-
-        // Submit check-in
-        const success = await submitCheckIn(memberId, locationId);
-
-        // Restore button
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-
-        // Clear form if successful
-        if (success) {
-            document.getElementById('checkInMemberId').value = '';
-            document.getElementById('checkinLocation').value = '';
-        }
-    });
-
     
     /* ========================================
        INITIALIZE PAGE
@@ -2640,20 +2150,11 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
     async function initMembersPage() {
         console.log('🔄 Initializing members page...');
         
-        // Populate location dropdowns
-        await populateLocationDropdowns();
-        
         // Fetch stats
         await fetchStats();
         
         // Fetch and display members
         await fetchMembers();
-
-        // Setup check-in search (after members are loaded)
-        setupCheckInSearch();
-
-        // Setup location warning
-        setupLocationWarning();
         
         console.log(`✅ Members page initialized with real data! (${allMembers.length} total members)`);
     }

@@ -98,8 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.querySelector('[data-metric="activeTrainers"]').textContent = 
             kpis.activeTrainers;
-        
-        console.log('✅ KPIs updated');
     }
     
     /* ========================================
@@ -134,8 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         container.appendChild(list);
-        
-        console.log('✅ Branch list updated');
     }
     
     /* ========================================
@@ -186,8 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         container.appendChild(item);
     });
-    
-    console.log('✅ Activity feed updated');
 }
     
     
@@ -258,8 +252,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
-        
-        console.log('✅ Membership growth chart created');
     }
     
     function createRevenueChart(data) {
@@ -319,8 +311,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
-        
-        console.log('✅ Revenue chart created');
     }
     
     /* ========================================
@@ -351,8 +341,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             container.appendChild(li);
         });
-        
-        console.log('✅ Inventory alerts updated');
     }
     
     
@@ -375,8 +363,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             container.appendChild(li);
         });
-        
-        console.log('✅ System health updated');
     }
     
     
@@ -536,7 +522,6 @@ function addNewActivity() {
         container.lastElementChild.remove();
     }
     
-    console.log('📢 New activity added');
 }
 
 // Add new activity every 6 seconds

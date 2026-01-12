@@ -152,16 +152,19 @@ const validateAddMember = [
         .matches(/^\(\d{3}\) \d{3}-\d{4}$/)
         .withMessage('Phone must be in format: (555) 123-4567'),
 
-    // EMERGENCY CONTACT VALIDATION
+    // EMERGENCY CONTACT VALIDATION  
     body('emergency_contact')
-        // .optional() - This field is not required
-        // If provided, it must pass validation
-        // If not provided, skip validation
-        // WHY? Some people don't have emergency contacts
-        .optional()
+        .optional({ nullable: true, checkFalsy: true })
         .trim()
-        .matches(/^\(\d{3}\) \d{3}-\d{4}$/)
-        .withMessage('Emergency contact must be in format: (555) 123-4567'),
+        .custom((value) => {
+            // If provided, must match format
+            if (value && value.length > 0) {
+                if (!/^\(\d{3}\) \d{3}-\d{4}$/.test(value)) {
+                    throw new Error('Emergency contact must be in format: (555) 123-4567');
+                }
+            }
+            return true;
+        }),
 
     // PLAN VALIDATION
     body('plan')

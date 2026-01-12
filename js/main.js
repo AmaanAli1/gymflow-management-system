@@ -4,7 +4,7 @@
    ============================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 GymFlow Admin Dashboard initialized');
+    console.log('✅ GymFlow initialized');
     
     /* ========================================
        GLOBAL UTILITIES
@@ -106,13 +106,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     };
     
-    /* ========================================
-       LOG USEFUL DEBUG INFO
-       ======================================== */
-    
-    console.log('📊 Dashboard Info:', {
-        page: window.location.pathname,
-        viewport: `${window.innerWidth}x${window.innerHeight}`,
-        userAgent: navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'
-    });
 });

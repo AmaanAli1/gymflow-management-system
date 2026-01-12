@@ -350,6 +350,14 @@
                                 <input type="email" id="memberEmail" name="email" required placeholder="john@example.com">
                             </div>
                             <div class="field">
+                                <label for="memberPhone">Phone *</label>
+                                <input type="tel" id="memberPhone" name="phone" placeholder="(555) 123-4567" required>
+                            </div>
+                            <div class="field">
+                                <label for="memberEmergencyContact">Emergency Contact</label>
+                                <input type="tel" id="memberEmergencyContact" name="emergency_contact" placeholder="(555) 987-6543">
+                            </div>
+                            <div class="field">
                                 <label for="memberLocation">Location *</label>
                                 <select id="memberLocation" name="location_id" required>
                                     <!-- Options populated by JavaScript -->
@@ -842,6 +850,7 @@
         <script src="../js/main.js"></script>
         <script src="../js/sidebar.js"></script>
         <script src="../js/modals.js"></script>
+        <script src="../js/shared.js"></script>
 
         <!-- Staff-specific JS: Fetch and display staff data -->
         <script src="../js/pages/staff.js"></script>
