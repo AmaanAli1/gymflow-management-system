@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             
             // Store filtered members for display
-            allMembers = data.members;
+            currentDisplayedMembers = data.members;
 
             // If no filters applied, also update allMembers
             if (!currentFilters.location && !currentFilters.plan && !currentFilters.status && !currentFilters.search) {
@@ -254,6 +254,84 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Add event listeners to action buttons
         attachTableActionListeners();
+    }
+
+    /* ========================================
+       SEARCH FUNCTIONALITY (Real-Time)
+       Filter members by search query
+       ======================================== */
+
+    function handleSearch(query) {
+        // If empty, apply current filters (show filtered results)
+        if (query === '') {
+            applyFilters();
+            return;
+        }
+
+        // Start with current filtered results (respect other filters)
+        let searchBase = allMembers;
+
+        // Apply non-search filters first
+        if (currentFilters.location) {
+            searchBase = searchBase.filter(m => m.location_id == currentFilters.location);
+        }
+        if (currentFilters.plan) {
+            searchBase = searchBase.filter(m => m.plan === currentFilters.plan);
+        }
+        if (currentFilters.status) {
+            searchBase = searchBase.filter(m => m.status === currentFilters.status);
+        }
+
+        // Apply search to the filtered base
+        const queryLower = query.toLowerCase().trim();
+        const filtered = searchBase.filter(member => {
+            return member.name.toLowerCase().includes(queryLower) || 
+                   member.email.toLowerCase().includes(queryLower) || 
+                   (member.member_id && member.member_id.toLowerCase().includes(queryLower)) || 
+                   (member.phone && member.phone.includes(queryLower));
+        });
+
+        currentDisplayedMembers = filtered;
+        populateMembersTable(filtered);
+    }
+
+    /* ========================================
+       APPLY FILTERS (Client-Side)
+       Apply location, plan, status filters to local data
+       ======================================== */
+
+    function applyFilters() {
+        // Start with all members
+        let filtered = [...allMembers];
+
+        // Apply location filter
+        if (currentFilters.location) {
+            filtered = filtered.filter(m => m.location_id == currentFilters.location);
+        }
+
+        // Apply plan filter
+        if (currentFilters.plan) {
+            filtered = filtered.filter(m => m.plan === currentFilters.plan);
+        }
+
+        // Apply status filter
+        if (currentFilters.status) {
+            filtered = filtered.filter(m => m.status === currentFilters.status);
+        }
+
+        // Apply search if there's a query
+        if (currentFilters.search) {
+            const queryLower = currentFilters.search.toLowerCase().trim();
+            filtered = filtered.filter(member => {
+                return member.name.toLowerCase().includes(queryLower) || 
+                       member.email.toLowerCase().includes(queryLower) || 
+                       (member.member_id && member.member_id.toLowerCase().includes(queryLower)) || 
+                       (member.phone && member.phone.includes(queryLower));
+            });
+        }
+
+        currentDisplayedMembers = filtered;
+        populateMembersTable(filtered);
     }
 
     /* ========================================
@@ -418,15 +496,11 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchMembers(); // Re-fetch with new filter
     });
     
-    // Search input (with debounce)
-    let searchTimeout;
+    // Search input
     searchInput.addEventListener('input', (e) => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            currentFilters.search = e.target.value;
-            fetchMembers(); // Re-fetch with search term
-        }, 500); // Wait 500ms after user stops typing
-    });
+        currentFilters.search = e.target.value;
+        handleSearch(e.target.value);   // Filter locally (instant)
+    })
     
     
     /* ========================================
@@ -1556,8 +1630,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
                 `;
             }).join('');
 
-            console.log(`✅ Loaded ${payments.length} payments`);
-
         } catch (error) {
             console.error('❌ Failed to load payment history:', error);
         }
@@ -2154,6 +2226,7 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
         await fetchStats();
         
         // Fetch and display members
+        currentFilters = { location: '', plan: '', status: '', search: '' };
         await fetchMembers();
         
         console.log(`✅ Members page initialized with real data! (${allMembers.length} total members)`);

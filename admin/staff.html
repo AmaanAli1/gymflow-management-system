@@ -195,7 +195,7 @@
                     <div class="staff-filters">
 
                         <!-- Filter by Role -->
-                        <select id="filterRote" aria-label="Filter by role">
+                        <select id="filterRole" aria-label="Filter by role">
                             <option value="all">All Roles</option>
                             <option value="Front Desk CSR">Front Desk CSR</option>
                             <option value="Sales">Sales</option>
@@ -277,6 +277,10 @@
                         <!-- Table Header -->
                         <thead>
                             <tr>
+                                <th class="sortable" data-sort="staff_id">
+                                    Staff ID <i class="fa-solid fa-sort"></i>
+                                    <i class="fa-solid fa-sort"></i>
+                                </th>
                                 <th class="sortable" data-sort="name">
                                     Name
                                     <i class="fa-solid fa-sort"></i>
@@ -313,7 +317,7 @@
                         <tbody id="staffTableBody">
                             <!-- Rows inserted here by staff.js -->
                             <tr>
-                                <td colspan="8" class="table-loading">
+                                <td colspan="9" class="table-loading">
                                     <i class="fa-solid fa-spinner fa-spin"></i>
                                     <p>Loading Staff...</p>
                                 </td>
@@ -591,7 +595,7 @@
                     <div class="slide-panel-info">
                         <div class="slide-panel-label">Staff Profile</div>
                         <div class="slide-panel-name" id="panelStaffName">---</div>
-                        <div class="slide-panel-id" id="panelStaffEmail">---</div>
+                        <div class="slide-panel-id" id="panelStaffID">---</div>
                     </div>
                     <button class="slide-panel-close" id="closeStaffPanel" aria-label="Close panel">
                         &times;
@@ -605,6 +609,11 @@
                     <div class="slide-panel-view">
 
                         <!-- Detail Rows -->
+                        <div class="slide-panel-row">
+                            <span class="slide-panel-key">Email</span>
+                            <span class="slide-panel-value" id="panelStaffEmailAddress">---</span>
+                        </div>
+
                         <div class="slide-panel-row">
                             <span class="slide-panel-key">Phone</span>
                             <span class="slide-panel-value" id="panelStaffPhone">---</span>

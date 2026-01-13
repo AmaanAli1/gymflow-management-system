@@ -41,16 +41,8 @@ router.get('/', (req, res) => {
     // WHY JOIN? We store location_id but need to display location name
     let query = `
         SELECT
-            s.id,
-            s.name,
-            s.email,
-            s.phone,
-            s.role,
-            s.location_id,
-            l.name as location_name,
-            s.hire_date,
-            s.status,
-            s.created_at
+           s.*,
+           l.name as location_name
         FROM staff s
         LEFT JOIN locations l ON s.location_id = l.id
         WHERE 1=1
@@ -75,9 +67,9 @@ router.get('/', (req, res) => {
     }
 
     if (search) {
-        query += ` AND (s.name LIKE ? OR s.email LIKE ? OR s.role LIKE ?)`;
+        query += ` AND (s.name LIKE ? OR s.email LIKE ? OR s.role LIKE ? OR s.staff_id LIKE ?)`;
         const searchPattern = `%${search}%`;
-        params.push(searchPattern, searchPattern, searchPattern);
+        params.push(searchPattern, searchPattern, searchPattern, searchPattern);
     }
 
     // Order by newest first
@@ -177,16 +169,9 @@ router.get('/:id', (req, res) => {
     // Fetch staff details with location
     const staffQuery = `
         SELECT
-            s.id,
-            s.name,
-            s.email,
-            s.phone,
-            s.role,
-            s.location_id,
+            s.*,
             l.name AS location_name,
-            s.hire_date,
-            s.status,
-            s.created_at
+            l.address AS location_address
         FROM staff s
         LEFT JOIN locations l ON s.location_id = l.id
         WHERE s.id = ?
@@ -214,7 +199,7 @@ router.get('/:id', (req, res) => {
    ============================================ */
 
 router.post('/', validateAddStaff, handleValidationErrors, (req, res) => {
-    const { name, email, phone, role, location_id, hire_date } = req.body;
+    const { name, email, phone, emergency_contact, emergency_phone, role, location_id, hire_date, hourly_rate, notes } = req.body;
 
     console.log('➕ Adding new staff:', req.body);
 
@@ -237,44 +222,83 @@ router.post('/', validateAddStaff, handleValidationErrors, (req, res) => {
             return res.status(400).json({ error: 'Email already exists' });
         }
 
-        // Insert new staff member
-        // WHY default status to 'active'?
-        // New hires are active by default
-        const insertQuery = `
-            INSERT INTO staff (name, email, phone, role, location_id, hire_date, status)
-            VALUES (?, ?, ?, ?, ?, ?, 'active')
+        // Step 1: Generate staff_id (like S-0001)
+        const getMaxIdQuery = `
+            SELECT MAX(CAST(SUBSTRING(staff_id, 3) AS UNSIGNED)) as max_num
+            FROM staff
         `;
 
-        db.query(insertQuery, [name, email, phone || null, role, location_id, hire_date], (err, result) => {
+        db.query(getMaxIdQuery, (err, results) => {
             if (err) {
-                console.error('❌ Insert error:', err);
-                return res.status(500).json({ error: 'Failed to create staff member' });
+                console.error('❌ Error generating staff ID:', err);
+                return res.status(500).json({ error: 'Database error' });
             }
 
-            const newStaffId = result.insertId;
+            // Generate next staff_id
+            // results[0].max_num might be null if table is empty, so we'll use || 0
+            const nextNum = (results[0].max_num || 0) + 1;
 
-            // Fetch the newly created staff member (with location name)
-            const fetchQuery = `
-                SELECT
-                    s.*,
-                    l.name AS location_name
-                FROM staff s
-                LEFT JOIN locations l ON s.location_id = l.id
-                WHERE s.id = ?
+            // LPAD equivalent in JavaScript
+            const staff_id = `S-${String(nextNum).padStart(4, '0')}`;
+
+            console.log(`📋 Genereated staff ID: ${staff_id}`);
+
+            // Step 2: Insert new staff member
+            const insertQuery = `
+                INSERT INTO STAFF (
+                    staff_id, name, email, phone, emergency_contact,
+                    emergency_phone, role, location_id, hire_date,
+                    hourly_rate, notes, status
+                )
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
             `;
 
-            db.query(fetchQuery, [newStaffId], (err, staff) => {
+            const values = [
+                staff_id, 
+                name, 
+                email, 
+                phone || null, 
+                emergency_contact || null, 
+                emergency_phone || null, 
+                role, 
+                location_id, 
+                hire_date, 
+                hourly_rate || null, 
+                notes || null
+            ];
+
+            db.query(insertQuery, values, (err, result) => {
                 if (err) {
-                    console.error('❌ Fetch error:', err);
-                    return res.status(500).json({ error: 'Staff created but failed to fetch' });
+                    console.error('❌ Insert error:', err);
+                    return res.status(500).json({ error: 'Failed to create staff member' });
                 }
 
-                console.log(`✅ Staff created: ${name} (ID: ${newStaffId})`);
-                res.status(201).json({
-                    success: true, 
-                    id: newStaffId, 
-                    message: 'Staff member created successfully', 
-                    staff: staff[0]
+                const newStaffId = result.insertId;
+
+                // Fetch the newly created staff member (with location name)
+                const fetchQuery = `
+                    SELECT
+                        s.*,
+                        l.name AS location_name
+                    FROM staff s
+                    LEFT JOIN locations l ON s.location_id = l.id
+                    WHERE s.id = ?
+                `;
+
+                db.query(fetchQuery, [newStaffId], (err, staff) => {
+                    if (err) {
+                        console.error('❌ Fetch error:', err);
+                        return res.status(500).json({ error: 'Staff created but failed to fetch' });
+                    }
+
+                    console.log(`✅ Staff created: ${name} (${staff_id})`);
+                    res.status(201).json({
+                        success: true, 
+                        id: newStaffId, 
+                        staff_id: staff_id, 
+                        message: 'Staff member created successfully', 
+                        staff: staff[0]
+                    });
                 });
             });
         });
@@ -288,7 +312,7 @@ router.post('/', validateAddStaff, handleValidationErrors, (req, res) => {
 
 router.put('/:id', validateEditStaff, handleValidationErrors, (req, res) => {
     const staffId = req.params.id;
-    const { name, email, phone, role, location_id, hire_date, status } = req.body;
+    const { name, email, phone, emergency_contact, emergency_phone, role, location_id, hire_date, hourly_rate, status, notes } = req.body;
 
     console.log(`📝 Update staff ${staffId}:`, req.body);
 
@@ -325,10 +349,14 @@ router.put('/:id', validateEditStaff, handleValidationErrors, (req, res) => {
                 name = ?,
                 email = ?,
                 phone = ?,
+                emergency_contact = ?,
+                emergency_phone = ?,
                 role = ?,
                 location_id = ?,
                 hire_date = ?,
-                status = ?
+                hourly_rate = ?,
+                status = ?,
+                notes = ?
             WHERE id = ?
         `;
 
@@ -336,10 +364,14 @@ router.put('/:id', validateEditStaff, handleValidationErrors, (req, res) => {
             name, 
             email, 
             phone || null, 
+            emergency_contact || null, 
+            emergency_phone || null, 
             role, 
             location_id, 
             hire_date, 
+            hourly_rate || null, 
             status || 'active', 
+            notes || null, 
             staffId
         ];
 
