@@ -647,6 +647,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Reset to view mode when closing
         switchToViewMode();
+
+        currentMember = null;
     }
 
     /* Helper: Calculate days since joining */
