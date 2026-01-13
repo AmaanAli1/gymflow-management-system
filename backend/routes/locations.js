@@ -15,7 +15,7 @@ const db = require('../config/database');
    ============================================ */
 router.get('/', (req, res) => {
     
-    const query = 'SELECT id, name FROM locations ORDER BY name';
+    const query = 'SELECT id, name FROM locations ORDER BY id';
 
     db.query(query, (err, results) => {
         if (err) {

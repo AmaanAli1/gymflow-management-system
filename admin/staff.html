@@ -215,6 +215,8 @@
                             <option value="all">All Status</option>
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
+                            <option value="on_leave">On Leave</option>
+                            <option value="terminated">Terminated</option>
                         </select>
 
 
@@ -512,76 +514,121 @@
                 </div>
 
                 <div class="modal-body">
+                    <!-- Error/Success Messages -->
+                    <div id="addStaffError" class="modal-error" style="display: none;"></div>
+                    <div id="addStaffSuccess" class="modal-success" style="display: none;"></div>
+
                     <form id="addStaffForm">
                         <div class="modal-grid">
+                            <!-- Full Name (Required) -->
                             <div class="field">
-                                <label for="staffName">Full Name</label>
-                                <input type="text" 
-                                       id="staffName" 
+                                <label for="staffName">Full Name *</label>
+                                <input type="text"
+                                       id="staffName"
                                        name="name"
-                                       placeholder="e.g. Sarah Lee" 
+                                       placeholder="e.g. Sara Johnson"
                                        required>
                             </div>
+
+                            <!-- Email (Required) -->
                             <div class="field">
-                                <label for="staffEmail">Email (Login)</label>
-                                <input type="email" 
-                                       id="staffEmail" 
+                                <label for="staffEmail">Email *</label>
+                                <input type="email"
+                                       id="staffEmail"
                                        name="email"
-                                       placeholder="staff@gymflowhq.com" 
+                                       placeholder="sarah.j@gymflow.com"
                                        required>
                             </div>
+
+                            <!-- Phone (Required) -->
                             <div class="field">
-                                <label for="staffRole">Primary Role</label>
+                                <label for="staffPhone">Phone *</label>
+                                <input type="tel"
+                                       id="staffPhone"
+                                       name="phone"
+                                       placeholder="(416) 555-0101"
+                                       required>
+                            </div>
+
+                            <!-- Emergency Contact (Optional) -->
+                            <div class="field">
+                                <label for="staffEmergencyContact">Emergency Contact</label>
+                                <input type="text"
+                                       id="staffEmergencyContact"
+                                       name="emergency_contact"
+                                       placeholder="e.g. Mike Johnson">
+                            </div>
+
+                            <!-- Emergency Phone -->
+                            <div class="field">
+                                <label for="staffEmergencyPhone">Emergency Phone</label>
+                                <input type="tel"
+                                       id="staffEmergencyPhone"
+                                       name="emergency_phone"
+                                       placeholder="(416) 555-0199">
+                            </div>
+
+                            <!-- Role (Required) -->
+                            <div class="field">
+                                <label for="staffRole">Role *</label>
                                 <select id="staffRole" name="role" required>
-                                    <option value="">Select role</option>
-                                    <option value="front-desk">Front Desk / CSR</option>
-                                    <option value="sales">Sales</option>
-                                    <option value="operations">Operations</option>
-                                    <option value="manager">Manager</option>
-                                    <option value="admin">Admin</option>
+                                    <option value="">Select role...</option>
+                                    <option value="Front Desk CSR">Front Desk CSR</option>
+                                    <option value="Sales">Sales</option>
+                                    <option value="Operations">Operations</option>
+                                    <option value="Manager">Manager</option>
+                                    <option value="Admin">Admin</option>
                                 </select>
                             </div>
+
+                            <!-- Location (Required) - Populated by JavaScript -->
                             <div class="field">
-                                <label for="staffLocation">Home Location</label>
-                                <select id="staffLocation" name="location" required>
-                                    <option value="">Select location</option>
-                                    <option value="downtown">Downtown</option>
-                                    <option value="midtown">Midtown</option>
-                                    <option value="eastside">Eastside</option>
+                                <label for="staffLocationSelect">Location *</label>
+                                <select id="staffLocationSelect" name="location_id" required>
+                                    <option value="">Select location...</option>
+                                    <!-- Options populated by JavaScript -->
                                 </select>
                             </div>
+
+                            <!-- Hire Date (Required) -->
                             <div class="field">
-                                <label for="staffEmployment">Employment Type</label>
-                                <select id="staffEmployment" name="employment" required>
-                                    <option value="">Select type</option>
-                                    <option value="full-time">Full-time</option>
-                                    <option value="part-time">Part-time</option>
-                                    <option value="contract">Contract</option>
-                                </select>
+                                <label for="staffHireDate">Hire Date *</label>
+                                <input type="date"
+                                       id="staffHireDate"
+                                       name="hire_date"
+                                       required>
                             </div>
+
+                            <!-- Hourly Rate (Optional) -->
                             <div class="field">
-                                <label for="staffAccess">Access Level</label>
-                                <select id="staffAccess" name="access" required>
-                                    <option value="">Select level</option>
-                                    <option value="standard">Standard</option>
-                                    <option value="manager">Manager</option>
-                                    <option value="admin">Admin</option>
-                                </select>
+                                <label for="staffHourlyRate">Hourly Rate ($)</label>
+                                <input type="number"
+                                       id="staffHourlyRate"
+                                       name="hourly_rate"
+                                       placeholder="e.g. 22.50"
+                                       step="0.01"
+                                       min="0">
                             </div>
                         </div>
+
+                        <!-- Notes (Optional) -->
                         <div class="field">
                             <label for="staffNotes">Notes</label>
-                            <textarea id="staffNotes" 
+                            <textarea id="staffNotes"
                                       name="notes"
-                                      rows="3" 
-                                      placeholder="Certifications, languages, special permissions, etc."></textarea>
+                                      rows="3"
+                                      placeholder="Certifications, languages, special skills, etc."></textarea>
                         </div>
                     </form>
                 </div>
 
+                <!-- Footer -->
                 <div class="modal-footer">
                     <button class="btn ghost" data-close-modal type="button">Cancel</button>
-                    <button class="btn primary" type="submit" form="addStaffForm">Create Staff Account</button>
+                    <button class="btn primary" type="submit" form="addStaffForm" id="submitAddStaff">
+                        <i class="fa-solid fa-plus"></i>
+                            Add Staff Member
+                    </button>
                 </div>
             </div>
         </div>

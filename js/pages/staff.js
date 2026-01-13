@@ -250,6 +250,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             viewStaff(staffId);
          }
       });
+
+      /* ============================================
+         ADD STAFF MODAL EVENT LISTENERS
+         ============================================ */
+
+      // When Add Staff modal opens, populate location dropdown and set default date
+      document.querySelectorAll('[data-modal="add-staff-modal"]').forEach(trigger => {
+         trigger.addEventListener('click', () => {
+            populateAddStaffLocationDropdown();
+            setDefaultHireDate();
+         });
+      });
+
+      // Handle Add Staff form submission
+      // WHY stopImmediatePropagation? Prevents shared.js from also handling this form
+      document.getElementById('addStaffForm').addEventListener('submit', (e) => {
+         e.stopImmediatePropagation(); // Stop shared.js from handling
+         handleAddStaff(e);
+      }, true);   // Add 'true' for capture phase (runs BEFORE shared.js)
    }
 
    /* ============================================
@@ -458,6 +477,161 @@ document.addEventListener('DOMContentLoaded', async () => {
          document.getElementById('staffDetailPanel').classList.remove('active');
       }
    });
+
+   /* ============================================
+      ADD STAFF MODAL
+      Handle adding new staff members
+      ============================================ */
+
+   // Populate location dropdown in Add Staff modal
+   async function populateAddStaffLocationDropdown() {
+      try {
+         const response = await fetch(`${API_BASE_URL}/locations`);
+         const locations = await response.json();
+
+         const dropdown = document.getElementById('staffLocationSelect');
+
+         // Clear existing options (keep the placeholder)
+         dropdown.innerHTML = `<option value="">Select location...</option>`;
+
+         // Add location options
+         locations.forEach(location => {
+            const option = document.createElement('option');
+            option.value = location.id;
+            option.textContent = location.name;
+            dropdown.appendChild(option);
+         });
+
+      } catch (error) {
+         console.error('❌ Failed to load locations for Add Staff modal:', error);
+      }
+   }
+
+   // Set default hire date to today
+   function setDefaultHireDate() {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      document.getElementById('staffHireDate').value = today;
+   }
+
+   // Handle Add Staff form submission
+   async function handleAddStaff(e) {
+      e.preventDefault();  // Prevent default form submission
+
+      console.log('📝 Submitting new staff member...');
+
+      // Get form data
+      const form = document.getElementById('addStaffForm');
+      const formData = new FormData(form);
+
+      // Build staff object
+      // WHY manually build? Need to convert location_id to integer
+      const staffData = {
+         name: formData.get('name'), 
+         email: formData.get('email'), 
+         phone: formData.get('phone'), 
+         emergency_contact: formData.get('emergency_contact') || null, 
+         emergency_phone: formData.get('emergency_phone') || null, 
+         role: formData.get('role'), 
+         location_id: parseInt(formData.get('location_id')), 
+         hire_date: formData.get('hire_date'), 
+         hourly_rate: formData.get('hourly_rate') ? parseFloat(formData.get('hourly_rate')) : null, 
+         notes: formData.get('notes') || null
+      };
+
+      console.log('📤 Staff data:', staffData);
+
+      // Hide previous messages
+      document.getElementById('addStaffError').style.display = 'none';
+      document.getElementById('addStaffSuccess').style.display = 'none';
+
+      // Disable submit button to prevent double submission
+      const submitBtn = document.getElementById('submitAddStaff');
+      const originalBtnText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Adding...';
+
+      try {
+         // Send POST request to API
+         const response = await fetch(`${API_BASE_URL}/staff`, {
+            method: 'POST', 
+            headers: {
+               'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(staffData)
+         });
+
+         const result = await response.json();
+
+         // Check if request failed
+         if (!response.ok) {
+            throw new Error(result.error || 'Failed to add staff member');
+         }
+
+         console.log('✅ Staff member added:', result);
+
+         // Show success message
+         const successMsg = document.getElementById('addStaffSuccess');
+         successMsg.textContent = `✅ ${staffData.name} added successfully! (${result.staff_id})`;
+         successMsg.style.display = 'block';
+
+         // Wait 1.5 seconds, then close modal and refresh
+         setTimeout(async () => {
+            // Close modal
+            const closeBtn = document.querySelector('#add-staff-modal [data-close-modal]');
+            if (closeBtn) closeBtn.click();
+
+            // Reset form
+            form.reset();
+
+            // Hide success message
+            successMsg.style.display = 'none';
+
+            // Refresh staff list
+            await fetchStats();
+            await fetchStaff();
+
+            // Show toast notification
+            showToast(`${staffData.name} added successfully!`, 'success');
+
+         }, 1500);
+
+      } catch (error) {
+         console.error('❌ Failed to add staff:', error);
+
+         // Show error message
+         const errorMsg = document.getElementById('addStaffError');
+         errorMsg.textContent = `❌ ${error.message}`;
+         errorMsg.style.display = 'block';
+
+         // Re-enable submit button
+         submitBtn.disabled = false;
+         submitBtn.innerHTML = originalBtnText;
+      }
+   }
+
+   // Toast notification helper
+   function showToast(message, type = 'success') {
+      // Create toast element
+      const toast = document.createElement('div');
+      toast.className = `toast-notification ${type}`;
+      toast.innerHTML = `
+         <i class="fa-solid fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+         <span>${message}</span>
+      `;
+
+      // Add to body
+      document.body.appendChild(toast);
+
+      // Show toast with animation
+      setTimeout(() => toast.classList.add('show'), 10);
+
+      // Remove after 3 seconds
+      setTimeout(() => {
+         toast.classList.remove('show');
+         setTimeout(() => toast.remove(), 300);
+      }, 3000);
+   }
+
 
    /* ============================================
       MAKE FUNCTIONS GLOBALLY ACCESSIBLE

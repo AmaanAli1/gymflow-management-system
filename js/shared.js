@@ -661,5 +661,3 @@ if (addTrainerForm) {
         }
     });
 }
-
-console.log('✅ Shared module initialized');

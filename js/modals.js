@@ -182,5 +182,3 @@ document.addEventListener('DOMContentLoaded', () => {
         return isValid;
     }
 });
-
-console.log('✅ Modal system initialized');
