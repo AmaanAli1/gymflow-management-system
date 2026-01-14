@@ -175,9 +175,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                <td>${hireDate}</td>
                <td><span class="pill ${statusClass}">${statusText}</span></td>
                <td>
-                  <button class="table-action-btn view" data-staff-id="${staff.id}" title="View details">
-                     <i class="fa-solid fa-eye"></i>
-                  </button>
+                  <div class="table-actions">
+                     <button class="table-action-btn view" data-staff-id="${staff.id}" title="View details">
+                        <i class="fa-solid fa-eye"></i>
+                     </button>
+                     <button class="table-action-btn edit" data-staff-id="${staff.id}" title="Edit staff">
+                        <i class="fa-solid fa-pen"></i
+                     </button>
+                  </div>
                </td>
             </tr>
          `;
@@ -240,14 +245,19 @@ document.addEventListener('DOMContentLoaded', async () => {
          });
       });
 
-      // View button clicks (event delegation)
+      // View and Edit button clicks (event delegation)
       const tbody = document.getElementById('staffTableBody');
       tbody.addEventListener('click', (e) => {
          // Check if clicked element is a view button (or its icon)
          const viewBtn = e.target.closest('.table-action-btn.view');
+         const editBtn = e.target.closest('.table-action-btn.edit');
+
          if (viewBtn) {
             const staffId = viewBtn.dataset.staffId;
             viewStaff(staffId);
+         } else if (editBtn) {
+            const staffId = editBtn.dataset.staffId;
+            editStaff(staffId);
          }
       });
    }
@@ -450,20 +460,292 @@ document.addEventListener('DOMContentLoaded', async () => {
    // Close panel button
    document.getElementById('closeStaffPanel')?.addEventListener('click', () => {
       document.getElementById('staffDetailPanel').classList.remove('active');
+      switchToViewMode();
    });
 
    // Close panel when clicking overlay
    document.getElementById('staffDetailPanel')?.addEventListener('click', (e) => {
       if (e.target.id === 'staffDetailPanel') {
          document.getElementById('staffDetailPanel').classList.remove('active');
+         switchToViewMode();
       }
    });
+
+   /* ============================================
+      SLIDE PANEL MODE SWITCHING
+      Switch between View, Edit, Delete modes
+      ============================================ */
+
+   function switchToViewMode() {
+
+      // Hide edit and delete sections
+      document.querySelector('.slide-panel-edit').style.display = 'none';
+      document.querySelector('.slide-panel-delete').style.display = 'none';
+
+      // Show view section
+      document.querySelector('.slide-panel-view').style.display = 'block';
+
+      // Show view buttons, hide edit/delete buttons
+      document.getElementById('viewModeButtons').style.display = 'flex';
+      document.getElementById('editModeButtons').style.display = 'none';
+      document.getElementById('deleteModeButtons').style.display = 'none';
+
+      // Hide any error/success messages
+      const editError = document.getElementById('editErrorMessage');
+      const editSuccess = document.getElementById('editSuccessMessage');
+      if (editError) editError.style.display = 'none';
+      if (editSuccess) editSuccess.style.display = 'none';
+   }
+
+   function switchToEditMode(staff) {
+
+      // Hide view and delete sections
+      document.querySelector('.slide-panel-view').style.display = 'none';
+      document.querySelector('.slide-panel-delete').style.display = 'none';
+
+      // Show edit section
+      document.querySelector('.slide-panel-edit').style.display = 'block';
+
+      // Hide view and delete buttons, show edit buttons
+      document.getElementById('viewModeButtons').style.display = 'none';
+      document.getElementById('editModeButtons').style.display = 'flex';
+      document.getElementById('deleteModeButtons').style.display = 'none';
+
+      // Populate the edit form with current data
+      populateEditForm(staff);
+   }
+
+   /* ============================================
+      POPULATE EDIT FORM
+      Fill form with current staff data
+      ============================================ */
+
+   async function populateEditForm(staff) {
+
+      // Store staff ID in hidden field
+      document.getElementById('editStaffId').value = staff.id;
+
+      // Populate form fields
+      document.getElementById('editName').value = staff.name || '';
+      document.getElementById('editEmail').value = staff.email || '';
+      document.getElementById('editPhone').value = staff.phone || '';
+      document.getElementById('editEmergencyContact').value = staff.emergency_contact || '';
+      document.getElementById('editEmergencyPhone').value = staff.emergency_phone || '';
+      document.getElementById('editRole').value = staff.role || '';
+      document.getElementById('editStatus').value = staff.status || 'active';
+      document.getElementById('editNotes').value = staff.notes || '';
+
+      // Format hire date for input (YYYY-MM-DD)
+      if (staff.hire_date) {
+         const hireDate = new Date(staff.hire_date);
+         const formattedDate = hireDate.toISOString().split('T')[0];
+         document.getElementById('editHireDate').value = formattedDate;
+      }
+
+      // Hourly rate
+      document.getElementById('editHourlyRate').value = staff.hourly_rate || '';
+
+      // Populate location dropdown
+      await populateEditLocationDropdown();
+
+      // Set selected location
+      document.getElementById('editLocation').value = staff.location_id || '';
+   }
+
+   /* ============================================
+      POPULATE EDIT LOCATION DROPDOWN
+      Load locations from API for edit form
+      ============================================ */
+
+   async function populateEditLocationDropdown() {
+      try {
+         const response = await fetch(`${API_BASE_URL}/locations`);
+         const locations = await response.json();
+
+         const dropdown = document.getElementById('editLocation');
+         dropdown.innerHTML = '<option value="">Select location...</option>';
+
+         locations.forEach(location => {
+            const option = document.createElement('option');
+            option.value = location.id;
+            option.textContent = location.name;
+            dropdown.appendChild(option);
+         });
+
+      } catch (error) {
+         console.error('❌ Failed to load locations for edit form:', error);
+      }
+   }
+
+   /* ============================================
+      EDIT STAFF
+      Open slide panel in edit mode
+      ============================================ */
+
+   async function editStaff(staffId) {
+
+      // Find the staff member in our array
+      const staff = allStaff.find(s => s.id === parseInt(staffId));
+
+      if (!staff) {
+         console.error(`❌ Staff ${staffId} not found`);
+         return;
+      }
+
+      // Open the panel first (if not already open)
+      const panel = document.getElementById('staffDetailPanel');
+      if (!panel.classList.contains('active')) {
+         // Populate header
+         document.getElementById('panelStaffName').textContent = staff.name;
+         document.getElementById('panelStaffID').textContent = `ID: ${staff.staff_id}`;
+
+         // Show panel
+         panel.classList.add('active');
+      }
+
+      // Switch to edit mode
+      switchToEditMode(staff);
+   }
+
+   /* ============================================
+      SAVE STAFF CHANGES
+      Submit edit form and update database
+      ============================================ */
+
+   async function saveStaffChanges(e) {
+      e.preventDefault();  // Prevent form submission
+
+      // Get staff ID
+      const staffId = document.getElementById('editStaffId').value;
+
+      // Get form data
+      const form = document.getElementById('editStaffForm');
+      const formData = new FormData(form);
+
+      const staffData = {
+         name: formData.get('name'), 
+         email: formData.get('email'), 
+         phone: formData.get('phone'), 
+         emergency_contact: formData.get('emergency_contact') || null, 
+         emergency_phone: formData.get('emergency_phone') || null, 
+         role: formData.get('role'), 
+         location_id: parseInt(formData.get('location_id')), 
+         hire_date: formData.get('hire_date'), 
+         hourly_rate: formData.get('hourly_rate') ? parseFloat(formData.get('hourly_rate')) : null, 
+         status: formData.get('status'), 
+         notes: formData.get('notes') || null
+      };
+
+      console.log('📤 Updated staff data:', staffData);
+
+      // Hide previous messages
+      const errorMsg = document.getElementById('editErrorMessage');
+      const successMsg = document.getElementById('editSuccessMessage');
+      if (errorMsg) errorMsg.style.display = 'none';
+      if (successMsg) successMsg.style.display = 'none';
+
+      // Disable save button with loading spinner
+      const saveBtn = document.getElementById('saveEditBtn');
+      const originalBtnText = saveBtn.innerHTML;
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+
+      try {
+         // Send PUT request to API
+         const response = await fetch(`${API_BASE_URL}/staff/${staffId}`, {
+            method: 'PUT', 
+            headers: {
+               'Content-Type': 'application/json'
+            }, 
+            body: JSON.stringify(staffData)
+         });
+
+         const result = await response.json();
+
+         if (!response.ok) {
+            throw new Error(result.error || 'Failed to update staff member');
+         }
+
+         console.log('✅ Staff member updated:', result);
+
+         // Show success message
+         if (successMsg) {
+            successMsg.textContent = '✅ Staff member updated successfully!';
+            successMsg.style.display = 'block';
+         }
+
+         // Update the staff in allStaff array
+         const index = allStaff.findIndex(s => s.id == staffId);
+         if (index !== -1) {
+            // Merge updated data with existing data
+            allStaff[index] = { ...allStaff[index], ...result.staff };
+         }
+
+         // Wait 1 second, then switch back to view mode
+         setTimeout(() => {
+            // Update view mode with new data
+            viewStaff(staffId);
+
+            // Switch to view mode
+            switchToViewMode();
+
+            // Hide success message
+            if (successMsg) successMsg.style.display = 'none';
+
+            // Re-enable button
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalBtnText;
+
+            // Refresh table to show updated data
+            fetchStaff();
+            fetchStats();
+         }, 1000);
+
+      } catch (error) {
+         console.error('❌ Failed to save staff changes:', error);
+
+         // Show error message
+         if (errorMsg) {
+         errorMsg.textContent = `❌ ${error.message}`;
+         errorMsg.style.display = 'block';
+      }
+
+         // Re-enable button
+         saveBtn.disabled = true;
+         saveBtn.innerHTML = originalBtnText;
+
+      }
+   }
+
+   /* ============================================
+      SLIDE PANEL EVENT LISTENERS
+      ============================================ */
+
+   // Edit button (in panel footer)
+   document.getElementById('editStaffBtn')?.addEventListener('click', () => {
+      const staffId = document.getElementById('editStaffBtn').dataset.staffId;
+      if (staffId) {
+         editStaff(staffId);
+      }
+   });
+
+   // Cancel edit button
+   document.getElementById('cancelEditBtn')?.addEventListener('click', () => {
+      switchToViewMode();
+   });
+
+   // Save changes button
+   document.getElementById('saveEditBtn')?.addEventListener('click', saveStaffChanges);
+
+   // Also handle form submission (pressing Enter)
+   document.getElementById('editStaffForm')?.addEventListener('submit', saveStaffChanges);
 
    /* ============================================
       MAKE FUNCTIONS GLOBALLY ACCESSIBLE
       ============================================ */
 
    window.viewStaff = viewStaff;
+   window.editStaff = editStaff;
    window.fetchStaff = fetchStaff;
    window.fetchStats = fetchStats;
 

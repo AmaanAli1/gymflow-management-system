@@ -726,6 +726,18 @@
                                 <input type="tel" id="editPhone" name="phone" placeholder="(555) 123-4567">
                             </div>
 
+                            <!-- Emergency Contact -->
+                            <div class="slide-panel-field">
+                                <label for="editEmergencyContact">Emergency Contact</label>
+                                <input type="text" id="editEmergencyContact" name="emergency_contact" placeholder="Emergency contact name">
+                            </div>
+
+                            <!-- Emergency Phone -->
+                            <div class="slide-panel-field">
+                                <label for="editEmergencyPhone">Emergency Phone</label>
+                                <input type="tel" id="editEmergencyPhone" name="emergency_phone" placeholder="(555) 987-6543">
+                            </div>
+
                             <!-- Role -->
                             <div class="slide-panel-field required">
                                 <label for="editRole">Role</label>
@@ -753,13 +765,27 @@
                                 <input type="date" id="editHireDate" name="hire_date" required>
                             </div>
 
+                            <!-- Hourly Rate -->
+                            <div class="slide-panel-field">
+                                <label for="editHourlyRate">Hourly Rate ($)</label>
+                                <input type="number" id="editHourlyRate" name="hourly_rate" step="0.01" min="0" placeholder="0.00">
+                            </div>
+
                             <!-- Status -->
                             <div class="slide-panel-field required">
                                 <label for="editStatus">Status</label>
                                 <select id="editStatus" name="status" required>
                                     <option value="active">Active</option>
+                                    <option value="on_leave">On Leave</option>
                                     <option value="inactive">Inactive</option>
+                                    <option value="terminated">Terminated</option>
                                 </select>
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="slide-panel-field">
+                                <label for="editNotes">Notes</label>
+                                <textarea id="editNotes" name="notes" rows="3" placeholder="Certifications, special skills, etc"></textarea>
                             </div>
 
                         </form>
