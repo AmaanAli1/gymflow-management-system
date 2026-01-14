@@ -14,26 +14,20 @@ const API_BASE_URL = 'http://localhost:5000/api';
    Universal - populates location dropdowns in all modals
    ============================================ */
 
- async function populateLocationDropdowns() {
-        // Fetch locations from database via members query
-        // For now, hardcode (we can create /api/locations later)
-        const locations = [
-            { id: 1, name: 'Downtown' },
-            { id: 2, name: 'Midtown' },
-            { id: 3, name: 'Eastside' }
-        ];
-        
-        // Populate ALL modal location dropdowns across all pages
-        // WHY querySelectorAll? Different pages have different modals
+async function populateLocationDropdowns() {
+    
+    try {
+        // Fetch locations from API
+        const response = await fetch(`${API_BASE_URL}/locations`);
+        const locations = await response.json();
+
+        // Populate ALL modal location dropdowns
         const modalLocationSelects = document.querySelectorAll(
-            '#memberLocation, #checkinLocation, #editLocation, #staffLocation, #editStaffLocation'
+            '#memberLocation, #checkinLocation, #editLocation, #staffLocationSelect'
         );
 
         modalLocationSelects.forEach(select => {
-            // Clear existing options first (prevent duplicates)
             select.innerHTML = '<option value="">Select Location</option>';
-
-            // Add location options
             locations.forEach(loc => {
                 const option = document.createElement('option');
                 option.value = loc.id;
@@ -42,12 +36,10 @@ const API_BASE_URL = 'http://localhost:5000/api';
             });
         });
 
-        // Populate filter dropdown (only exists on members/staff pages)
+        // Populate filter dropdown (only on members/staff pages)
         const locationFilter = document.getElementById('locationFilter');
         if (locationFilter) {
-            // Clear and add "All locations" option
             locationFilter.innerHTML = '<option value="">All Locations</option>';
-
             locations.forEach(loc => {
                 const option = document.createElement('option');
                 option.value = loc.id;
@@ -55,7 +47,11 @@ const API_BASE_URL = 'http://localhost:5000/api';
                 locationFilter.appendChild(option);
             });
         }
+
+    } catch (error) {
+        console.error('❌ Failed to populate location dropdowns:', error);
     }
+}
 
 /* ============================================
    AUTO-FORMAT PHONE NUMBERS
@@ -104,6 +100,7 @@ const addMemberForm = document.getElementById('addMemberForm');
     if (addMemberForm) {
         addMemberForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            e.stopImmediatePropagation();
             
             // Get form data
             const formData = new FormData(addMemberForm);
@@ -116,7 +113,19 @@ const addMemberForm = document.getElementById('addMemberForm');
                 plan: formData.get('plan')
             };
             
-            console.log('📝 Submitting new member:', memberData);
+            console.log('📤 Member data:', memberData);
+
+            // Hide previous messages
+            const errorMsg = document.getElementById('addMemberError');
+            const successMsg = document.getElementById('addMemberSuccess');
+            if (errorMsg) errorMsg.style.display = 'none';
+            if (successMsg) successMsg.style.display = 'none';
+
+            // Disable submit button with loading spinner
+            const submitBtn = document.querySelector('#add-member-modal button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Adding...';
             
             try {
                 const response = await fetch(`${API_BASE_URL}/members`, {
@@ -126,36 +135,201 @@ const addMemberForm = document.getElementById('addMemberForm');
                     },
                     body: JSON.stringify(memberData)
                 });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Failed to create member');
-                }
-                
+
                 const result = await response.json();
                 
-                console.log('✅ Member created:', result);
-                
-                // Close modal
-                document.getElementById('add-member-modal').classList.remove('show');
-                
-                // Reset form
-                addMemberForm.reset();
-                
-                // Refresh table and stats
-                if (typeof fetchMembers === 'function' && typeof fetchStats === 'function') {
-                    fetchMembers();
-                    fetchStats();
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to create member');
                 }
+                
+                console.log('✅ Member created:', result);
+
+                // Show success message
+                if (successMsg) {
+                    successMsg.textContent = `✅ ${memberData.name} added successfully! (${result.member_id})`;
+                    successMsg.style.display = 'block';
+                }
+
+                // Wait 1.5 seconds, then close and refresh
+                setTimeout(() => {
+                    // Close modal
+                    const closeBtn = document.querySelector('#add-member-modal [data-close-modal');
+                    if (closeBtn) closeBtn.click();
+
+                    // Reset form
+                    addMemberForm.reset();
+                    if (successMsg) successMsg.style.display = 'none';
+
+                    // Refresh table and stats (if on members page)
+                    if (typeof fetchMembers === 'function') fetchMembers();
+                    if (typeof fetchStats === 'function') fetchStats();
+
+                    // Show toast notification
+                    showNotification(`${memberData.name} added successfully!`, 'success');
+
+                    // Re-enable button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+
+                }, 1500);
                 
             } catch (error) {
                 console.error('❌ Failed to create member:', error);
+
+                // Show error message
+                if (errorMsg) {
+                    errorMsg.textContent = `❌ ${error.message}`;
+                    errorMsg.style.display = 'block';
+                }
+
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
             }
         });
     }
 
 /* ============================================
-   2. MEMBER CHECK-IN MODAL HANDLER
+   2. ADD STAFF FORM MODAL HANDLER
+   Universal - accessible from sidebar on all pages
+   ============================================ */
+
+const addStaffForm = document.getElementById('addStaffForm');
+
+if (addStaffForm) {
+
+    // Populate location dropdown and set hire date when modal opens
+    document.querySelectorAll('[data-modal="add-staff-modal"]').forEach(trigger => {
+        trigger.addEventListener('click', async () => {
+            // Populate location dropdown
+            const dropdown = document.getElementById('staffLocationSelect');
+            if (dropdown) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/locations`);
+                    const locations = await response.json();
+
+                    dropdown.innerHTML = '<option value="">Select location...</option>';
+                    locations.forEach(location => {
+                        const option = document.createElement('option');
+                        option.value = location.id;
+                        option.textContent = location.name;
+                        dropdown.appendChild(option);
+                    });
+                } catch (error) {
+                    console.log(' Failed to load locations:', error);
+                }
+            }
+
+            // Set default hire date to today
+            const hireDateInput = document.getElementById('staffHireDate');
+            if (hireDateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                hireDateInput.value = today;
+            }
+        });
+    });
+
+    // Handle form submissions
+    addStaffForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        console.log('📝 Submitting new staff member...');
+
+        // Get form data
+        const formData = new FormData(addStaffForm);
+        const staffData = {
+            name: formData.get('name'), 
+            email: formData.get('email'), 
+            phone: formData.get('phone'), 
+            emergency_contact: formData.get('emergency_contact') || null, 
+            emergency_phone: formData.get('emergency_phone') || null, 
+            role: formData.get('role'), 
+            location_id: parseInt(formData.get('location_id')), 
+            hire_date: formData.get('hire_date'), 
+            hourly_rate: formData.get('hourly_rate') ? parseFloat(formData.get('hourly_rate')) : null, 
+            notes: formData.get('notes') || null
+        };
+
+        console.log('📤 Staff data:', staffData);
+
+        // Hide previous messages
+        const errorMsg = document.getElementById('addStaffError');
+        const successMsg = document.getElementById('addStaffSuccess');
+        if (errorMsg) errorMsg.style.display = 'none';
+        if (successMsg) successMsg.style.display = 'none';
+
+        // Disable submit button
+        const submitBtn = document.getElementById('submitAddStaff');
+        if (!submitBtn) return; // Safety check
+
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Adding...';
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/staff`, {
+                method: 'POST', 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(staffData)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to add staff member');
+            }
+
+            console.log('✅ Staff member added:', result);
+
+            // Show success message
+            if (successMsg) {
+                successMsg.textContent = `✅ ${staffData.name} added successfully! (${result.staff_id})`;
+                successMsg.style.display = 'block';
+            }
+
+            // Wait 1.5 seconds, then close and refresh
+            setTimeout(() => {
+                // Close modal
+                const closeBtn = document.querySelector('#add-staff-modal [data-close-modal');
+                if (closeBtn) closeBtn.click();
+
+                // Reset form
+                addStaffForm.reset();
+                if (successMsg) successMsg.style.display = 'none';
+
+                // Refresh staff list (if on staff page)
+                if (typeof fetchStaff === 'function') fetchStaff();
+                if (typeof fetchStats === 'function') fetchStats();
+
+                // Show toast (use shared.js's showNotification)
+                showNotification(`${staffData.name} added successfully!`, 'success');
+
+                // Re-enable button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }, 1500);
+
+        } catch (error) {
+            console.error('❌ Failed to add staff:', error);
+
+            // Show error
+            if (errorMsg) {
+                errorMsg.textContent = `❌ ${error.message}`;
+                errorMsg.style.display = 'block';
+            }
+
+            // Re-enable button
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
+    });
+}
+
+/* ============================================
+   3. MEMBER CHECK-IN MODAL HANDLER
    Universal - accessible from sidebar on all pages
    ============================================ */
 
@@ -535,71 +709,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-
-/* ============================================
-   3. ADD STAFF MODAL HANDLER (PLACEHOLDER)
-   Universal - accessible from sidebar on all pages
-   ============================================ */
-
-const addStaffForm = document.getElementById('addStaffForm');
-
-if (addStaffForm) {
-    addStaffForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        // Get form data
-        const formData = new FormData(addStaffForm);
-        const staffData = {
-            name: formData.get('name'),
-            email: formData.get('email'),
-            phone: formData.get('phone') || null,
-            role: formData.get('role'),
-            location_id: parseInt(formData.get('location_id')),
-            hire_date: formData.get('hire_date')
-        };
-        
-        console.log('📝 Submitting new staff:', staffData);
-        
-        try {
-            const response = await fetch(`${API_BASE_URL}/staff`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(staffData)
-            });
-            
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Failed to create staff member');
-            }
-            
-            const result = await response.json();
-            
-            console.log('✅ Staff member created:', result);
-            
-            // Close modal
-            document.getElementById('add-staff-modal').classList.remove('show');
-            
-            // Reset form
-            addStaffForm.reset();
-            
-            // If we're on staff page, refresh the data
-            // WHY? fetchStaff() only exists on staff.html
-            if (typeof fetchStaff === 'function') {
-                fetchStaff();
-                fetchStaffStats();
-            }
-            
-            // Show success notification
-            showNotification('Staff member added successfully!', 'success');
-            
-        } catch (error) {
-            console.error('❌ Failed to create staff:', error);
-            showNotification(error.message, 'error');
-        }
-    });
-}
 
 
 /* ============================================
