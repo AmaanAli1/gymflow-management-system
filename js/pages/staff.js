@@ -180,7 +180,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <i class="fa-solid fa-eye"></i>
                      </button>
                      <button class="table-action-btn edit" data-staff-id="${staff.id}" title="Edit staff">
-                        <i class="fa-solid fa-pen"></i
+                        <i class="fa-solid fa-pen"></i>
+                     </button>
+                     <button class="table-action-btn delete" data-staff-id="${staff.id}" title="Delete staff">
+                        <i class="fa-solid fa-trash"></i>
                      </button>
                   </div>
                </td>
@@ -245,12 +248,13 @@ document.addEventListener('DOMContentLoaded', async () => {
          });
       });
 
-      // View and Edit button clicks (event delegation)
+      // View, Edit, and Delete button clicks (event delegation)
       const tbody = document.getElementById('staffTableBody');
       tbody.addEventListener('click', (e) => {
          // Check if clicked element is a view button (or its icon)
          const viewBtn = e.target.closest('.table-action-btn.view');
          const editBtn = e.target.closest('.table-action-btn.edit');
+         const deleteBtn = e.target.closest('.table-action-btn.delete');
 
          if (viewBtn) {
             const staffId = viewBtn.dataset.staffId;
@@ -258,6 +262,15 @@ document.addEventListener('DOMContentLoaded', async () => {
          } else if (editBtn) {
             const staffId = editBtn.dataset.staffId;
             editStaff(staffId);
+         } else if (deleteBtn) {
+            const staffId = deleteBtn.dataset.staffId;
+            const staff = allStaff.find(s => s.id === parseInt(staffId));
+            if (staff) {
+               // Open panel first
+               viewStaff(staffId);
+               // Then switch to delete mode
+               switchToDeleteMode(staff);
+            }
          }
       });
    }
@@ -647,7 +660,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Disable save button with loading spinner
       const saveBtn = document.getElementById('saveEditBtn');
       const originalBtnText = saveBtn.innerHTML;
-      saveBtn.disabled = true;
+      saveBtn.disabled = false;
       saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
 
       try {
@@ -718,6 +731,200 @@ document.addEventListener('DOMContentLoaded', async () => {
    }
 
    /* ============================================
+      SWITCH TO DELETE MODE
+      Show delete confirmation form
+      ============================================ */
+
+   function switchToDeleteMode(staff) {
+
+      // Hide view and edit sections
+      document.querySelector('.slide-panel-view').style.display = 'none';
+      document.querySelector('.slide-panel-edit').style.display = 'none';
+
+      // Show delete section
+      document.querySelector('.slide-panel-delete').style.display = 'block';
+
+      // Hide view/edit buttons, show delete buttons
+      document.getElementById('viewModeButtons').style.display = 'none';
+      document.getElementById('editModeButtons').style.display = 'none';
+      document.getElementById('deleteModeButtons').style.display = 'flex';
+
+      // Populate delete info
+      document.getElementById('deleteStaffName').textContent = staff.name;
+      document.getElementById('deleteStaffEmail').textContent = staff.email;
+      document.getElementById('deleteStaffDetails').textContent = `${staff.role} • ${staff.location_name || 'Unknown Location'}`;
+
+      // Store staff ID in form
+      document.getElementById('deleteStaffForm').dataset.staffId = staff.id;
+
+      // Reset form
+      document.getElementById('deleteStaffForm').reset();
+      document.getElementById('deleteConfirmCheckbox').checked = false;
+      document.getElementById('confirmDeleteBtn').disabled = true;
+
+      // Hide any previous messages
+      const deleteError = document.getElementById('deleteErrorMessage');
+      const deleteSuccess = document.getElementById('deleteSuccessMessage');
+      if (deleteError) deleteError.style.display = 'none';
+      if (deleteSuccess) deleteSuccess.style.display = 'none';
+
+   }
+
+   /* ============================================
+      ENABLE/DISABLE DELETE BUTTON
+      Checkbox toggle
+      ============================================ */
+
+   function toggleDeleteButton() {
+      const checkbox = document.getElementById('deleteConfirmCheckbox');
+      const deleteBtn = document.getElementById('confirmDeleteBtn');
+
+      // Enable button only if checkbox is checked
+      deleteBtn.disabled = !checkbox.checked;
+   }
+
+   /* ============================================
+      DELETE STAFF
+      Submit delete request with admin verification
+      ============================================ */
+
+   async function deleteStaff(e) {
+      e.preventDefault();
+
+      const form = document.getElementById('deleteStaffForm');
+      const staffId = form.dataset.staffId;
+
+      // Get form data
+      const formData = new FormData(form);
+      const deleteData = {
+         reason: formData.get('reason'), 
+         notes: formData.get('notes') || null, 
+         admin_username: formData.get('admin_username'), 
+         admin_password: formData.get('admin_password')
+      };
+
+      // ========== VALIDATION BLOCK ==========
+
+      // Validate required fields
+      if (!deleteData.reason) {
+         const errorMsg = document.getElementById('deleteErrorMessage');
+         errorMsg.textContent = ' Please select a reason for removal';
+         errorMsg.style.display = 'block';
+         return;
+      }
+
+      if (!deleteData.admin_username || !deleteData.admin_password) {
+         const errorMsg = document.getElementById('deleteErrorMessage');
+         errorMsg.textContent = ' Please enter admin username and password';
+         errorMsg.style.display = 'block';
+         return;
+      }
+
+      if (!document.getElementById('deleteConfirmCheckbox').checked) {
+         const errorMsg = document.getElementById('deleteErrorMessage');
+         errorMsg.textContent = ' Please check the confirmation checkbox';
+         errorMsg.style.display = 'block';
+         return;
+      }
+
+      // ========== END VALIDATION BLOCK ==========
+
+      // Hide previous messages
+      document.getElementById('deleteErrorMessage').style.display = 'none';
+      document.getElementById('deleteSuccessMessage').style.display = 'none';
+
+      // Disable delete button with loading state
+      const deleteBtn = document.getElementById('confirmDeleteBtn');
+      const originalBtnText = deleteBtn.innerHTML;
+      deleteBtn.disabled = true;
+      deleteBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting...';
+
+      try {
+         // STEP 1: Verify admin password
+         console.log(' Verifying admin credentials...');
+
+         const verifyResponse = await fetch(`${API_BASE_URL}/admin/verify-password`, {
+            method: 'POST', 
+            headers: {
+               'Content-Type': 'application/json'
+            }, 
+            body: JSON.stringify({
+               username: deleteData.admin_username, 
+               password: deleteData.admin_password
+            })
+         });
+
+         const verifyResult = await verifyResponse.json();
+
+         if (!verifyResult.verified) {
+            throw new Error('Invalid admin credentials. Please check your username and password.');
+         }
+
+         console.log(' Admin verified');
+
+         // STEP 2: Delete the staff member (soft delete)
+         console.log(' Deleting staff member...');
+
+         const deleteResponse = await fetch(`${API_BASE_URL}/staff/${staffId}`, {
+            method: 'DELETE', 
+            headers: {
+               'Content-Type': 'application/json'
+            }, 
+            body: JSON.stringify({
+               reason: deleteData.reason, 
+               notes: deleteData.notes
+            })
+         });
+
+         const deleteResult = await deleteResponse.json();
+
+         if (!deleteResponse.ok) {
+            throw new Error(deleteResult.error || 'Failed to delete staff member');
+         }
+
+         console.log(' Staff member deleted', deleteResult);
+
+         // Show success message
+         const successMsg = document.getElementById('deleteSuccessMessage');
+         successMsg.textContent = ' Staff member removed successfully!';
+         successMsg.style.display = 'block';
+
+         // Update the staff in allStaff array (set status to terminated)
+         const index = allStaff.findIndex(s => s.id == staffId);
+         if (index !== -1) {
+            allStaff[index].status = 'terminated';
+         }
+
+         // Wait 1.5 seconds, then close the panel and refresh
+         setTimeout(() => {
+            // Close the panel
+            document.getElementById('staffDetailPanel').classList.remove('active');
+            switchToViewMode();  // Reset to view mode
+
+            // Refresh table and stats
+            fetchStaff();
+            fetchStats();
+
+            // Show toast notification
+            showNotification('Staff member removed successfully', 'success');
+
+         }, 1500);
+
+      } catch (error) {
+         console.error(' Failed to delete staff member:', error);
+
+         // Show error message
+         const errorMsg = document.getElementById('deleteErrorMessage');
+         errorMsg.textContent = ` ${error.message}`;
+         errorMsg.style.display = 'block';
+
+         // Re-enable button
+         deleteBtn.disabled = false;
+         deleteBtn.innerHTML = originalBtnText;
+      }
+   }
+
+   /* ============================================
       SLIDE PANEL EVENT LISTENERS
       ============================================ */
 
@@ -739,6 +946,43 @@ document.addEventListener('DOMContentLoaded', async () => {
 
    // Also handle form submission (pressing Enter)
    document.getElementById('editStaffForm')?.addEventListener('submit', saveStaffChanges);
+
+   /* ============================================
+      DELETE MODE EVENT LISTENERS
+      ============================================ */
+
+   // Delete button (in panel footer)
+   document.getElementById('deleteStaffBtn')?.addEventListener('click', () => {
+      const staffId = document.getElementById('deleteStaffBtn').dataset.staffId;
+
+      console.log('Delete button clicked');
+      console.log('Staff ID from dataset:', staffId);
+      console.log('All staff array:', allStaff);
+
+      const staff = allStaff.find(s => s.id === parseInt(staffId));
+      console.log('Found staff:', staff);
+
+      if (staff) {
+         switchToDeleteMode(staff);
+      } else {
+         console.error('Staff not found with ID:', staffId);
+      }
+
+   });
+
+   // Cancel delete button
+   document.getElementById('cancelDeleteBtn')?.addEventListener('click', () => {
+      switchToViewMode();
+   });
+
+   // Confirm delete button
+   document.getElementById('confirmDeleteBtn')?.addEventListener('click', deleteStaff);
+
+   // Also handle form submission
+   document.getElementById('deleteStaffForm')?.addEventListener('submit', deleteStaff);
+
+   // Checkbox toggle - enable/disable delete button
+   document.getElementById('deleteConfirmCheckbox')?.addEventListener('change', toggleDeleteButton);
 
    /* ============================================
       MAKE FUNCTIONS GLOBALLY ACCESSIBLE

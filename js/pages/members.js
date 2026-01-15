@@ -1366,21 +1366,21 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
         // Validate required fields
         if (!deleteData.reason) {
             const errorMsg = document.getElementById('deleteErrorMessage');
-            errorMsg.textContent = ' Please select a reason for cancellation';
+            errorMsg.textContent = '❌ Please select a reason for cancellation';
             errorMsg.style.display = 'block';
             return;
         }
 
         if (!deleteData.admin_username || !deleteData.admin_password) {
             const errorMsg = document.getElementById('deleteErrormessage');
-            errorMsg.textContent = ' Please enter admin username and password';
+            errorMsg.textContent = '❌ Please enter admin username and password';
             errorMsg.style.display = 'block';
             return;
         }
 
         if (!document.getElementById('deleteConfirmCheckbox'). checked) {
             const errorMsg = document.getElementById('deleteErrorMessage');
-            errorMsg.textContent = ' Please check the confirmation checkbox';
+            errorMsg.textContent = '❌ Please check the confirmation checkbox';
             errorMsg.style.display = 'block';
             return;
         }
