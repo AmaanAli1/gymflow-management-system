@@ -1156,6 +1156,124 @@
 
         </div>
 
+        <!-- ============================================ 
+             SHIFT DETAIL MODAL
+             View shift details before editing
+             ============================================ -->
+
+        <div class="schedule-modal-overlay" id="shiftDetailModal">
+            <div class="modal-container medium">
+
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <div>
+                        <h2 id="shiftDetailTitle">Shift Details</h2>
+                        <p class="modal-subtitle" id="shiftDetailSubtitle">View shift information</p>
+                    </div>
+                    <button class="modal-close" id="closeShiftDetailModal">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="modal-body">
+
+                    <!-- Shift Info Grid -->
+                    <div class="shift-detail-grid">
+
+                        <!-- Date & Time Section -->
+                        <div class="shift-detail-section">
+                            <div class="shift-detail-icon">
+                                <i class="fa-solid fa-calendar-day"></i>
+                            </div>
+                            <div class="shift-detail-content">
+                                <label>Date</label>
+                                <p id="shiftDetailDate">Monday, January 20, 2026</p>
+                            </div>
+                        </div>
+
+                        <div class="shift-detail-section">
+                            <div class="shift-detail-icon">
+                                <i class="fa-solid fa-clock"></i>
+                            </div>
+                            <div class="shift-detail-content">
+                                <label>Time</label>
+                                <p id="shiftDetailTime">9:00 AM - 5:00 PM (8 hours)</p>
+                            </div>
+                        </div>
+
+                        <!-- Staff Section -->
+                        <div class="shift-detail-section">
+                            <div class="shift-detail-icon">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <div class="shift-detail-content">
+                                <label>Staff Member</label>
+                                <p id="shiftDetailStaff">Sarah Johnson</p>
+                            </div>
+                        </div>
+
+                        <!-- Role Section -->
+                        <div class="shift-detail-section">
+                            <div class="shift-detail-icon">
+                                <i class="fa-solid fa-briefcase"></i>
+                            </div>
+                            <div class="shift-detail-content">
+                                <label>Position</label>
+                                <p id="shiftDetailRole">Front Desk CSR</p>
+                            </div>
+                        </div>
+
+                        <!-- Location Section -->
+                        <div class="shift-detail-section">
+                            <div class="shift-detail-icon">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                            <div class="shift-detail-content">
+                                <label>Location</label>
+                                <p id="shiftDetailLocation">Downtown</p>
+                            </div>
+                        </div>
+
+                        <!-- Status Section -->
+                        <div class="shift-detail-section">
+                            <div class="shift-detail-icon">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                            <div class="shift-detail-content">
+                                <label>Status</label>
+                                <p id="shiftDetailStatus">
+                                    <span class="pill success">Scheduled</span>
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Notes Section (Full Width) -->
+                    <div class="shift-detail-notes">
+                        <label><i class="fa-solid fa-note-sticky"></i> Notes</label>
+                        <p id="shiftDetailNotes">Opening shift</p>
+                    </div>
+
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn ghost" id="closeShiftDetailBtn">Close</button>
+                    <button type="button" class="btn ghost danger" id="deleteShiftFormDetailBtn">
+                        <i class="fa-solid fa-trash"></i>
+                        Delete
+                    </button>
+                    <button type="button" class="btn primary" id="editShiftFormDetailBtn">
+                        <i class="fa-solid fa-pen"></i>
+                        Edit Shift
+                    </button>
+                </div>
+                
+            </div>
+        </div>
+
 
         <!-- ============================================
              CHECK-IN NOTIFICATION CONTAINER

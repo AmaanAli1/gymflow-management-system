@@ -1043,6 +1043,35 @@ document.addEventListener('DOMContentLoaded', async () => {
    document.getElementById('scheduleStaffFilter')?.addEventListener('change', loadShifts);
    document.getElementById('scheduleLocationFilter')?.addEventListener('change', loadShifts);
 
+   // Close Shift Detail Modal
+   document.getElementById('closeShiftDetailModal')?.addEventListener('click', () => {
+      document.getElementById('shiftDetailModal').classList.remove('active');
+   });
+
+   // Close when clicking outside
+   document.getElementById('shiftDetailModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'shiftDetailModal') {
+         document.getElementById('shiftDetailModal').classList.remove('active');
+      }
+   });
+
+   // Close button in footer
+   document.getElementById('closeShiftDetailBtn')?.addEventListener('click', () => {
+      document.getElementById('shiftDetailModal').classList.remove('active');
+   });
+
+   // Edit button - close detail, open edit form
+   document.getElementById('editShiftFormDetailBtn')?.addEventListener('click', () => {
+      document.getElementById('shiftDetailModal').classList.remove('active');
+      openShiftFormModal(currentShift.id);
+   });
+
+   // Delete button - will implement later!
+   document.getElementById('deleteShiftFormDetailBtn')?.addEventListener('click', () => {
+      // TODO: Implement delete
+      console.log('Delete shift:', currentShift.Id);
+   });
+
    /* ============================================
       SCHEDULE MODAL FUNCTIONS (Placeholder)
       ============================================ */
@@ -1349,7 +1378,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Add click handler to edit shift
             shiftCard.addEventListener('click', () => {
-               openShiftFormModal(shift.id);
+               viewShiftDetails(shift);
             });
 
             // Add to cell
@@ -1367,6 +1396,71 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('fullyCoveredShifts').textContent = '0';
       document.getElementById('understaffedShifts').textContent = '0';
       document.getElementById('noCoverageShifts').textContent = '0';
+   }
+
+   /* ============================================
+      SHIFT DETAIL FUNCTIONS
+      ============================================ */
+
+   // Store current shift being viewed
+   let currentShift = null;
+
+   // View shift details
+   function viewShiftDetails(shift) {
+
+      // Store shift for edit/delete operations
+      currentShift = shift;
+
+      // Format date (e.g., "Monday, January 20, 2026")
+      const shiftDate = new Date(shift.shift_date);
+      const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const formattedDate = shiftDate.toLocaleDateString('en-US', dateOptions);
+
+      // Format time and calculate duration
+      const formatTime = (timeStr) => {
+         const [hours, minutes] = timeStr.split(':');
+         const hour = parseInt(hours);
+         const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+         const ampm = hour >= 12 ? 'PM' : 'AM';
+         return `${displayHour}:${minutes} ${ampm}`;
+      };
+
+      const startTime = formatTime(shift.start_time);
+      const endTime = formatTime(shift.end_time);
+
+      // Calculate duration in hours
+      const [startHour, startMin] = shift.start_time.split(':').map(Number);
+      const [endHour, endMin] = shift.end_time.split(':').map(Number);
+      const durationHours = (endHour + endMin/60) - (startHour + startMin/60);
+      const durationText = `${durationHours} hour${durationHours !== 1 ? 's' : ''}`;
+
+      // Populate modal
+      document.getElementById('shiftDetailDate').textContent = formattedDate;
+      document.getElementById('shiftDetailTime').textContent = `${startTime} - ${endTime} (${durationText})`;
+      document.getElementById('shiftDetailStaff').textContent = shift.staff_name;
+      document.getElementById('shiftDetailRole').textContent = shift.role;
+      document.getElementById('shiftDetailLocation').textContent = shift.location_name;
+
+      // Status with pill
+      const statusElement = document.getElementById('shiftDetailStatus');
+      let statusClass = 'success';
+      let statusText = 'Scheduled';
+
+      if (shift.status === 'completed') {
+         statusClass = 'info';
+         statusText = 'Completed';
+      } else if (shift.status === 'cancelled') {
+         statusClass = 'danger';
+         statusText = 'Cancelled';
+      }
+
+      statusElement.innerHTML = `<span class="pill ${statusClass}">${statusText}</span>`;
+
+      // Notes
+      document.getElementById('shiftDetailNotes').textContent = shift.notes || '';
+      
+      // Show modal
+      document.getElementById('shiftDetailModal').classList.add('active');
    }
 
 

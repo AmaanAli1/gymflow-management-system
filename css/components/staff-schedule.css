@@ -559,6 +559,136 @@
 }
 
 /* ============================================
+   SHIFT DETAIL VIEW
+   Card-style layout for viewing shift info
+   ============================================ */
+
+.shift-detail-grid {
+    /* Layout */
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gap-lg);
+    
+    /* Spacing */
+    margin-bottom: var(--space-4xl);
+}
+
+.shift-detail-section {
+    /* Layout */
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-md);
+    
+    /* Spacing */
+    padding: var(--space-2xl);
+    
+    /* Styling */
+    background: var(--color-bg-card);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-light);
+}
+
+.shift-detail-icon {
+    /* Sizing */
+    width: 40px;
+    height: 40px;
+    
+    /* Layout */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    
+    /* Styling */
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border-radius: var(--radius-md);
+    
+    /* Typography */
+    font-size: var(--font-size-lg);
+}
+
+.shift-detail-content {
+    /* Layout */
+    flex: 1;
+}
+
+.shift-detail-content label {
+    /* Typography */
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-muted);
+    
+    /* Spacing */
+    display: block;
+    margin-bottom: var(--space-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.shift-detail-content p {
+    /* Typography */
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+/* Notes Section - Full Width */
+.shift-detail-notes {
+    /* Spacing */
+    padding: var(--space-2xl);
+    
+    /* Styling */
+    background: var(--color-bg-card);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-light);
+}
+
+.shift-detail-notes label {
+    /* Typography */
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-muted);
+    
+    /* Spacing */
+    display: block;
+    margin-bottom: var(--space-md);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.shift-detail-notes label i {
+    /* Spacing */
+    margin-right: var(--space-sm);
+    
+    /* Styling */
+    color: var(--color-primary);
+}
+
+.shift-detail-notes p {
+    /* Typography */
+    font-size: var(--font-size-base);
+    color: var(--color-text-secondary);
+    line-height: var(--line-height-relaxed);
+    margin: 0;
+}
+
+.shift-detail-notes p:empty::before {
+    /* Empty state */
+    content: 'No notes for this shift';
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .shift-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================
    RESPONSIVE DESIGN
    Tablet and mobile adjustment
    ============================================ */
