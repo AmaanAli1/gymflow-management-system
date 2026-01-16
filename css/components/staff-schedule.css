@@ -1,0 +1,596 @@
+/* ============================================
+   STAFF SCHEDULE MODAL STYLES
+   Styling for the weekly schedule calendar and shift management
+   ============================================ */
+
+/* ============================================
+   SCHEDULE CONTROLS BAR
+   Top bar with week navigation and filters
+   ============================================ */
+
+.schedule-controls {
+    /* Layout */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--gap-md);
+
+    /* Spacing */
+    margin-bottom: var(--space-4xl);
+    padding: var(--space-2xl);
+
+    /* Styling */
+    background: var(--color-bg-card);
+    border-radius: var(--radius-md);
+}
+
+.schedule-controls-left, 
+.schedule-controls-right {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+}
+
+/* ============================================
+   WEEK NAVIGATION
+   Buttons to navigate between weeks
+   ============================================ */
+
+.week-nav {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+}
+
+.current-week {
+    /* Typography */
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    text-align: center;
+
+    /* Sizing */
+    min-width: 200px;
+}
+
+/* ============================================
+   COVERAGE STATISTICS CARDS
+   Displays staffing coverage metrics
+   ============================================ */
+
+.coverage-stats {
+    /* Layout */
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--gap-md);
+
+    /* Spacing */
+    margin-bottom: var(--space-4xl);
+}
+
+.coverage-stat-card {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: var(--gap-md);
+
+    /* Spacing */
+    padding: var(--space-2xl);
+
+    /* Styling */
+    background: var(--color-bg-card);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-light);
+}
+
+/* ============================================
+   COVERAGE STAT ICONS
+   Colored circular icons for each metric
+   ============================================ */
+
+.coverage-stat-icon {
+    /* Sizing */
+    width: 48px;
+    height: 48px;
+
+    /* Layout */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Styling */
+    border-radius: var(--radius-full);
+
+    /* Typography */
+    font-size: var(--font-size-xl);
+}
+
+/* Icon Color Variants */
+.coverage-stat-icon.success {
+    /* Styling - Green for fully covered */
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.coverage-stat-icon.warning {
+    /* Styling - Yellow for understaffed */
+    background: var(--color-warning-light);
+    color: var(--color-warning);
+}
+
+.cover-stat-icon.danger {
+    /* Styling - Red for no coverage */
+    background: var(--color-info-light);
+    color: var(--color-info);
+}
+
+/* ============================================
+   COVERAGE STAT TEXT
+   Label and value for each statistics
+   ============================================ */
+
+.coverage-stat-info {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+}
+
+.coverage-stat-label {
+    /* Typography */
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+
+    /* Spacing */
+    margin-bottom: var(--space-xs);
+}
+
+.coverage-stat-value {
+    /* Typography */
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+}
+
+/* ============================================
+   SCHEDULE CALENDAR CONTAINER
+   Weekly calendar grid wrapper
+   ============================================ */
+
+.schedule-calender {
+    /* Styling */
+    background: var(--color-bg-card);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-light);
+    overflow: hidden;
+}
+
+/* ============================================
+   CALENDAR HEADER
+   Days of the week header row
+   ============================================ */
+
+.calendar-header {
+    /* Layout - 8 columns (time + 7 days) */
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+
+    /* Styling */
+    background: var(--color-bg-elevated);
+    border-bottom: 2px solid var(--color-border-light);
+}
+
+.time-column-header, 
+.day-column-header {
+    /* Spacing */
+    padding: var(--space-2xl);
+
+    /* Typography */
+    font-weight: var(--font-weight-semibold);
+    text-align: center;
+    color: var(--color-text-primary);
+
+    /* Styling */
+    border-right: 1px solid var(--color-border-light);
+}
+
+.time-column-header {
+    /* Styling - Different background for time column */
+    background: var(--color-bg-card);
+}
+
+.day-column-header:last-child {
+    /* Remove border on last column */
+    border-right: none;
+}
+
+/* ============================================
+   CALENDAR BODY
+   Scrollable area containing time slots and shifts
+   ============================================ */
+
+.calendar-body {
+    /* Sizing */
+    min-height: 400px;
+    max-height: 600px;
+
+    /* Behaviour */
+    overflow-y: auto;
+}
+
+/* ============================================
+   CALENDAR ROWS
+   Each row represents one time slot
+   ============================================ */
+
+.calendar-row {
+    /* Layout - Match header columns */
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+
+    /* Styling */
+    border-bottom: 1px solid var(--color-border-base);
+}
+
+/* ============================================
+   TIME CELLS
+   Left column showing the time of day
+   ============================================ */
+
+.time-cell {
+    /* Spacing */
+    padding: var(--space-lg);
+
+    /* Typography */
+    text-align: center;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-muted);
+
+    /* Styling */
+    border-right: 1px solid var(--color-border-light);
+    background: var(--color-bg-card);
+}
+
+/* ============================================
+   DAY CELLS
+   Individual cells for each day/time slot
+   ============================================ */
+
+.day-cell {
+    /* Spacing */
+    padding: var(--space-md);
+
+    /* Sizing */
+    min-height: 60px;
+
+    /* Layout */
+    position: relative;
+
+    /* Styling */
+    border-right: 1px solid var(--color-border-base);
+}
+
+.day-cell:last-child {
+    /* Remove border on last column */
+    border-right: none;
+}
+
+/* ============================================
+   SHIFT CARDS
+   Individual shift blocks within calendar cells
+   ============================================ */
+
+.shift-card {
+    /* Styling */
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+    color: var(--color-text-primary);
+    border-radius: var(--radius-sm);
+
+    /* Spacing */
+    padding: var(--space-md);
+    margin-bottom: var(--space-xs);
+
+    /* Typography */
+    font-size: var(--font-size-xs);
+
+    /* Behavior */
+    cursor: pointer;
+    transition: transform var(--transition-base);
+}
+
+/* Shift Card Hover Effect */
+.shift-card:hover {
+    /* Animation */
+    transform: translateY(-2px);
+
+    /* Styling */
+    box-shadow: var(--shadow-md);
+}
+
+/* ============================================
+   SHIFT CARD CONTENT
+   Text elements within shift cards
+   ============================================ */
+
+.shift-card-time {
+    /* Typography */
+    font-weight: var(--font-weight-semibold);
+
+    /* Spacing */
+    margin-bottom: var(--space-xs);
+}
+
+.shift-card-staff {
+    /* Styling */
+    opacity: 0.9;
+}
+
+.shift-card-location {
+    /* Typography */
+    font-size: var(--font-size-xs);
+
+    /* Spacing */
+    margin-top: var(--space-xs);
+
+    /* Styling */
+    opacity: 0.8;
+}
+
+/* ============================================
+   EMPTY STATE
+   Shown when no shifts are scheduled
+   ============================================ */
+
+.calendar-empty {
+    /* Spacing */
+    padding: var(--space-5xl);
+
+    /* Typography */
+    text-align: center;
+    color: var(--color-text-muted);
+}
+
+.calendar-empty i {
+    /* Typography */
+    font-size: var(--font-size-3xl);
+
+    /* Spacing */
+    margin-bottom: var(--space-2xl);
+
+    /* Styling */
+    opacity: 0.3;
+}
+
+/* ============================================
+   MODAL SIZE VARIANTS
+   Different sizes for different modals
+   ============================================ */
+
+.modal-container.large {
+    /* Sizing - Large for schedule overview */
+    width: 95%;
+    max-width: 1400px;
+}
+
+.modal-container.medium {
+    /* Sizing - Medium for shift form */
+    width: 90%;
+    max-width: 600px;
+}
+
+/* ============================================
+   MODAL OVERLAY
+   Base modal backdrop and visibility
+   ============================================ */
+
+.schedule-modal-overlay {
+    /* Layout */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    /* Styling */
+    background: var(--color-overlay);
+
+    /* Layout */
+    display: none;  /* Hidden by default */
+    align-items: center;
+    justify-content: center;
+
+    /* Z-index */
+    z-index: 9999;
+
+    /* Pointer events */
+    pointer-events: auto;
+
+    /* Animation */
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+/* Show modal when active */
+.schedule-modal-overlay.active {
+    display: flex;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ============================================
+   MODAL CONTAINER
+   The actual modal box
+   ============================================ */
+
+.modal-container {
+    /* Styling */
+    background: var(--color-bg-modal);
+    border-radius: var(--radius-lg);
+
+    /* Shadow */
+    box-shadow: var(--shadow-xl);
+
+    /* Sizing */
+    max-height: 90vh;
+    overflow-y: auto;
+
+    /* Z-index */
+    z-index: var(--z-modal);
+
+    /* Animation */
+    transform: scale(0.9);
+    transition: transform var(--transition-base);
+}
+
+.schedule-modal-overlay.active .modal-container {
+    transform: scale(1);
+}
+
+/* ============================================
+   MODAL HEADER
+   Title and close button
+   ============================================ */
+
+.modal-header {
+    /* Layout */
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    
+    /* Spacing */
+    padding: var(--space-4xl);
+    
+    /* Styling */
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.modal-header h2 {
+    /* Typography */
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.modal-subtitle {
+    /* Typography */
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin-top: var(--space-xs);
+}
+
+.modal-close {
+    /* Styling */
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    
+    /* Sizing */
+    font-size: var(--font-size-xl);
+    padding: var(--space-md);
+    
+    /* Animation */
+    transition: color var(--transition-fast);
+}
+
+.modal-close:hover {
+    color: var(--color-text-primary);
+}
+
+/* ============================================
+   MODAL BODY
+   Main content area
+   ============================================ */
+
+.modal-body {
+    /* Spacing */
+    padding: var(--space-4xl);
+}
+
+/* ============================================
+   MODAL FOOTER
+   Action buttons area
+   ============================================ */
+
+.modal-footer {
+    /* Layout */
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--gap-md);
+    
+    /* Spacing */
+    padding: var(--space-4xl);
+    
+    /* Styling */
+    border-top: 1px solid var(--color-border-light);
+}
+
+/* ============================================
+   FORM CONTROLS IN SCHEDULE MODAL
+   ============================================ */
+
+.form-select {
+    /* Spacing */
+    padding: var(--space-md) var(--space-lg);
+    
+    /* Styling */
+    background: var(--color-bg-input);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-primary);
+    
+    /* Typography */
+    font-size: var(--font-size-base);
+    
+    /* Behavior */
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+}
+
+.form-select:hover {
+    border-color: var(--color-border-lighter);
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   Tablet and mobile adjustment
+   ============================================ */
+
+@media (max-width: 768px) {
+
+    /* Coverage Stats - 2 column on mobile */
+    .coverage-stats {
+        grid-template: repeat(2, 1fr);
+    }
+
+    /* Schedule Controls - Stack vertically */
+    .schedule-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    /* Calendar Header - Smaller font */
+    .day-column-header {
+        /* Typography */
+        font-size: var(--font-size-xs);
+
+        /* Spacing */
+        padding: var(--space-md);
+    }
+
+    /* Time Cell - Smaller */
+    .time-cell {
+        /* Spacing */
+        padding: var(--space-md);
+
+        /* Typography */
+        font-size: var(--font-size-xs);
+    }
+}

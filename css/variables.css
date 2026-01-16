@@ -23,6 +23,14 @@
     --color-warning: #f1c40f;
     --color-warning-light: rgba(241, 196, 15, 0.2);
 
+    /* Danger (Red) */
+    --color-danger: #ef4444;
+    --color-danger-light: rgba(239, 68, 68, 0.2);
+
+    /* Info (Blue) */
+    --color-info: #3b82f6;
+    --color-info-light: rgba(59, 130, 246, 0.2);
+
     /* Backgrounds (Dark Theme) */
     --color-bg-page: #0f0f0f;               /* Main page background */
     --color-bg-sidebar: #151515;            /* Sidebar background */

@@ -985,6 +985,392 @@ document.addEventListener('DOMContentLoaded', async () => {
    document.getElementById('deleteConfirmCheckbox')?.addEventListener('change', toggleDeleteButton);
 
    /* ============================================
+      SCHEDULE MODAL EVENT LISTENERS
+      ============================================ */
+
+   // Open Schedule Overview (global view)
+   document.getElementById('scheduleOverviewBtn')?.addEventListener('click', () => {
+      openScheduleModal('global');
+   });
+
+   // Open Manage Schedule (individual staff)
+   document.getElementById('manageScheduleBtn')?.addEventListener('click', () => {
+      const staffId = document.getElementById('editStaffBtn').dataset.staffId;
+      openScheduleModal('individual', staffId);
+   });
+
+   // Close Schedule Modal
+   document.getElementById('closeScheduleModal')?.addEventListener('click', () => {
+      document.getElementById('scheduleModal').classList.remove('active');
+   });
+
+   // Close modal when clicking outside (on overlay)
+   document.getElementById('scheduleModal')?.addEventListener('click', (e) => {
+      // Only close if clicking the overlay itself, not the modal container
+      if (e.target.id === 'scheduleModal') {
+         document.getElementById('scheduleModal').classList.remove('active');
+      }
+   });
+
+   // Open Add Shift Modal
+   document.getElementById('addShiftBtn')?.addEventListener('click', () => {
+      openShiftFormModal();
+   });
+
+   // Close Shift Form Modal
+   document.getElementById('closeShiftFormModal')?.addEventListener('click', () => {
+      document.getElementById('shiftFormModal').classList.remove('active');
+   });
+
+   // Close shift form when clicking outside
+   document.getElementById('shiftFormModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'shiftFormModal') {
+         document.getElementById('shiftFormModal').classList.remove('active');
+      }
+   });
+
+   // Cancel Shift Button
+   document.getElementById('cancelShiftBtn')?.addEventListener('click', () => {
+      document.getElementById('shiftFormModal').classList.remove('active');
+   });
+
+   // Week navigation buttons
+   document.getElementById('prevWeek')?.addEventListener('click', goToPreviousWeek);
+   document.getElementById('nextWeek')?.addEventListener('click', goToNextWeek);
+   document.getElementById('todayBtn')?.addEventListener('click', goToToday);
+
+   // Filter change handlers
+   document.getElementById('scheduleStaffFilter')?.addEventListener('change', loadShifts);
+   document.getElementById('scheduleLocationFilter')?.addEventListener('change', loadShifts);
+
+   /* ============================================
+      SCHEDULE MODAL FUNCTIONS (Placeholder)
+      ============================================ */
+
+   function openScheduleModal(mode, staffId = null) {
+
+      // Initialize week if not already set
+      if (!currentWeekStart) {
+         initializeWeek();
+      }
+      
+      // Update modal title based on mode
+      if (mode === 'global') {
+         document.getElementById('scheduleModalTitle').textContent = 'Schedule Overview';
+         document.getElementById('scheduleModalSubtitle').textContent = 'Mange staff shifts and coverage';
+         document.getElementById('scheduleStaffFilter').style.display = 'block';
+      } else {
+         const staff = allStaff.find(s => s.id === parseInt(staffId));
+         if (staff) {
+            document.getElementById('scheduleModalTitle').textContent = `${staff.name}'s Schedule`;
+            document.getElementById('scheduleModalSubtitle').textContent = `Mange shifts for ${staff.role}`;
+            document.getElementById('scheduleStaffFilter').style.display = 'none';
+            document.getElementById('scheduleStaffFilter').value = staffId;
+         }
+      }
+
+      // Update week display
+      updateWeekDisplay();
+
+      // Generate calendar grid
+      generateCalendarGrid();
+
+      // Load shifts data
+      loadShifts();
+
+      // Populate filter dropdowns
+      populateScheduleFilters();
+
+      // Show modal
+      document.getElementById('scheduleModal').classList.add('active');
+   }
+
+   // Populate staff and location filters
+   async function populateScheduleFilters() {
+      // Populate staff filter
+      const staffFilter = document.getElementById('scheduleStaffFilter');
+      staffFilter.innerHTML = '<option value="all">All Staff</option>';
+
+      allStaff.forEach(staff => {
+         const option = document.createElement('option');
+         option.value = staff.id;
+         option.textContent = staff.name;
+         staffFilter.appendChild(option);
+      });
+
+      // Populate location filter
+      try {
+         const response = await fetch (`${API_BASE_URL}/locations`);
+         const locations = await response.json();
+
+         const locationFilter = document.getElementById('scheduleLocationFilter');
+         locationFilter.innerHTML = '<option value="all">All Locations</option>';
+
+         locations.forEach(location => {
+            const option = document.createElement('option');
+            option.value = location.id;
+            option.textContent = location.name;
+            locationFilter.appendChild(option);
+         });
+      } catch (error) {
+         console.error('❌ Failed to load locations:', error);
+      }
+   }
+
+   function openShiftFormModal(shiftId = null) {
+
+      if (shiftId) {
+         document.getElementById('shiftFormTitle').textContent = 'Edit Shift';
+         // TODO: Load shift data
+      } else {
+         document.getElementById('shiftFormTitle').textContent = 'Add Shift';
+         document.getElementById('shiftForm').reset();
+      }
+
+      // Show modal
+      document.getElementById('shiftFormModal').classList.add('active');
+
+      // TODO: Populate dropdowns
+   }
+
+   /* ============================================
+      CALENDAR GENERATION & RENDERING
+      ============================================ */
+
+   // Store current week being viewed
+   let currentWeekStart = null;
+
+   // Initialize current week to today
+   function initializeWeek() {
+      const today = new Date();
+      // Get Monday of current week
+      const dayOfWeek = today.getDay();
+      const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      currentWeekStart = new Date(today.setDate(diff));
+      currentWeekStart.setHours(0, 0, 0, 0); // Reset time to midnight
+   }
+
+   // Format date as YYYY-MM-DD for API calls
+   function formatDateForApi(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+   }
+
+   // Format date for display (e.g., "Jan 20")
+   function formatDateForDisplay(date) {
+      const options = { month: 'short', day: 'numeric' };
+      return date.toLocaleDateString('en-US', options);
+   }
+
+   // Update week display text
+   function updateWeekDisplay() {
+      const weekEnd = new Date(currentWeekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+
+      const weekText = `Week of ${formatDateForDisplay(currentWeekStart)} - ${formatDateForDisplay(weekEnd)}, ${currentWeekStart.getFullYear()}`;
+      document.getElementById('currentWeekDisplay').textContent = weekText;
+   }
+
+   // Navigate to previous week
+   function goToPreviousWeek() {
+      currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+      updateWeekDisplay();
+      loadShifts();
+   }
+
+   // Navigate to next week
+   function goToNextWeek() {
+      currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+      updateWeekDisplay();
+      loadShifts();
+   }
+
+   // Jump to current week
+   function goToToday() {
+      initializeWeek();
+      updateWeekDisplay();
+      loadShifts();
+   }
+
+   // Generate calendar grid with time slots
+   function generateCalendarGrid() {
+      const calendarBody = document.getElementById('scheduleCalendarBody');
+
+      // Time slots (6 AM to 10 PM in 1-hour increments)
+      const timeSlots = [];
+      for (let hour = 6; hour <= 22; hour++) {
+         const displayHour = hour > 12 ? hour - 12 : hour;
+         const ampm = hour >= 12 ? 'PM' : 'AM';
+         const displayTime = `${displayHour} ${ampm}`;
+         timeSlots.push({ hour, displayTime });
+      }
+
+      // Build grid HTML
+      let html = '';
+
+      timeSlots.forEach(slot => {
+         html += `
+            <div class="calendar-row">
+               <div class="time-cell">${slot.displayTime}</div>
+         `;
+
+         // 7 day cells (Monday - Sunday)
+         for (let day = 0; day < 7; day ++) {
+            const cellDate = new Date(currentWeekStart);
+            cellDate.setDate(cellDate.getDate() + day);
+            const dateStr = formatDateForApi(cellDate);
+
+            html += `
+               <div class="day-cell"
+                  data-date="${dateStr}"
+                  data-hour="${slot.hour}">
+               </div>
+            `;
+         }
+
+         html += `</div>`;
+      });
+
+      calendarBody.innerHTML = html;
+   }
+
+   // Fetch shifts from API
+   async function loadShifts() {
+      try {
+         // Calculate date range (current week)
+         const startDate = formatDateForApi(currentWeekStart);
+
+         const endDate = new Date(currentWeekStart);
+         endDate.setDate(endDate.getDate() + 6);
+         const endDateStr = formatDateForApi(endDate);
+
+         // Get filter values
+         const staffFilter = document.getElementById('scheduleStaffFilter').value;
+         const locationFilter = document.getElementById('scheduleLocationFilter').value;
+
+         // Build query string
+         let queryParams = `start_date=${startDate}&end_date=${endDateStr}`;
+
+         if (staffFilter && staffFilter !== 'all') {
+            queryParams += `&staff_id=${staffFilter}`;
+         }
+
+         if (locationFilter && locationFilter !== 'all') {
+            queryParams += `&location_id=${locationFilter}`;
+         }
+
+         // Fetch from API
+         const response = await fetch(`${API_BASE_URL}/shifts?${queryParams}`);
+
+         if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+         }
+
+         const data = await response.json();
+
+         // Render shifts on calendar
+         renderShifts(data.shifts);
+
+         // Update coverage stats
+         updateCoverageStats(data.shifts);
+
+      } catch (error) {
+         console.error('❌ Failed to load shifts:', error);
+
+         // Show error in calendar
+         const calendarBody = document.getElementById('scheduleCalendarBody');
+         calendarBody.innerHTML = `
+            <div class="calendar-empty">
+               <i class="fa-solid fa-exclamation-triangle"></i>
+               <p>Failed to load shifts. Please try again.</p>
+            </div>
+         `;
+      }
+   }
+
+   // Render shifts onto the calendar grid
+   function renderShifts(shifts) {
+      // First, clear all existing shift cards
+      document.querySelectorAll('.shift-card').forEach(card => card.remove());
+
+      // If no shifts, show empty state
+      if (shifts.length === 0) {
+         const calendarBody = document.getElementById('scheduleCalendarBody');
+         calendarBody.innerHTML = `
+            <div class="calendar-empty">
+               <i class="fa-solid fa-calendar-xmark"></i>
+               <p>No shifts scheduled for this week</p>
+            </div>
+         `;
+         return;
+      }
+
+      // Regenerate grid (in case it was replaced by empty state)
+      generateCalendarGrid();
+
+      // Place each shift in the correct cell
+      shifts.forEach(shift => {
+         // Parse shift date and time
+         const shiftDate = new Date(shift.shift_date);
+         const dateStr = formatDateForApi(shiftDate);
+
+         // Extract hour from start_time (format: "HH:MM:SS")
+         const startHour = parseInt(shift.start_time.split(':')[0]);
+
+         // Find the matching cell
+         const cell = document.querySelector(
+            `.day-cell[data-date="${dateStr}"][data-hour="${startHour}"]`
+         );
+
+         if (cell) {
+            // Create shift card
+            const shiftCard = document.createElement('div');
+            shiftCard.className = 'shift-card';
+            shiftCard.dataset.shiftId = shift.id;
+
+            // Format time display (e.g., "9:00 AM - 5:00 PM")
+            const formatTime = (timeStr) => {
+               const [hours, minutes] = timeStr.split(':');
+               const hour = parseInt(hours);
+               const displayHour = hour > 12 ? hour - 12 : hour;
+               const ampm = hour >= 12 ? 'PM' : 'AM';
+               return `${displayHour}:${minutes} ${ampm}`;
+            };
+
+            const timeDisplay = `${formatTime(shift.start_time)} - ${formatTime(shift.end_time)}`;
+
+            shiftCard.innerHTML = `
+               <div class="shift-card-time">${timeDisplay}</div>
+               <div class="shift-card-staff">${shift.staff_name}</div>
+               <div class="shift-card-location">${shift.location_name}</div>
+            `;
+
+            // Add click handler to edit shift
+            shiftCard.addEventListener('click', () => {
+               openShiftFormModal(shift.id);
+            });
+
+            // Add to cell
+            cell.appendChild(shiftCard);
+         }
+      });
+   }
+
+   // Update coverage statistics
+   function updateCoverageStats(shifts) {
+      // For now, just show total shifts
+      // TODO: Calculate actual coverage based on requirements
+
+      document.getElementById('totalShifts').textContent = shifts.length;
+      document.getElementById('fullyCoveredShifts').textContent = '0';
+      document.getElementById('understaffedShifts').textContent = '0';
+      document.getElementById('noCoverageShifts').textContent = '0';
+   }
+
+
+   /* ============================================
       MAKE FUNCTIONS GLOBALLY ACCESSIBLE
       ============================================ */
 

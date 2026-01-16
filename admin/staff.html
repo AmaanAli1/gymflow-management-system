@@ -35,6 +35,7 @@
 
         <!-- Page-Specific Styles -->
         <link rel="stylesheet" href="../css/pages/staff.css">
+        <link rel="stylesheet" href="../css/components/staff-schedule.css">
     </head>
     <body>
 
@@ -239,6 +240,12 @@
                         <button class="add-btn" data-modal="add-staff-modal" aria-label="Add new staff member">
                             <i class="fa-solid fa-plus"></i>
                             Add Staff
+                        </button>
+
+                        <!-- Schedule Overview Button -->
+                        <button class="add-btn secondary" id="scheduleOverviewBtn" aria-label="View schedule overview">
+                            <i class="fa-solid fa-calendar-days"></i>
+                            Schedule Overview
                         </button>
                     </div>
                 </div>
@@ -745,6 +752,7 @@
                                     <option value="">Select role...</option>
                                     <option value="Front Desk CSR">Front Desk CSR</option>
                                     <option value="Sales">Sales</option>
+                                    <option value="Trainer">Trainer</option>
                                     <option value="Operations">Operations</option>
                                     <option value="Manager">Manager</option>
                                     <option value="Admin">Admin</option>
@@ -917,6 +925,237 @@
 
             </div>
         </div>
+
+        <!-- ============================================
+             SCHEDULE MODAL
+             Big centered modal for managing staff schedules
+             ============================================ -->
+
+        <div class="schedule-modal-overlay" id="scheduleModal">
+            <div class="modal-container large">
+
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <div>
+                        <h2 id="scheduleModalTitle">Schedule Overview</h2>
+                        <p class="modal-subtitle" id="scheduleModalSubtitle">Manage staff shifts and coverage</p>
+                    </div>
+                    <button class="modal-close" id="closeScheduleModal">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="modal-body">
+
+                    <!-- Filters & Controls -->
+                    <div class="schedule-controls">
+                        <div class="schedule-controls-left">
+                            <!-- Week Navigation -->
+                            <div class="week-nav">
+                                <button class="btn ghost small" id="prevWeek">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </button>
+                                <span class="current-week" id="currentWeekDisplay">Week of Jan 15 - Jan 21, 2026</span>
+                                <button class="btn ghost small" id="nextWeek">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </button>
+                                <button class="btn ghost small" id="todayBtn">Today</button>
+                            </div>
+                        </div>
+
+                        <div class="schedule-controls-right">
+                            <!-- Staff Filter (only shows in global view) -->
+                            <select id="scheduleStaffFilter" class="form-select">
+                                <option value="all">All Staff</option>
+                                <!-- Populated by JavaScript -->
+                            </select>
+
+                            <!-- Location Filter -->
+                            <select id="scheduleLocationFilter" class="form-select">
+                                <option value="all">All Locations</option>
+                                <!-- Populated by JavaScript -->
+                            </select>
+
+                            <!-- Add Shift Button -->
+                            <button class="btn primary" id="addShiftBtn">
+                                <i class="fa-solid fa-plus"></i>
+                                Add Shift
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Coverage Stats -->
+                    <div class="coverage-stats">
+                        <div class="coverage-stat-card">
+                            <div class="coverage-stat-icon success">
+                                <i class="fa-solid fa-user-check"></i>
+                            </div>
+                            <div class="coverage-stat-info">
+                                <span class="coverage-stat-label">Full Covered</span>
+                                <span class="coverage-stat-value" id="fullyCoveredShifts">0</span>
+                            </div>
+                        </div>
+
+                        <div class="coverage-stat-card">
+                            <div class="coverage-stat-icon warning">
+                                <i class="fa-solid fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="coverage-stat-info">
+                                <span class="coverage-stat-label">Understaffed</span>
+                                <span class="coverage-stat-value" id="understaffedShifts">0</span>
+                            </div>
+                        </div>
+
+                        <div class="coverage-stat-card">
+                            <div class="coverage-stat-icon danger">
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                            </div>
+                            <div class="coverage-stat-info">
+                                <span class="coverage-stat-label">No Coverage</span>
+                                <span class="coverage-stat-value" id="noCoverageShifts">0</span>
+                            </div>
+                        </div>
+
+                        <div class="coverage-stat-card">
+                            <div class="coverage-stat-icon info">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div class="coverage-stat-info">
+                                <span class="coverage-stat-label">Total Shifts</span>
+                                <span class="coverage-stat-value" id="totalShifts">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weekly Calendar Grid -->
+                    <div class="schedule-calendar">
+                        <div class="calendar-header">
+                            <div class="time-column-header">Time</div>
+                            <div class="day-column-header">Monday</div>
+                            <div class="day-column-header">Tuesday</div>
+                            <div class="day-column-header">Wednesday</div>
+                            <div class="day-column-header">Thursday</div>
+                            <div class="day-column-header">Friday</div>
+                            <div class="day-column-header">Saturday</div>
+                            <div class="day-column-header">Sunday</div>
+                        </div>
+
+                        <!-- Calendar body will be populated by JavaScript -->
+                        <div class="calendar-body" id="scheduleCalendarBody">
+                            <!-- Time slots and shifts rendered here -->
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ============================================ 
+             ADD/EDIT SHIFT MODAL
+             Nested modal for adding/editing individual shifts
+             ============================================ -->
+
+        <div class="schedule-modal-overlay" id="shiftFormModal">
+            <div class="modal-container medium">
+
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <div>
+                        <h2 id="shiftFormTitle">Add Shift</h2>
+                        <p class="modal-subtitle">Schedule a new shift</p>
+                    </div>
+                    <button class="modal-close" id="closeShiftFormModal">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="modal-body">
+
+                    <!-- Error/Success Messages -->
+                    <div id="shiftFormError" class="modal-error" style="display: none;"></div>
+                    <div id="shiftFormSuccess" class="modal-success" style="display: none;"></div>
+
+                    <form id="shiftForm">
+                        <!-- Hidden ID for editing -->
+                        <input type="hidden" id="shiftId">
+
+                        <div class="modal-grid">
+                            <!-- Staff Member -->
+                            <div class="field">
+                                <label for="shiftStaff">Staff Member *</label>
+                                <select id="shiftStaff" name="staff_id" required>
+                                    <option value="">Select staff member...</option>
+                                    <!-- Populated by JavaScript -->
+                                </select>
+                            </div>
+
+                            <!-- Location -->
+                            <div class="field">
+                                <label for="shiftLocation">Location *</label>
+                                <select id="shiftLocation" name="location_id" required>
+                                    <option value="">Select location...</option>
+                                    <!-- Populated by JavaScript -->
+                                </select>
+                            </div>
+
+                            <!-- Date -->
+                             <div class="field">
+                                <label for="shiftDate">Date *</label>
+                                <input type="date" id="shiftDate" name="shift_date" required>
+                             </div>
+
+                             <!-- Start Time -->
+                            <div class="field">
+                                <label for="shiftStartTime">Start Time *</label>
+                                <input type="time" id="shiftStartTime" name="start_time" required>
+                            </div>
+
+                            <!-- End Time -->
+                            <div class="field">
+                                <label for="shiftEndTime">End Time *</label>
+                                <input type="time" id="shiftEndTime" name="end_time" required>
+                            </div>
+
+                            <!-- Role/Position -->
+                            <div class="field">
+                                <label for="shiftRole">Position *</label>
+                                <select id="shiftRole" name="role" required>
+                                    <option value="">Select position...</option>
+                                    <option value="Front Desk CSR">Front Desk CSR</option>
+                                    <option value="Sales">Sales</option>
+                                    <option value="Manager">Manager</option>
+                                    <option value="Operations">Operations</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="field">
+                            <label for="shiftNotes">Notes (Optional)</label>
+                            <textarea id="shiftNotes" name="notes" rows="3" placeholder="Any special instructions or notes..."></textarea>
+                        </div>
+
+                    </form>
+
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn ghost" id="cancelShiftBtn">Cancel</button>
+                    <button type="button" class="btn primary" id="saveShiftBtn">
+                        <i class="fa-solid fa-save"></i>
+                        Save Shift
+                    </button>
+                </div>
+
+            </div>
+
+
+        </div>
+
 
         <!-- ============================================
              CHECK-IN NOTIFICATION CONTAINER
