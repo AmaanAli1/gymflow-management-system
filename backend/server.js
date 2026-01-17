@@ -93,6 +93,7 @@ const staffRoutes = require('./routes/staff');
 const dashboardRoutes = require('./routes/dashboard');
 const locationsRoutes = require('./routes/locations');
 const shiftsRoutes = require('./routes/shifts');
+const adminRoutes = require('./routes/admin');
 
 // Mount member routes at /api/members
 app.use('/api/members', memberRoutes);
@@ -113,6 +114,8 @@ console.log('✅ Dashboard routes mounted at /api/dashboard');
 // Mount dashboard routes at /api/locations
 app.use('/api/locations', locationsRoutes);
 console.log('✅ Dashboard routes mounted at /api/locations');
+
+app.use('/api/admin', adminRoutes);
 
 
 // ============================================

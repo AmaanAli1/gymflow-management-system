@@ -1066,11 +1066,37 @@ document.addEventListener('DOMContentLoaded', async () => {
       openShiftFormModal(currentShift.id);
    });
 
-   // Delete button - will implement later!
-   document.getElementById('deleteShiftFormDetailBtn')?.addEventListener('click', () => {
-      // TODO: Implement delete
-      console.log('Delete shift:', currentShift.Id);
+   // Delete button in shift modal - open confirmation
+   document.getElementById('deleteShiftFormDetailBtn')?.addEventListener('click', openDeleteShiftModal);
+
+   // Close delete modal
+   document.getElementById('closeDeleteShiftModal')?.addEventListener('click', () => {
+      document.getElementById('deleteShiftModal').classList.remove('active');
    });
+
+   // Click outside to close
+   document.getElementById('deleteShiftModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'deleteShiftModal') {
+         document.getElementById('deleteShiftModal').classList.remove('active');
+      }
+   });
+
+   // Cancel button
+   document.getElementById('cancelDeleteShiftBtn')?.addEventListener('click', () => {
+      document.getElementById('deleteShiftModal').classList.remove('active');
+   });
+
+   // Confirm delete button
+   document.getElementById('confirmDeleteShiftBtn')?.addEventListener('click', confirmDeleteShift);
+
+   // Checkbox toggle
+   document.getElementById('deleteShiftConfirmCheckbox')?.addEventListener('change', toggleDeleteShiftButton);
+
+   // Save shift button
+   document.getElementById('saveShiftBtn')?.addEventListener('click', saveShift);
+
+   // Also handle form submission (pressing Enter)
+   document.getElementById('shiftForm')?.addEventListener('submit', saveShift);
 
    /* ============================================
       SCHEDULE MODAL FUNCTIONS (Placeholder)
@@ -1148,18 +1174,379 @@ document.addEventListener('DOMContentLoaded', async () => {
 
    function openShiftFormModal(shiftId = null) {
 
+      // Hide previous messages
+      document.getElementById('shiftFormError').style.display = 'none';
+      document.getElementById('shiftFormSuccess').style.display = 'none';
+
       if (shiftId) {
+         // EDIT MODE
          document.getElementById('shiftFormTitle').textContent = 'Edit Shift';
-         // TODO: Load shift data
+         document.getElementById('shiftId').value = shiftId;
+
+         // Load shift data
+         loadShiftData(shiftId);
+
       } else {
+         // ADD MODE
          document.getElementById('shiftFormTitle').textContent = 'Add Shift';
+         document.getElementById('shiftId').value = '';
          document.getElementById('shiftForm').reset();
+
+         // Set default date to today
+         const today = new Date();
+         const dateStr = formatDateForApi(today);
+         document.getElementById('shiftDate').value = dateStr;
       }
+
+      // Populate dropdowns
+      populateShiftFormDropdowns();
 
       // Show modal
       document.getElementById('shiftFormModal').classList.add('active');
+   }
 
-      // TODO: Populate dropdowns
+   // Populate staff and location dropdowns in shift form
+   async function populateShiftFormDropdowns() {
+      try {
+         // Populate staff dropdown
+         const staffDropDown = document.getElementById('shiftStaff');
+         staffDropDown.innerHTML = '<option value="">Select staff member...</option>';
+
+         allStaff.forEach(staff => {
+            // Only show active staff 
+            if (staff.status === 'active') {
+               const option = document.createElement('option');
+               option.value = staff.id;
+               option.textContent = `${staff.name} - ${staff.role}`;
+               staffDropDown.appendChild(option);
+            }
+         });
+
+         // Populate location dropdown
+         const response = await fetch(`${API_BASE_URL}/locations`);
+         const locations = await response.json();
+
+         const locationDropDown = document.getElementById('shiftLocation');
+         locationDropDown.innerHTML = '<option value="">Select location...</option>';
+
+         locations.forEach(location => {
+            const option = document.createElement('option');
+            option.value = location.id;
+            option.textContent = location.name;
+            locationDropDown.appendChild(option);
+         });
+
+      } catch (error) {
+         console.error('❌ Failed to populate dropdowns:', error);
+      }
+   }
+
+   // Load shift data for editing
+   async function loadShiftData(shiftId) {
+
+      try {
+         // Fetch shift from API
+         const response = await fetch(`${API_BASE_URL}/shifts/${shiftId}`);
+
+         if (!response.ok) {
+            throw new Error('Failed to load shift');
+         }
+
+         const shift = await response.json();
+         
+         // Populate form fields
+         document.getElementById('shiftStaff').value = shift.staff_id;
+         document.getElementById('shiftLocation').value = shift.location_id;
+         document.getElementById('shiftRole').value = shift.role;
+
+         // Format date for input (YYYY-MM-DD)
+         const shiftDate = new Date(shift.shift_date);
+         document.getElementById('shiftDate').value = formatDateForApi(shiftDate);
+
+         // Set times
+         // API returns "HH:MM:SS", input needs "HH:MM"
+         document.getElementById('shiftStartTime').value = shift.start_time.substring(0, 5);
+         document.getElementById('shiftEndTime').value = shift.end_time.substring(0, 5);
+
+         // Set notes
+         document.getElementById('shiftNotes').value = shift.notes || '';
+
+      } catch (error) {
+         console.error('❌ Failed to load shift data', error);
+
+         // Show error
+         const errorMsg = document.getElementById('shiftFormError');
+         errorMsg.textContent = `❌ Failed to load shift data: ${error.message}`;
+         errorMsg.style.display = 'block';
+      }
+   }
+
+   // Save shift (create or update)
+   async function saveShift(e) {
+      e.preventDefault();
+
+      // Get form data
+      const shiftId = document.getElementById('shiftId').value;
+      const formData = new FormData(document.getElementById('shiftForm'));
+
+      const shiftData = {
+         staff_id: parseInt(formData.get('staff_id')), 
+         location_id: parseInt(formData.get('location_id')), 
+         shift_date: formData.get('shift_date'), 
+         start_time: formData.get('start_time'), 
+         end_time: formData.get('end_time'), 
+         role: formData.get('role'), 
+         notes: formData.get('notes') || null
+      };
+
+      console.log('✅ Saving shift:', shiftData);
+
+      // Validate required fields
+      if (!shiftData.staff_id || !shiftData.location_id || !shiftData.shift_date || 
+          !shiftData.start_time || !shiftData.end_time || !shiftData.role) {
+         const errorMsg = document.getElementById('shiftFormError');
+         errorMsg.textContent = '⚠️ Please fill in all required fields';
+         errorMsg.style.display = 'block';
+         return;
+      }
+
+      // Validate time (end must be after start)
+      if (shiftData.start_time >= shiftData.end_time) {
+         const errorMsg = document.getElementById('shiftFormError');
+         errorMsg.textContent = '⚠️ End time must be after start time';
+         errorMsg.style.display = 'block';
+         return;
+      }
+
+      // Hide previous messages
+      document.getElementById('shiftFormError').style.display = 'none';
+      document.getElementById('shiftFormSuccess').style.display = 'none';
+
+      // Show loading state on button
+      const saveBtn = document.getElementById('saveShiftBtn');
+      const originalBtnText = saveBtn.innerHTML;
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+
+      try {
+         let response;
+
+         if (shiftId) {
+            // UPDATE existing shift
+            response = await fetch(`${API_BASE_URL}/shifts/${shiftId}`, {
+               method: 'PUT', 
+               headers: { 'Content-Type': 'application/json' }, 
+               body: JSON.stringify(shiftData)
+            });
+         } else {
+            // CREATE new shift
+            response = await fetch(`${API_BASE_URL}/shifts`, {
+               method: 'POST', 
+               headers: { 'Content-Type': 'application/json' }, 
+               body: JSON.stringify(shiftData)
+            });
+         }
+
+         const result = await response.json();
+
+         if (!response.ok) {
+            throw new Error(result.error || 'Failed to save shift');
+         }
+
+         console.log('✅ Shift saved:', result);
+
+         // Show success message
+         const successMsg = document.getElementById('shiftFormSuccess');
+         successMsg.textContent = `✅ Shift ${shiftId ? 'updated' : 'created'} successfully!`;
+         successMsg.style.display = 'block';
+
+         // Wait 1 second, then close modal and refresh calendar
+         setTimeout(() => {
+            // Close modal
+            document.getElementById('shiftFormModal').classList.remove('active');
+
+            // Refresh calendar
+            loadShifts();
+
+            // Reset button
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalBtnText;
+
+            // Hide success message
+            successMsg.style.display = 'none';
+
+         }, 1000);
+
+      } catch (error) {
+         console.error('❌ Failed to save shift:', error);
+
+         // Show error message
+         const errorMsg = document.getElementById('shiftFormError');
+         errorMsg.textContent = `❌ ${error.message}`;
+         errorMsg.style.display = 'block';
+
+         // Reset button
+         saveBtn.disabled = false;
+         saveBtn.innerHTML = originalBtnText;
+      }
+      
+   }
+
+   /* ============================================
+      DELETE SHIFT
+      Remove shift with admin verification
+      ============================================ */
+
+   // Open delete confirmation modal
+   function openDeleteShiftModal() {
+      if (!currentShift) {
+         console.error(' No shift selected');
+         return;
+      }
+
+      // Format shift info for display
+      const shiftDate = new Date(currentShift.shift_date);
+      const dateOptions = { weekday: 'long', month: 'short', day: 'numeric'  };
+      const formattedDate = shiftDate.toLocaleDateString('en-US', dateOptions);
+
+      const formatTime = (timeStr) => {
+         const [hours, minutes] = timeStr.split(':');
+         const hour = parseInt(hours);
+         const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+         const ampm = hour >= 12 ? 'PM' : 'AM';
+         return `${displayHour}:${minutes} ${ampm}`;
+      };
+
+      const timeDisplay = `${formatTime(currentShift.start_time)} - ${formatTime(currentShift.end_time)}`;
+
+      // Populate modal
+      document.getElementById('deleteShiftStaffName').textContent = currentShift.staff_name;
+      document.getElementById('deleteShiftDateTime').textContent = `${formattedDate} • ${timeDisplay}`;
+      document.getElementById('deleteShiftRoleLocation').textContent = `${currentShift.role} • ${currentShift.location_name}`;
+
+      // Reset form
+      document.getElementById('deleteShiftForm').reset();
+      document.getElementById('deleteShiftConfirmCheckbox').checked = false;
+      document.getElementById('confirmDeleteShiftBtn').disabled = true;
+
+      // Hide message
+      document.getElementById('deleteShiftError').style.display = 'none';
+      document.getElementById('deleteShiftSuccess').style.display = 'none';
+
+      // Close detail modal, open delete modal
+      document.getElementById('shiftDetailModal').classList.remove('active');
+      document.getElementById('deleteShiftModal').classList.add('active');
+   }
+
+   // Confirm and execute delete
+   async function confirmDeleteShift() {
+      const form = document.getElementById('deleteShiftForm');
+      const formData = new FormData(form);
+
+      const reason = formData.get('reason');
+      const notes = formData.get('notes');
+      const adminUsername = formData.get('admin_username');
+      const adminPassword = formData.get('admin_password');
+
+      // Validate
+      if (!reason || !adminUsername || !adminPassword) {
+         const errorMsg = document.getElementById('deleteShiftError');
+         errorMsg.textContent = '⚠️ Please fill in all required fields';
+         errorMsg.style.display = 'block';
+         return;
+      }
+
+      if (!document.getElementById('deleteShiftConfirmCheckbox').checked) {
+         const errorMsg = document.getElementById('deleteShiftError');
+         errorMsg.textContent = '⚠️ Please check the confirmation checkbox';
+         errorMsg.style.display = 'block';
+         return;
+      }
+
+      // Hide message
+      document.getElementById('deleteShiftError').style.display = 'none';
+      document.getElementById('deleteShiftSuccess').style.display = 'none';
+
+      // Show loading state
+      const deleteBtn = document.getElementById('confirmDeleteShiftBtn');
+      const originalBtnText = deleteBtn.innerHTML;
+      deleteBtn.disabled = true;
+      deleteBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting...';
+
+      try {
+         // STEP 1: Verify admin credentials
+         const verifyResponse = await fetch(`${API_BASE_URL}/admin/verify-password`, {
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({
+               username: adminUsername, 
+               password: adminPassword
+            })
+         });
+
+         const verifyResult = await verifyResponse.json();
+
+         if (!verifyResult.verified) {
+            throw new Error('Invalid admin credentials');
+         }
+
+         console.log('✅ Admin verified');
+
+         // STEP 2: Delete the shift
+
+         const deleteResponse = await fetch(`${API_BASE_URL}/shifts/${currentShift.id}`, {
+            method: 'DELETE'
+         });
+
+         const deleteResult = await deleteResponse.json();
+
+         if (!deleteResponse.ok) {
+            throw new Error(deleteResult.error || 'Failed to delete shift');
+         }
+
+         console.log('✅ Shift deleted:', deleteResult);
+
+         // Show success message
+         const successMsg = document.getElementById('deleteShiftSuccess');
+         successMsg.textContent = '✅ Shift deleted successfully!';
+         successMsg.style.display = 'block';
+
+         // Wait 1 second, then close and refresh
+         setTimeout(() => {
+            // Close modal
+            document.getElementById('deleteShiftModal').classList.remove('active');
+
+            // Refresh calendar
+            loadShifts();
+
+            // Reset button
+            deleteBtn.disabled = false;
+            deleteBtn.innerHTML = originalBtnText;
+
+            // Show toast notification
+            showNotification('Shift deleted successfully', 'success');
+
+         }, 1000);
+
+      } catch (error) {
+         console.error('❌ Failed to delete shift:', error);
+
+         // Show error message
+         const errorMsg = document.getElementById('deleteShiftError');
+         errorMsg.textContent = `❌ ${error.message}`;
+         errorMsg.style.display = 'block';
+
+         // Reset button
+         deleteBtn.disabled = false;
+         deleteBtn.innerHTML = originalBtnText;
+      }
+   }
+
+   // Enable/disable delete button based on checkbox
+   function toggleDeleteShiftButton() {
+      const checkbox = document.getElementById('deleteShiftConfirmCheckbox');
+      const deleteBtn = document.getElementById('confirmDeleteShiftBtn');
+      deleteBtn.disabled = !checkbox.checked;
    }
 
    /* ============================================

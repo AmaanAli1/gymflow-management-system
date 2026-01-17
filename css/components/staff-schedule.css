@@ -689,6 +689,154 @@
 }
 
 /* ============================================
+   FORM MESSAGES
+   Success and error alerts in modals
+   ============================================ */
+
+.modal-error,
+.modal-success {
+    /* Spacing */
+    padding: var(--space-2xl);
+    margin-bottom: var(--space-4xl);
+    
+    /* Styling */
+    border-radius: var(--radius-md);
+    border-left: 4px solid;
+    
+    /* Typography */
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+}
+
+.modal-error {
+    /* Styling */
+    background: var(--color-danger-light);
+    border-left-color: var(--color-danger);
+    color: var(--color-danger);
+}
+
+.modal-success {
+    /* Styling */
+    background: var(--color-success-light);
+    border-left-color: var(--color-success);
+    color: var(--color-success);
+}
+
+/* ============================================
+   DELETE SHIFT CONFIRMATION
+   ============================================ */
+
+.delete-shift-info {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: var(--gap-lg);
+    
+    /* Spacing */
+    padding: var(--space-4xl);
+    margin-bottom: var(--space-4xl);
+    
+    /* Styling */
+    background: var(--color-danger-light);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--color-danger);
+}
+
+.delete-shift-icon {
+    /* Sizing */
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    
+    /* Layout */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Styling */
+    background: var(--color-danger);
+    color: white;
+    border-radius: var(--radius-full);
+    
+    /* Typography */
+    font-size: var(--font-size-2xl);
+}
+
+.delete-shift-details h3 {
+    /* Typography */
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-xs) 0;
+}
+
+.delete-shift-details p {
+    /* Typography */
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin: 0;
+    line-height: var(--line-height-relaxed);
+}
+
+/* Admin Verification Section */
+.admin-verification-section {
+    /* Spacing */
+    padding: var(--space-4xl);
+    margin: var(--space-4xl) 0;
+    
+    /* Styling */
+    background: var(--color-bg-elevated);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-light);
+}
+
+.admin-verification-section h4 {
+    /* Typography */
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-3xl) 0;
+}
+
+.admin-verification-section h4 i {
+    /* Styling */
+    color: var(--color-warning);
+    margin-right: var(--space-sm);
+}
+
+/* Checkbox Field */
+.checkbox-field {
+    /* Spacing */
+    margin-top: var(--space-4xl);
+}
+
+.checkbox-label {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    
+    /* Behavior */
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+    /* Sizing */
+    width: 18px;
+    height: 18px;
+    
+    /* Behavior */
+    cursor: pointer;
+}
+
+.checkbox-label span {
+    /* Typography */
+    font-size: var(--font-size-base);
+    color: var(--color-text-secondary);
+}
+
+/* ============================================
    RESPONSIVE DESIGN
    Tablet and mobile adjustment
    ============================================ */

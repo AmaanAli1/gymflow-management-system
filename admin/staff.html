@@ -1270,7 +1270,106 @@
                         Edit Shift
                     </button>
                 </div>
-                
+
+            </div>
+        </div>
+
+        <!-- ============================================
+             DELETE SHIFT CONFIRMATION MODAL
+             Confirmation with admin verification
+             ============================================ -->
+
+        <div class="schedule-modal-overlay" id="deleteShiftModal">
+            <div class="modal-container medium">
+
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <div>
+                        <h2>Delete Shift</h2>
+                        <p class="modal-subtitle">This action cannot be undone</p>
+                    </div>
+                    <button class="modal-close" id="closeDeleteShiftModal">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="modal-body">
+
+                    <!-- Error/Success Messages -->
+                    <div id="deleteShiftError" class="modal-error" style="display: none;"></div>
+                    <div id="deleteShiftSuccess" class="modal-success" style="display: none;"></div>
+
+                    <!-- Shift Info to Delete -->
+                    <div class="delete-shift-info">
+                        <div class="delete-shift-icon">
+                            <i class="fa-solid fa-calendar-xmark"></i>
+                        </div>
+                        <div class="delete-shift-details">
+                            <h3 id="deleteShiftStaffName">Sarah Johnson</h3>
+                            <p id="deleteShiftDateTime">Monday, Jan 20 • 9:00 AM - 5:00 PM</p>
+                            <p id="deleteShiftRoleLocation">Front Desk CSR • Downtown</p>
+                        </div>
+                    </div>
+
+                    <!-- Delete Form -->
+                    <form id="deleteShiftForm">
+
+                        <!-- Reason for Deletion -->
+                        <div class="field">
+                            <label for="deleteShiftReason">Reason for Deletion *</label>
+                            <select id="deleteShiftReason" name="reason" required>
+                                <option value="">Select reason...</option>
+                                <option value="schedule_change">Schedule Change</option>
+                                <option value="staff_unavailable">Staff Unavailable</option>
+                                <option value="shift_covered">Shift Already Covered</option>
+                                <option value="error">Created in Error</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Optional Notes -->
+                        <div class="field">
+                            <label for="deleteShiftNotes">Additional Notes (Optional)</label>
+                            <textarea id="deleteShiftNotes" name="notes" rows="3" placeholder="Provide additional context..."></textarea>
+                        </div>
+
+                        <!-- Admin Verification -->
+                        <div class="admin-verification-section">
+                            <h4><i class="fa-solid fa-shield-halved"></i>Admin Verification</h4>
+
+                            <div class="field">
+                                <label for="deleteShiftAdminUsername">Admin Username *</label>
+                                <input type="text" id="deleteShiftAdminUsername" name="admin_username" required autocomplete="username">
+                            </div>
+
+                            <div class="field">
+                                <label for="deleteShiftAdminPassword">Admin Password *</label>
+                                <input type="password" id="deleteShiftAdminPassword" name="admin_password" required autocomplete="current-password">
+                            </div>
+                        </div>
+
+                        <!-- Confirmation Checkbox -->
+                        <div class="field checkbox-field">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="deleteShiftConfirmCheckbox" required>
+                                <span>I understand this action cannot be undone</span>
+                            </label>
+                        </div>
+
+                    </form>
+
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn ghost" id="cancelDeleteShiftBtn">Cancel</button>
+                    <button type="button" class="btn danger" id="confirmDeleteShiftBtn" disabled>
+                        <i class="fa-solid fa-trash"></i>
+                        Delete Shift
+                    </button>
+                </div>
+
             </div>
         </div>
 
