@@ -868,7 +868,9 @@ document.addEventListener('DOMContentLoaded', async () => {
          const deleteResponse = await fetch(`${API_BASE_URL}/staff/${staffId}`, {
             method: 'DELETE', 
             headers: {
-               'Content-Type': 'application/json'
+               'Content-Type': 'application/json', 
+               'x-admin-username': deleteData.admin_username, 
+               'x-admin-password': deleteData.admin_password
             }, 
             body: JSON.stringify({
                reason: deleteData.reason, 
@@ -1495,7 +1497,11 @@ document.addEventListener('DOMContentLoaded', async () => {
          // STEP 2: Delete the shift
 
          const deleteResponse = await fetch(`${API_BASE_URL}/shifts/${currentShift.id}`, {
-            method: 'DELETE'
+            method: 'DELETE', 
+            headers: {
+               'x-admin-username': adminUsername, 
+               'x-admin-password': adminPassword
+            }
          });
 
          const deleteResult = await deleteResponse.json();

@@ -1420,7 +1420,9 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
             const deleteResponse = await fetch(`${API_BASE_URL}/members/${memberId}`, {
                 method: 'DELETE', 
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json', 
+                    'x-admin-username': deleteData.admin_username, 
+                    'x-admin-password': deleteData.admin_password
                 },
                 body: JSON.stringify({
                     reason: deleteData.reason, 

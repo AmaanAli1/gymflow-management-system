@@ -13,6 +13,7 @@ const db = require('../config/database');
 
 // Import rate limiters
 const { authLimiter, paymentLimiter, checkInLimiter } = require('../middleware/rateLimiter');
+const { requireAdmin } = require('../middleware/adminAuth');
 
 // Import validators
 const {
@@ -397,10 +398,10 @@ router.put('/:id', validateEditMember, handleValidationErrors, (req, res) => {
 
 /* ============================================
    DELETE /api/members/:id
-   Soft delete member (set status to cancelled)
+   Soft delete member (requires admin)
    ============================================ */
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', requireAdmin, (req, res) => {
     const memberId = req.params.id;
 
     // Soft delete - just update status to 'cancelled'

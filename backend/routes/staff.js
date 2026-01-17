@@ -18,6 +18,10 @@ const {
     validateEditStaff
 } = require('../middleware/validation');
 
+const {
+    requireAdmin
+} = require('../middleware/adminAuth');
+
 // WHY separate route file?
 // - Groups staff-related endpoints together
 // - Matches the pattern from members.js
@@ -417,7 +421,7 @@ router.put('/:id', validateEditStaff, handleValidationErrors, (req, res) => {
    Soft delete staff (set status to inactive)
    ============================================ */
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', requireAdmin, (req, res) => {
     const staffId = req.params.id;
 
     console.log(`🗑️ Deleting staff ${staffId} (setting to inactive)`);
@@ -516,7 +520,6 @@ router.post('/:id/reactivate', (req, res) => {
         });
     });
 });
-
 
 // Export router
 module.exports = router;

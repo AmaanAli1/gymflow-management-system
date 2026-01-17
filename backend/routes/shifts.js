@@ -11,6 +11,11 @@ const router = express.Router();
 // Import database
 const db = require('../config/database');
 
+// Middleware
+const {
+    requireAdmin
+} = require('../middleware/adminAuth');
+
 /* ============================================
    GET /api/shifts
    Get all shifts with optional filters
@@ -291,10 +296,10 @@ router.put('/:id', (req, res) => {
 
 /* ============================================
    DELETE /api/shifts/:id
-   Delete a shift
+   Delete a shift (requires admin)
    ============================================ */
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', requireAdmin, (req, res) => {
     const shiftId = req.params.id;
 
     console.log(`🗑️ Deleting shift ${shiftId}`);
