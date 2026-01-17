@@ -815,6 +815,395 @@ const validateEditStaff = [
 
 console.log('✅ Edit staff validation rules configured');
 
+/* ============================================
+   VALIDATION RULES: ADD SHIFT
+   Applied to POST /api/shifts
+   ============================================ */
+
+const validateAddShift = [
+    // STAFF ID VALIDATION
+    body('staff_id')
+        .notEmpty()
+        .withMessage('Staff member is required')
+        .isInt({ min: 1 })
+        .withMessage('Invalid staff member')
+
+        // Custom validation: Staff must exist and be active
+        .custom(async (staffId) => {
+            return new Promise((resolve, reject) => {
+                const query = 'SELECT status FROM staff WHERE id = ?';
+                db.query(query, [staffId], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length === 0) {
+                        return reject(new Error('Staff member not found'));
+                    }
+
+                    if (results[0].status !== 'active') {
+                        return reject(new Error('Cannot assign shifts to inactive staff'));
+                    }
+
+                    return resolve();
+                });
+            });
+        }),
+
+    // LOCATION ID VALIDATION
+    body('location_id')
+        .notEmpty()
+        .withMessage('Location is required')
+        .isInt({ min: 1 })
+        .withMessage('Invalid location')
+
+        // Custom validation: Location must exist
+        .custom(async (locationId) => {
+            return new Promise((resolve, reject) => {
+                const query = 'SELECT id FROM locations WHERE id = ?';
+                db.query(query, [locationId], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length === 0) {
+                        return reject(new Error('Location not found'));
+                    }
+
+                    return resolve();
+                });
+            });
+        }),
+
+    // SHIFT DATE VALIDATION
+    body('shift_date')
+        .notEmpty()
+        .withMessage('Shift date is required')
+        .isISO8601()
+        .withMessage('Invalid date format')
+
+        // Can't creae shifts too far in past
+        .custom((value) => {
+            const shiftDate = new Date(value);
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            if (shiftDate < thirtyDaysAgo) {
+                throw new Error('Cannot create shifts more than 30 days in the past');
+            }
+
+            return true;
+        }),
+
+    // START TIME VALIDATION
+    body('start_time')
+        .notEmpty()
+        .withMessage('Start time is required')
+
+        // Must match HH:MM format
+        .matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
+        .withMessage('Start time must be in HH:MM format (00:00 to 23:59'),
+
+    // END TIME VALIDATION
+    body('end_time')
+        .notEmpty()
+        .withMessage('End time is required')
+
+        // Must match HH:MM format
+        .matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
+        .withMessage('End time must be in HH:MM format (00:00 to 23:59)')
+
+        // Custom validation: End must be after start
+        .custom((endTime, { req }) => {
+            const startTime = req.body.start_time;
+
+            if (!startTime) {
+                return true;    // Let start_time validator handle missing value
+            }
+
+            // Convert times to comparable numbers (minutes since midnight)
+            const [startHour, startMin] = startTime.split(':').map(Number);
+            const [endHour, endMin] = endTime.split(':').map(Number);
+
+            const startMinutes = startHour * 60 + startMin;
+            const endMinutes = endHour * 60 + endMin;
+
+            if (endMinutes <= startMinutes) {
+                throw new Error('End time must be after start time');
+            }
+
+            // Limit shift length to 12 hours
+            const shiftDuration = endMinutes - startMinutes;
+            if (shiftDuration > 720) {  // 12 hours = 720 minutes
+                throw new Error('Shift duration cannot exceed 12 hours');
+            }
+
+            return true;
+        }), 
+
+    // ROLE VALIDATION
+    body('role')
+        .notEmpty()
+        .withMessage('Role is required')
+        .isIn(['Front Desk CSR', 'Sales', 'Operations', 'Manager', 'Admin', 'Trainer'])
+        .withMessage('Invalid role'), 
+
+    // NOTES VALIDATION (Optional)
+    body('notes')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ max: 500 })
+        .withMessage('Notes must be less than 500 characters'), 
+
+    // BUSINESS LOGIC: Check for overlapping shifts
+    body('staff_id')
+        .custom(async (staffId, { req }) => {
+            return new Promise((resolve, reject) => {
+                const { shift_date, start_time, end_time } = req.body;
+
+                if (!shift_date || !start_time || !end_time) {
+                    return resolve();   // Let other validators handle missing fields
+                }
+
+                // Check if staff already has a shift that overlaps
+                const query = `
+                    SELECT id, start_time, end_time
+                    FROM shifts
+                    WHERE staff_id = ?
+                        AND shift_date = ?
+                        AND (
+                            -- New shift starts during existing shift
+                            (? >= start_time AND ? < end_time)
+                            OR
+                            -- New shift ends during existing shift
+                            (? > start_time AND ? <= end_time)
+                            OR
+                            -- New shift completely contains existing shift
+                            (? <= start_time AND ? >= end_time)
+                        )
+                `;
+
+                db.query(query, [
+                    staffId, 
+                    shift_date, 
+                    start_time, start_time, 
+                    end_time, end_time, 
+                    start_time, end_time
+                ], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length > 0) {
+                        return reject(new Error(
+                            `Staff member already has a shift from ${results[0].start_time} to ${results[0].end_time} on this date`
+                        ));
+                    }
+
+                    return resolve();
+                });
+            });
+        })
+];
+
+/* ============================================
+   VALIDATION RULES: EDIT SHIFT
+   Applied to PUT /api/shifts/:id
+   ============================================ */
+
+const validateEditShift = [
+    // Validate shift ID in url
+    param('id')
+        .isInt({ min: 1 })
+        .withMessage('Invalid shift ID'), 
+
+    // Same validation as add shift
+    body('staff_id')
+        .notEmpty()
+        .withMessage('Staff member is required')
+        .isInt({ min: 1 })
+        .withMessage('Invalid staff member')
+
+        // Custom validation: Staff must exist and be active
+        .custom(async (staffId) => {
+            return new Promise((resolve, reject) => {
+                const query = 'SELECT status FROM staff WHERE id = ?';
+                db.query(query, [staffId], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length === 0) {
+                        return reject(new Error('Staff member not found'));
+                    }
+
+                    if (results[0].status !== 'active') {
+                        return reject(new Error('Cannot assign shifts to inactive staff'));
+                    }
+
+                    return resolve();
+                });
+            });
+        }),
+
+    // LOCATION ID VALIDATION
+    body('location_id')
+        .notEmpty()
+        .withMessage('Location is required')
+        .isInt({ min: 1 })
+        .withMessage('Invalid location')
+
+        // Custom validation: Location must exist
+        .custom(async (locationId) => {
+            return new Promise((resolve, reject) => {
+                const query = 'SELECT id FROM locations WHERE id = ?';
+                db.query(query, [locationId], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length === 0) {
+                        return reject(new Error('Location not found'));
+                    }
+
+                    return resolve();
+                });
+            });
+        }),
+
+    // SHIFT DATE VALIDATION
+    body('shift_date')
+        .notEmpty()
+        .withMessage('Shift date is required')
+        .isISO8601()
+        .withMessage('Invalid date format')
+
+        // Can't creae shifts too far in past
+        .custom((value) => {
+            const shiftDate = new Date(value);
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            if (shiftDate < thirtyDaysAgo) {
+                throw new Error('Cannot create shifts more than 30 days in the past');
+            }
+
+            return true;
+        }),
+
+    // START TIME VALIDATION
+    body('start_time')
+        .notEmpty()
+        .withMessage('Start time is required')
+
+        // Must match HH:MM format
+        .matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
+        .withMessage('Start time must be in HH:MM format (00:00 to 23:59'),
+
+    // END TIME VALIDATION
+    body('end_time')
+        .notEmpty()
+        .withMessage('End time is required')
+
+        // Must match HH:MM format
+        .matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
+        .withMessage('End time must be in HH:MM format (00:00 to 23:59)')
+
+        // Custom validation: End must be after start
+        .custom((endTime, { req }) => {
+            const startTime = req.body.start_time;
+
+            if (!startTime) {
+                return true;    // Let start_time validator handle missing value
+            }
+
+            // Convert times to comparable numbers (minutes since midnight)
+            const [startHour, startMin] = startTime.split(':').map(Number);
+            const [endHour, endMin] = endTime.split(':').map(Number);
+
+            const startMinutes = startHour * 60 + startMin;
+            const endMinutes = endHour * 60 + endMin;
+
+            if (endMinutes <= startMinutes) {
+                throw new Error('End time must be after start time');
+            }
+
+            // Limit shift length to 12 hours
+            const shiftDuration = endMinutes - startMinutes;
+            if (shiftDuration > 720) {  // 12 hours = 720 minutes
+                throw new Error('Shift duration cannot exceed 12 hours');
+            }
+
+            return true;
+        }), 
+
+    // ROLE VALIDATION
+    body('role')
+        .notEmpty()
+        .withMessage('Role is required')
+        .isIn(['Front Desk CSR', 'Sales', 'Operations', 'Manager', 'Admin', 'Trainer'])
+        .withMessage('Invalid role'), 
+
+    // NOTES VALIDATION (Optional)
+    body('notes')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ max: 500 })
+        .withMessage('Notes must be less than 500 characters'), 
+
+    // BUSINESS LOGIC: Check for overlapping shifts
+    body('staff_id')
+        .custom(async (staffId, { req }) => {
+            return new Promise((resolve, reject) => {
+                const { shift_date, start_time, end_time } = req.body;
+
+                if (!shift_date || !start_time || !end_time) {
+                    return resolve();   // Let other validators handle missing fields
+                }
+
+                const shiftId = req.params.id;
+
+                // Check if staff already has a shift that overlaps
+                const query = `
+                    SELECT id, start_time, end_time
+                    FROM shifts
+                    WHERE staff_id = ?
+                        AND shift_date = ?
+                        AND (
+                            -- New shift starts during existing shift
+                            (? >= start_time AND ? < end_time)
+                            OR
+                            -- New shift ends during existing shift
+                            (? >= start_time AND ? <= end_time)
+                            OR
+                            -- New shift completely contains existing shift
+                            (? <= start_time AND ? >= end_time)
+                        )
+                `;
+
+                db.query(query, [
+                    staffId, 
+                    shift_date,
+                    shiftId, 
+                    start_time, start_time, 
+                    end_time, end_time, 
+                    start_time, end_time
+                ], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length > 0) {
+                        return reject(new Error(
+                            `Staff member already has a shift from ${results[0].start_time} to ${results[0].end_time} on this date`
+                        ));
+                    }
+
+                    return resolve();
+                });
+            });
+        })
+];
 
 // ============================================
 // EXPORT ALL VALIDATORS
@@ -835,5 +1224,9 @@ module.exports = {
 
     // Staff validators
     validateAddStaff, 
-    validateEditStaff
+    validateEditStaff, 
+
+    // Shift validators
+    validateAddShift, 
+    validateEditShift
 };

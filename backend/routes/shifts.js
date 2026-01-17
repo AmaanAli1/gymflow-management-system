@@ -16,13 +16,24 @@ const {
     requireAdmin
 } = require('../middleware/adminAuth');
 
+const {
+    validateAddShift, 
+    validateEditShift, 
+    handleValidationErrors,
+    validateEditStaff
+} = require('../middleware/validation');
+
+const {
+    apiLimiter
+} = require('../middleware/rateLimiter');
+
 /* ============================================
    GET /api/shifts
    Get all shifts with optional filters
    Query params: staff_id, location_id, start_date, end_date
    ============================================ */
 
-router.get('/', (req, res) => {
+router.get('/', apiLimiter, (req, res) => {
     
     // Get query parameters for filtering
     const { staff_id, location_id, start_date, end_date } = req.query;
@@ -96,7 +107,7 @@ router.get('/', (req, res) => {
    Get single shift details
    ============================================ */
 
-router.get('/:id', (req, res) => {
+router.get('/:id', apiLimiter, (req, res) => {
     const shiftId = req.params.id;
 
     const query = `
@@ -130,7 +141,7 @@ router.get('/:id', (req, res) => {
    Create new shift
    ============================================ */
 
-router.post('/', (req, res) => {
+router.post('/', apiLimiter, validateAddShift, handleValidationErrors, (req, res) => {
     const {staff_id, location_id, shift_date, start_time, end_time, role, notes } = req.body;
 
     console.log('➕ Creating new shift:', req.body);
@@ -215,7 +226,7 @@ router.post('/', (req, res) => {
    Update shift details
    ============================================ */
 
-router.put('/:id', (req, res) => {
+router.put('/:id', apiLimiter, validateEditShift, handleValidationErrors, (req, res) => {
     const shiftId = req.params.id;
     const { staff_id, location_id, shift_date, start_time, end_time, role, status, notes } = req.body;
 
@@ -299,7 +310,7 @@ router.put('/:id', (req, res) => {
    Delete a shift (requires admin)
    ============================================ */
 
-router.delete('/:id', requireAdmin, (req, res) => {
+router.delete('/:id', apiLimiter, requireAdmin, (req, res) => {
     const shiftId = req.params.id;
 
     console.log(`🗑️ Deleting shift ${shiftId}`);

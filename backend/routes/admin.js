@@ -8,12 +8,15 @@ const router = express.Router();
 const db = require('../config/database');
 const bcrypt = require('bcrypt');
 
+// Middleware
+const { authLimiter } = require('../middleware/rateLimiter');
+
 /* ============================================
    POST /api/admin/verify-password
    Verify admin credentials for sensitive operations
    ============================================ */
 
-router.post('/verify-password', async (req, res) => {
+router.post('/verify-password', authLimiter, async (req, res) => {
    const { username, password } = req.body;
 
    // Validate input
