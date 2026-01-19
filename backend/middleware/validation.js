@@ -1205,6 +1205,141 @@ const validateEditShift = [
         })
 ];
 
+/* ============================================
+   VALIDATION RULES: ADD TRAINER
+   Applied to POST /api/trainers
+   ============================================ */
+
+const validateAddTrainer = [
+    // Same as staff
+    body('name')
+        .trim()
+        .notEmpty()
+        .withMessage('Name is required')
+        .isLength({ min: 2, max: 100 })
+        .withMessage('Name must be between 2 and 100 characters')
+        .matches(/^[a-zA-Z\s'-]+$/)
+        .withMessage('Name can only contain letters, spaces, hyphens, and apostrophes'), 
+
+    // EMAIL VALIDATION
+    body('email')
+        .trim()
+        .notEmpty()
+        .withMessage('Email is required')
+        .isEmail()
+        .withMessage('Invalid email format')
+        .normalizeEmail()
+
+        // Check if email already exists in staff table
+        .custom(async (email) => {
+            return new Promise((resolve, reject) => {
+                const query = 'SELECT id FROM staff WHERE email = ?';
+                db.query(query, [email], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length > 0) {
+                        return reject(new Error('Email already exists'));
+                    }
+
+                    return resolve();
+                });
+            });
+        }), 
+
+    // PHONE VALIDATION
+    body('phone')
+        .trim()
+        .notEmpty()
+        .withMessage('Phone number is required for trainers')
+        .matches(/^\(\d{3}\) \d{3}-\d{4}$/)
+        .withMessage('Phone must be in format: (555) 123-4567'), 
+
+    // EMERGENCY CONTACT NAME VALIDATION
+    body('emergency_contact')
+        .trim()
+        .notEmpty()
+        .withMessage('Emergency contact is required for trainers')
+        .isLength({ min: 2, max: 100 })
+        .withMessage('Emergency contact name must be between 2 and 100 characters')
+        .matches(/^[a-zA-Z\s'-]+$/)
+        .withMessage('Emergency contact can only contain letters, spaces, hyphens, and apostrophes'), 
+
+    // EMERGENCY PHONE VALIDATION
+    body('emergency_phone')
+        .trim()
+        .notEmpty()
+        .withMessage('Emergency phone is required for trainers')
+        .matches(/^\(\d{3}\) \d{3}-\d{4}$/)
+        .withMessage('Emergency phone must be in format: (555) 123-4567'), 
+
+    // SPECIALTY VALIDATION
+    body('specialty')
+        .notEmpty()
+        .withMessage('Specialty is requried for trainers')
+        .isIn(['Strength', 'Hypertrophy', 'Weight Loss', 'Conditioning', 'Yoga / Mobility'])
+        .withMessage('Specialty must be Strength, Hypertrophy, Weight Loss, Conidtioning, or Yoga / Mobility'), 
+
+    // LOCATION VALIDATION
+    body('location_id')
+        .notEmpty()
+        .withMessage('Location is required')
+        .isInt({ min: 1 })
+        .withMessage('Invalid location')
+        
+        // Custom validation: Location must exist in database
+        .custom(async (locationId) => {
+            return new Promise((resolve, reject) => {
+                const query = 'SELECT id FROM locations where id = ?';
+                db.query(query, [locationId], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length === 0) {
+                        return reject(new Error('Location not found'));
+                    }
+
+                    return resolve();
+                });
+            });
+        }), 
+
+    // HIRE DATE VALIDATION
+    body('hire_date')
+        .notEmpty()
+        .withMessage('Hire date is required')
+        .isISO8601()
+        .withMessage('Invalid date format')
+
+        // Custom validation: Can't hire someone in the distant future
+        .custom((value) => {
+            const hireDate = new Date(value);
+            const oneYearFromNow = new Date();
+            oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+
+            if (hireDate > oneYearFromNow) {
+                throw new Error('Hire date cannot be more than 1 year in the future');
+            }
+
+            return true;
+        }), 
+
+    // HOURLY RATE VALIDATION
+    body('hourly_rate')
+        .optional({ nullable: true, checkFalsy: true })
+        .isFloat({ min: 0, max: 500 })
+        .withMessage('Hourly rate must be between $0 and $500'), 
+
+    // NOTES VALIDATION
+    body('notes')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ max: 500 })
+        .withMessage('Notes must be less than 500 characters')
+];
+
 // ============================================
 // EXPORT ALL VALIDATORS
 // ============================================
@@ -1225,6 +1360,7 @@ module.exports = {
     // Staff validators
     validateAddStaff, 
     validateEditStaff, 
+    validateAddTrainer, 
 
     // Shift validators
     validateAddShift, 

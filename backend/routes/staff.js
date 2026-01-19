@@ -15,7 +15,8 @@ const db = require('../config/database');
 const {
     handleValidationErrors, 
     validateAddStaff, 
-    validateEditStaff
+    validateEditStaff, 
+    validateAddTrainer
 } = require('../middleware/validation');
 
 const {
@@ -316,7 +317,7 @@ router.post('/', validateAddStaff, handleValidationErrors, (req, res) => {
 
 router.put('/:id', validateEditStaff, handleValidationErrors, (req, res) => {
     const staffId = req.params.id;
-    const { name, email, phone, emergency_contact, emergency_phone, role, location_id, hire_date, hourly_rate, status, notes } = req.body;
+    const { name, email, phone, emergency_contact, emergency_phone, role, specialty, location_id, hire_date, hourly_rate, status, notes } = req.body;
 
     console.log(`📝 Update staff ${staffId}:`, req.body);
 
@@ -356,6 +357,7 @@ router.put('/:id', validateEditStaff, handleValidationErrors, (req, res) => {
                 emergency_contact = ?,
                 emergency_phone = ?,
                 role = ?,
+                specialty = ?,
                 location_id = ?,
                 hire_date = ?,
                 hourly_rate = ?,
@@ -371,6 +373,7 @@ router.put('/:id', validateEditStaff, handleValidationErrors, (req, res) => {
             emergency_contact || null, 
             emergency_phone || null, 
             role, 
+            specialty || null, 
             location_id, 
             hire_date, 
             hourly_rate || null, 
@@ -520,6 +523,126 @@ router.post('/:id/reactivate', (req, res) => {
         });
     });
 });
+
+/* ============================================
+   POST /api/trainers
+   Add new trainer (specialized staff member)
+   ============================================ */
+
+router.post('/trainers', validateAddTrainer, handleValidationErrors, (req, res) => {
+    // Note: role is NOT included - we set it automatically
+    const {
+        name, 
+        email, 
+        phone, 
+        emergency_contact, 
+        emergency_phone, 
+        specialty, 
+        location_id, 
+        hire_date, 
+        hourly_rate, 
+        notes
+    } = req.body;
+
+    console.log('Adding new trainer:', name);
+
+    // STEP 1: Generate trainer ID (T-0001 format)
+    const getMaxIdQuery = `
+        SELECT MAX(CAST(SUBSTRING(staff_id, 3) AS UNSIGNED)) as max_num
+        FROM STAFF
+        WHERE staff_id LIKE 'T-%'
+    `;
+
+    db.query(getMaxIdQuery, (err, results) => {
+        if (err) {
+            console.error('Error generating trainer ID:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        // Generate next trainer ID
+        // results[0].max_num is nullable if no trainers exist yet
+        const nextNum = (results[0].max_num || 0) + 1;
+        const staff_id = `T-${String(nextNum).padStart(4, '0')}`;
+
+        console.log('Generated trainer ID:', staff_id);
+
+        // STEP 2: Inser trainer into staff table
+        // role is hardcoded as 'Trainer' - not user-provided
+        // specialty is included - unique to trainers
+        const insertQuery = `
+            INSERT INTO staff (
+                staff_id,
+                name,
+                email,
+                phone,
+                emergency_contact,
+                emergency_phone,
+                role,
+                specialty,
+                location_id,
+                hire_date,
+                hourly_rate,
+                notes,
+                status
+            )
+            VALUES (?, ?, ?, ?, ?, ?, 'Trainer', ?, ?, ?, ?, ?, 'active')
+        `;
+
+        // Values array matches the ? placeholder in order
+        // Note: 'Trainer' is hardcoded in query, not in values
+        const values = [
+            staff_id, 
+            name, 
+            email, 
+            phone, 
+            emergency_contact, 
+            emergency_phone, 
+            specialty, 
+            location_id, 
+            hire_date, 
+            hourly_rate || null, 
+            notes || null
+        ];
+
+        db.query(insertQuery, values, (err, result) => {
+            if (err) {
+                console.error('Insert error:', err);
+                return res.status(500).json({ error: 'Failed to create trainer' });
+            }
+
+            // STEP 3: Fetch the newly created trainer with location name
+            const newTrainerId = result.insertId;
+
+            const fetchQuery = `
+                SELECT
+                    s.*,
+                    l.name as location_name
+                FROM staff s
+                LEFT JOIN locations l ON s.location_id = l.id
+                WHERE s.id = ?
+            `;
+
+            db.query(fetchQuery, [newTrainerId], (err, trainer) => {
+                if (err) {
+                    console.error('Fetch error:', err);
+                    return res.status(500).json({ error: 'Trainer created but failed to fetch' });
+                }
+
+                console.log('Trainer created successfully:', staff_id);
+
+                // Return success response with trainer data
+                res.status(201).json({
+                    success: true, 
+                    id: newTrainerId, 
+                    staff_id: staff_id, 
+                    message: 'Trainer created successfully', 
+                    trainer: trainer[0]
+                });
+            });
+        });
+    });
+});
+
 
 // Export router
 module.exports = router;

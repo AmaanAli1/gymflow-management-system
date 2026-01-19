@@ -273,6 +273,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
          }
       });
+
+      // Role dropdown change handler (in edit form)
+      const editRoleSelect = document.getElementById('editRole');
+      if (editRoleSelect) {
+         editRoleSelect.addEventListener('change', (e) => {
+            const specialtyField = document.getElementById('editSpecialtyField');
+            const specialtySelect = document.getElementById('editSpecialty');
+
+            if (e.target.value === 'Trainer') {
+               specialtyField.style.display = 'block';
+               specialtySelect.required = true;
+            } else {
+               specialtyField.style.display = 'none';
+               specialtySelect.required = false;
+               specialtySelect.value = '';
+            }
+         });
+      }
    }
 
    /* ============================================
@@ -417,6 +435,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('panelStaffRole').textContent = staff.role;
       document.getElementById('panelStaffLocation').textContent = staff.location_name || 'N/A';
       document.getElementById('panelStaffEmailAddress').textContent = staff.email;
+
+      // Show/hide trainer-specific section
+      if (staff.role === 'Trainer') {
+         document.getElementById('trainerSpecificSection').style.display = 'block';
+         document.getElementById('detailSpecialty').textContent = staff.specialty || 'Not specified';
+         document.getElementById('detailHourlyRate').textContent = staff.hourly_rate ? `$${staff.hourly_rate}/hr` : 'Not set';
+      } else {
+         document.getElementById('trainerSpecificSection').style.display = 'none';
+      }
 
       // Format hire date
       const hireDate = new Date(staff.hire_date).toLocaleDateString('en-US', {
@@ -563,6 +590,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Set selected location
       document.getElementById('editLocation').value = staff.location_id || '';
+
+      // Handle specialty field (trainers only)
+      const specialtyField = document.getElementById('editSpecialtyField');
+      const specialtySelect = document.getElementById('editSpecialty');
+
+      if (staff.role === 'Trainer') {
+         // Show specialty field and set value
+         specialtyField.style.display = 'block';
+         specialtySelect.value = staff.specialty || '';
+         specialtySelect.required = true;
+      } else {
+         // Hide specialty field for non-trainers
+         specialtyField.style.display = 'none';
+         specialtySelect.value = '';
+         specialtySelect.required = false;
+      }
    }
 
    /* ============================================
@@ -642,6 +685,8 @@ document.addEventListener('DOMContentLoaded', async () => {
          emergency_contact: formData.get('emergency_contact') || null, 
          emergency_phone: formData.get('emergency_phone') || null, 
          role: formData.get('role'), 
+         // Include specialty only if role is Trainer
+         specialty: formData.get('role') === 'Trainer' ? formData.get('specialty') : null, 
          location_id: parseInt(formData.get('location_id')), 
          hire_date: formData.get('hire_date'), 
          hourly_rate: formData.get('hourly_rate') ? parseFloat(formData.get('hourly_rate')) : null, 
@@ -841,7 +886,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       try {
          // STEP 1: Verify admin password
-         console.log(' Verifying admin credentials...');
+         console.log('🔒 Verifying admin credentials...');
 
          const verifyResponse = await fetch(`${API_BASE_URL}/admin/verify-password`, {
             method: 'POST', 
@@ -860,10 +905,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             throw new Error('Invalid admin credentials. Please check your username and password.');
          }
 
-         console.log(' Admin verified');
+         console.log('✅ Admin verified');
 
          // STEP 2: Delete the staff member (soft delete)
-         console.log(' Deleting staff member...');
 
          const deleteResponse = await fetch(`${API_BASE_URL}/staff/${staffId}`, {
             method: 'DELETE', 
@@ -884,11 +928,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             throw new Error(deleteResult.error || 'Failed to delete staff member');
          }
 
-         console.log(' Staff member deleted', deleteResult);
+         console.log('✅ Staff member deleted', deleteResult);
 
          // Show success message
          const successMsg = document.getElementById('deleteSuccessMessage');
-         successMsg.textContent = ' Staff member removed successfully!';
+         successMsg.textContent = '✅ Staff member removed successfully!';
          successMsg.style.display = 'block';
 
          // Update the staff in allStaff array (set status to terminated)
@@ -913,11 +957,11 @@ document.addEventListener('DOMContentLoaded', async () => {
          }, 1500);
 
       } catch (error) {
-         console.error(' Failed to delete staff member:', error);
+         console.error('❌ Failed to delete staff member:', error);
 
          // Show error message
          const errorMsg = document.getElementById('deleteErrorMessage');
-         errorMsg.textContent = ` ${error.message}`;
+         errorMsg.textContent = `❌ ${error.message}`;
          errorMsg.style.display = 'block';
 
          // Re-enable button
@@ -957,12 +1001,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    document.getElementById('deleteStaffBtn')?.addEventListener('click', () => {
       const staffId = document.getElementById('deleteStaffBtn').dataset.staffId;
 
-      console.log('Delete button clicked');
-      console.log('Staff ID from dataset:', staffId);
-      console.log('All staff array:', allStaff);
-
       const staff = allStaff.find(s => s.id === parseInt(staffId));
-      console.log('Found staff:', staff);
 
       if (staff) {
          switchToDeleteMode(staff);
@@ -1074,6 +1113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    // Close delete modal
    document.getElementById('closeDeleteShiftModal')?.addEventListener('click', () => {
       document.getElementById('deleteShiftModal').classList.remove('active');
+      openShiftFormModal(currentShift.id);
    });
 
    // Click outside to close
@@ -1086,6 +1126,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    // Cancel button
    document.getElementById('cancelDeleteShiftBtn')?.addEventListener('click', () => {
       document.getElementById('deleteShiftModal').classList.remove('active');
+      openShiftFormModal(currentShift.id);
    });
 
    // Confirm delete button

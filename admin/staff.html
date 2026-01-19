@@ -447,10 +447,15 @@
                 </div>
 
                 <div class="modal-body">
+
+                    <!-- Error/Success Messages -->
+                    <div id="addTrainerError" class="modal-error" style="display: none;"></div>
+                    <div id="addTrainerSuccess" class="modal-success" style="display: none;"></div>
+
                     <form id="addTrainerForm">
                         <div class="modal-grid">
                             <div class="field">
-                                <label for="trainerName">Full Name</label>
+                                <label for="trainerName">Full Name *</label>
                                 <input type="text"
                                        id="trainerName"
                                        name="name"
@@ -458,7 +463,7 @@
                                        required>
                             </div>
                             <div class="field">
-                                <label for="trainerEmail">Email</label>
+                                <label for="trainerEmail">Email *</label>
                                 <input type="email"
                                        id="trainerEmail"
                                        name="email"
@@ -466,33 +471,63 @@
                                        required>
                             </div>
                             <div class="field">
-                                <label for="trainerLocation">Location</label>
-                                <select id="trainerLocation" name="location" required>
-                                    <option value="">Select location</option>
-                                    <option value="downtown">Downtown</option>
-                                    <option value="midtown">Midtown</option>
-                                    <option value="eastside">Eastside</option>
+                                <label for="trainerPhone">Phone *</label>
+                                <input type="tel"
+                                       id="trainerPhone"
+                                       name="phone"
+                                       placeholder="(555) 123-4567"
+                                       required>
+                            </div>
+                            <div class="field">
+                                <label for="trainerEmergencyContact">Emergency Contact *</label>
+                                <input type="text"
+                                       id="trainerEmergencyContact"
+                                       name="emergency_contact"
+                                       placeholder="Jane Doe"
+                                       required>
+                            </div>
+                            <div class="field">
+                                <label for="trainerEmergencyPhone">Emergency Phone *</label>
+                                <input type="tel"
+                                       id="trainerEmergencyPhone"
+                                       name="emergency_phone"
+                                       placeholder="(555) 123-4567"
+                                       required>
+                            </div>
+                            <div class="field">
+                                <label for="trainerLocation">Location *</label>
+                                <select id="trainerLocation" name="location_id" required>
+                                    <option value="">Select location...</option>
+                                    <!-- Options populated by JavaScript-->
                                 </select>
                             </div>
                             <div class="field">
-                                <label for="trainerSpecialty">Specialty</label>
+                                <label for="trainerSpecialty">Specialty *</label>
                                 <select id="trainerSpecialty" name="specialty" required>
-                                    <option value="">Select specialty</option>
-                                    <option value="strength">Strength</option>
-                                    <option value="hypertrophy">Hypertrophy</option>
-                                    <option value="weightloss">Weight Loss</option>
-                                    <option value="conditioning">Conditioning</option>
-                                    <option value="yoga">Yoga / Mobility</option>
+                                    <option value="">Select specialty...</option>
+                                    <option value="Strength">Strength</option>
+                                    <option value="Hypertrophy">Hypertrophy</option>
+                                    <option value="Weight Loss">Weight Loss</option>
+                                    <option value="Conditioning">Conditioning</option>
+                                    <option value="Yoga / Mobility">Yoga / Mobility</option>
                                 </select>
                             </div>
                             <div class="field">
-                                <label for="trainerRate">Hourly Rate</label>
+                                <label for="trainerHireDate">Hire Date *</label>
+                                <input type="data"
+                                       id="trainerHireDate"
+                                       name="hire_date"
+                                       required>
+                            </div>
+                            <div class="field">
+                                <label for="trainerRate">Hourly Rate ($)</label>
                                 <input type="number" 
                                        id="trainerRate" 
-                                       name="rate"
+                                       name="hourly_rate"
                                        placeholder="e.g. 65" 
                                        min="0" 
-                                       step="5">
+                                       step="5"
+                                       required>
                             </div>
                         </div>
                         <div class="field">
@@ -507,7 +542,10 @@
 
                 <div class="modal-footer">
                     <button class="btn ghost" data-close-modal type="button">Cancel</button>
-                    <button class="btn primary" type="submit" form="addTrainerForm">Save Trainer</button>
+                    <button class="btn primary" type="submit" form="addTrainerForm" id="submitAddTrainer">
+                        <i class="fa-solid fa-plus"></i>
+                        Add Trainer
+                    </button>
                 </div>
             </div>
         </div>
@@ -700,6 +738,26 @@
                             <span class="slide-panel-value" id="panelStaffDuration">---</span>
                         </div>
 
+                        <!-- Trainer-Specific Section -->
+                        <!-- JavaScript shows/hides this based on staff.role -->
+                        <div id="trainerSpecificSection" style="display: none;">
+
+                            <!-- Section Divider -->
+                            <div class="slide-panel-divider">
+                                <span>Trainer Details</span>
+                            </div>
+
+                            <div class="slide-panel-row">
+                                <span class="slide-panel-key">Specialty</span>
+                                <span class="slide-panel-value" id="detailSpecialty">---</span>
+                            </div>
+
+                            <div class="slide-panel-row">
+                                <span class="slide-panel-key">Hourly Rate</span>
+                                <span class="slide-panel-value" id="detailHourlyRate">---</span>
+                            </div>
+                        </div>
+
                     </div>
                     <!-- End of slide-panel-view -->
                     
@@ -756,6 +814,19 @@
                                     <option value="Operations">Operations</option>
                                     <option value="Manager">Manager</option>
                                     <option value="Admin">Admin</option>
+                                </select>
+                            </div>
+
+                            <!-- Specialty (Trainers Only) -->
+                            <div class="slide-panel-field required" id="editSpecialtyField" style="display: none;">
+                                <label for="editSpecialty">Specialty</label>
+                                <select id="editSpecialty" name="specialty">
+                                    <option value="">Select specialty...</option>
+                                    <option value="Strength">Strength</option>
+                                    <option value="Hypertrophy">Hypertrophy</option>
+                                    <option value="Weight Loss">Weight Loss</option>
+                                    <option value="Conitioning">Conidtioning</option>
+                                    <option value="Yoga / Mobility">Yoga / Mobility</option>
                                 </select>
                             </div>
 

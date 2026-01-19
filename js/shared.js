@@ -23,7 +23,7 @@ async function populateLocationDropdowns() {
 
         // Populate ALL modal location dropdowns
         const modalLocationSelects = document.querySelectorAll(
-            '#memberLocation, #checkinLocation, #editLocation, #staffLocationSelect'
+            '#memberLocation, #checkinLocation, #editLocation, #staffLocationSelect, #trainerLocation'
         );
 
         modalLocationSelects.forEach(select => {
@@ -712,61 +712,179 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 /* ============================================
-   4. ADD TRAINER MODAL HANDLER (PLACEHOLDER)
+   4. ADD TRAINER MODAL HANDLER
    Universal - accessible from sidebar on all pages
    ============================================ */
 
 const addTrainerForm = document.getElementById('addTrainerForm');
 
 if (addTrainerForm) {
+
+    // Helper Function to populate trainer location dropdown
+    async function populateTrainerLocationDropdown() {
+        
+        const dropdown = document.getElementById('trainerLocation');
+
+        if (!dropdown) return;
+
+        // Skip if already populated (has more than just placeholder option)
+        if (dropdown.options.length > 1) return;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/locations`);
+            const locations = await response.json();
+
+            dropdown.innerHTML = '<option value="">Select location...</option>';
+            locations.forEach(location => {
+                const option = document.createElement('option');
+                option.value = location.id;
+                option.textContent = location.name;
+                dropdown.appendChild(option);
+            });
+
+        } catch (error) {
+            console.error('Failed to load locations for trainer:', error);
+        }
+    }
+
+    // Setup when modal opens: populate dropdowns, set defaults
+    document.querySelectorAll('[data-modal="add-trainer-modal"]').forEach(trigger => {
+        trigger.addEventListener('click', async () => {
+
+            // Populate location dropdown from API
+            try {
+                await populateTrainerLocationDropdown();
+            } catch (error) {
+                console.error('Error calling populateTrainerLocationDropdown:', error);
+            }
+
+            // Set default hire date to today
+            const hireDateInput = document.getElementById('trainerHireDate');
+            if (hireDateInput && !hireDateInput.value) {
+                const today = new Date().toISOString().split('T')[0];
+                hireDateInput.value = today;
+            }
+
+            // Clear any previous error/success messages
+            const errorMsg = document.getElementById('addTrainerError');
+            const successMsg = document.getElementById('addTrainerSuccess');
+            if (errorMsg) errorMsg.style.display = 'none';
+            if (successMsg) successMsg.style.display = 'none';
+        });
+    });
+
+    // Handle form submission
     addTrainerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
-        // Get form data
+        e.stopImmediatePropagation();
+
+        // Get form data using FormData API
         const formData = new FormData(addTrainerForm);
+
+        // Build trainer data object
         const trainerData = {
-            name: formData.get('name'),
-            email: formData.get('email'),
-            location: formData.get('location'),
-            specialty: formData.get('specialty'),
-            rate: formData.get('rate') || null,
+            name: formData.get('name'), 
+            email: formData.get('email'), 
+            phone: formData.get('phone'), 
+            emergency_contact: formData.get('emergency_contact'), 
+            emergency_phone: formData.get('emergency_phone'), 
+            specialty: formData.get('specialty'), 
+            location_id: parseInt(formData.get('location_id')), 
+            hire_date: formData.get('hire_date'), 
+            hourly_rate: formData.get('hourly_rate') ? parseFloat(formData.get('hourly_rate')) : null, 
             notes: formData.get('notes') || null
         };
-        
-        console.log('📝 Submitting new trainer:', trainerData);
-        
-        // TODO: When you create a trainers table and API endpoint, update this
+
+        // Get message elements for feedback
+        const errorMsg = document.getElementById('addTrainerError');
+        const successMsg = document.getElementById('addTrainerSuccess');
+
+        // Hide any previous messages
+        if (errorMsg) errorMsg.style.display = 'none';
+        if (successMsg) successMsg.style.display = 'none';
+
+        // Get submit button and store original text
+        const submitBtn = document.getElementById('submitAddTrainer');
+        if (!submitBtn) return;
+
+        const originalBtnText = submitBtn.innerHTML;
+
+        // Validate location_id before sending
+        if (!trainerData.location_id || isNaN(trainerData.location_id)) {
+            if (errorMsg) {
+                errorMsg.textContent = 'Please select a location';
+                errorMsg.style.display = 'block';
+            }
+            return;
+        }
+
+        // Show loading state (validation passed)
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Adding...';
+
         try {
-            // Placeholder - you'll need to create /api/trainers endpoint
-            const response = await fetch(`${API_BASE_URL}/trainers`, {
-                method: 'POST',
+            // Send POST request to /api/trainers
+            const response = await fetch(`${API_BASE_URL}/staff/trainers`, {
+                method: 'POST', 
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(trainerData)
             });
-            
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Failed to add trainer');
-            }
-            
+
             const result = await response.json();
-            
-            console.log('✅ Trainer added:', result);
-            
-            // Close modal
-            document.getElementById('add-trainer-modal').classList.remove('show');
-            
-            // Reset form
-            addTrainerForm.reset();
-            
-            // Show success notification
-            showNotification('Trainer added successfully!', 'success');
-            
+
+            // Check if request failed
+            if (!response.ok) {
+                // Handle validation errors from backend
+                if (result.details && Array.isArray(result.details)) {
+                    const errorMessages = result.details.map(d => d.msg).join(', ');
+                    throw new Error(errorMessages);
+                }
+                throw new Error(result.error || 'Failed to add trainer');
+            }
+
+            // Show success message
+            if (successMsg) {
+                successMsg.textContent = `${trainerData.name} added successfully! (${result.staff_id})`;
+                successMsg.style.display = 'block';
+            }
+
+            // Wait 1.5 seconds, then close modal and refresh
+            setTimeout(() => {
+                // Close modal
+                const closeBtn = document.querySelector('#add-trainer-modal [data-close-modal]');
+                if (closeBtn) closeBtn.click();
+
+                // Reset form
+                addTrainerForm.reset();
+                if (successMsg) successMsg.style.display = 'none';
+
+                // Refresh staff table and stats (if on staff page)
+                if (typeof fetchStaff === 'function') fetchStaff();
+                if (typeof fetchStats === 'function') fetchStats();
+
+                // Show toast notification
+                showNotification(`${trainerData.name} added successfully!`, 'success');
+
+                // Re-enable button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+
+            }, 1500);
+
         } catch (error) {
-            console.error('❌ Failed to add trainer:', error);
-            showNotification(error.message, 'error');
+            console.error('Failed to add trainer:', error);
+
+            // Show error message in modal
+            if (errorMsg) {
+                errorMsg.textContent = error.message;
+                errorMsg.style.display = 'block';
+            }
+
+            // Re-enable submit button
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
         }
     });
 }
