@@ -394,6 +394,7 @@
 
     /* Styling */
     background: var(--color-overlay);
+    backdrop-filter: blur(1px);
 
     /* Layout */
     display: none;  /* Hidden by default */
