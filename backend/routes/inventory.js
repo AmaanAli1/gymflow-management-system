@@ -1,0 +1,749 @@
+// routes/inventory.js
+
+/* ============================================
+   INVENTORY ROUTES
+   All endpoints related to inventory management
+   ============================================ */
+
+const express = require('express');
+const router = express.Router();
+
+// Import database
+const db = require('../config/database');
+
+// ============================================
+// CATEGORY PREFIX MAPPING
+// Maps category IDs to SKU prefixes
+// Centralized, used by multiple routes
+// ============================================
+
+const CATEGORY_PREFIXES = {
+    1: 'SUPP',      // Supplements
+    2: 'BEV',       // Beverages
+    3: 'MERCH',     // Merchandise
+    4: 'EQUIP',     // Equipment
+    5: 'SUPPLY',    // Supplies
+};
+
+/* ============================================
+   GET /api/inventory/stats
+   Get KPI statistics for inventory dashboard
+   ============================================ */
+
+router.get('/stats', (req, res) => {
+    // Query to get all stats in one go
+    const statsQuery = `
+        SELECT
+            -- Total unique products
+            (SELECT COUNT(*) FROM products WHERE status = 'active') as total_products,
+            
+            -- Total stock value (quantity * unit_price across all locations)
+            (SELECT COALESCE(SUM(s.quantity * p.unit_price), 0)
+             FROM inventory_stock s
+             JOIN products p ON s.product_id = p.id
+             WHERE p.status = 'active') as total_stock_value,
+            
+            -- Low stock count (products where total stock < reorder_point)
+            (SELECT COUNT(DISTINCT p.id)
+             FROM products p
+             JOIN (
+                SELECT product_id, SUM(quantity) as total_qty
+                FROM inventory_stock
+                GROUP BY product_id
+             ) stock_totals ON p.id = stock_totals.product_id
+             WHERE p.status = 'active'
+             AND stock_totals.total_qty <= p.reorder_point
+             AND stock_totals.total_qty > 0) as low_stock_count,
+             
+            -- Out of stock count (products with zero total quantity)
+            (SELECT COUNT(DISTINCT p.id)
+             FROM products p
+             JOIN (
+                SELECT product_id, SUM(quantity) as total_qty
+                FROM inventory_stock
+                GROUP BY product_id
+             ) stock_totals ON p.id = stock_totals.product_id
+              WHERE p.status = 'active'
+              AND stock_totals.total_qty = 0) as out_of_stock_count,
+              
+            -- Pending reorder requests
+            (SELECT COUNT(*) FROM reorder_requests WHERE status = 'pending') as pending_reorders
+    `;
+
+    db.query(statsQuery, (err, results) => {
+        if (err) {
+            console.error('Stats query error:', err);
+            return res.status(500).json({ error: 'Failed to fetch inventory stats' });
+        }
+
+        const stats = results[0];
+
+        // Format currency values
+        stats.total_stock_value = parseFloat(stats.total_stock_value) || 0;
+
+        res.json(stats);
+    });
+});
+
+/* ============================================
+   GET /api/inventory/categories
+   Get all product categories
+   ============================================ */
+
+router.get('/categories', (req, res) => {
+    
+    const query = `
+        SELECT
+            c.*,
+            COUNT(p.id) as product_count
+        FROM inventory_categories c
+        LEFT JOIN products p ON c.id = p.category_id AND p.status = 'active'
+        GROUP BY c.id
+        ORDER BY c.name
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Categories query error:', err);
+            return res.status(500).json({ error: 'Failed to fetch categories' });
+        }
+
+        res.json(results);
+    });
+});
+
+/* ============================================
+   GET /api/inventory/products
+   Get all products with stock levels
+   ============================================ */
+
+router.get('/products', (req, res) => {
+    // Get query parameters for filtering
+    const { category, location, status, search, stock_status } = req.query;
+
+    // STEP 1: Get products with total stock
+    let query = `
+        SELECT
+            p.*,
+            c.name as category_name,
+            c.icon as category_icon,
+            COALESCE(stock_totals.total_quantity, 0) as total_quantity
+        FROM products p
+        JOIN inventory_categories c ON p.category_id = c.id
+        LEFT JOIN (
+            SELECT product_id, SUM(quantity) as total_quantity
+            FROM inventory_stock
+            GROUP BY product_id
+        ) stock_totals ON p.id = stock_totals.product_id
+        WHERE 1=1
+    `;
+
+    const params = [];
+
+    // Apply filters
+    if (category && category !== 'all') {
+        query += ` AND p.category_id = ?`;
+        params.push(category);
+    }
+
+    if (status && status !== 'all') {
+        query += ` AND p.status = ?`;
+        params.push(status);
+    }
+
+    if (search) {
+        query += ` AND (p.name LIKE ? OR p.sku LIKE ? OR p.description LIKE ?)`;
+        const searchPattern = `%${search}%`;
+        params.push(searchPattern, searchPattern, searchPattern);
+    }
+
+    // Stock status filter
+    if (stock_status === 'low') {
+        query += ` AND COALESCE(stock_totals.total_quantity, 0) <= p.reorder_point AND COALESCE(stock_totals.total_quantity, 0) > 0`;
+    } else if (stock_status === 'out') {
+        query += ` AND COALESCE(stock_totals.total_quantity, 0) = 0`;
+    } else if (stock_status === 'in_stock') {
+        query += ` AND COALESCE(stock_totals.total_quantity, 0) > p.reorder_point`;
+    }
+
+    // Location filter
+    if (location && location !== 'all') {
+        query += ` AND EXISTS (
+            SELECT 1 FROM inventory_stock
+            WHERE product_id = p.id AND location_id = ?
+        )`;
+        params.push(location);
+    }
+
+    query += ` ORDER BY c.name, p.name`;
+
+    db.query(query, params, (err, products) => {
+        if (err) {
+            console.error('Products query error:', err);
+            return res.status(500).json({ error: 'Failed to fetch products' });
+        }
+
+        // If no product, return empty array
+        if (products.length === 0) {
+            return res.json({ products: [] });
+        }
+
+        // STEP 2: Get stock by location for all products in one query
+        const productIds = products.map(p => p.id);
+
+        const stockQuery = `
+            SELECT
+                s.product_id,
+                s.location_id,
+                s.quantity,
+                s.last_restocked,
+                l.name as location_name
+            FROM inventory_stock s
+            JOIN locations l ON s.location_id = l.id
+            WHERE s.product_id IN (?)
+            ORDER BY s.product_id, l.name
+        `;
+
+        db.query(stockQuery, [productIds], (err, stockResults) => {
+            if (err) {
+                console.error('Stock query error:', err);
+                // Return products without stock breakdown if this fails
+                return res.json({
+                    products: products.map(p => ({ ...p, stock_by_location: [] }))
+                });
+            }
+
+            // Group stock results by product_id
+            const stockByProduct = {};
+            stockResults.forEach(stock => {
+                if (!stockByProduct[stock.product_id]) {
+                    stockByProduct[stock.product_id] = [];
+                }
+
+                stockByProduct[stock.product_id].push({
+                    location_id: stock.location_id, 
+                    location_name: stock.location_name, 
+                    quantity: stock.quantity, 
+                    last_restocked: stock.last_restocked
+                });
+            });
+
+            // Attach stock data to each product
+            const productsWithStock = products.map(product => ({
+                ...product, 
+                stock_by_location: stockByProduct[product.id] || []
+            }));
+
+            res.json({ products: productsWithStock});
+        });
+    });
+});
+
+/* ============================================
+   GET /api/inventory/products/:id
+   Get single product with full details
+   ============================================ */
+
+router.get('/products/:id', (req, res) => {
+    const productId = req.params.id;
+
+    const query = `
+        SELECT
+            p.*,
+            c.name as category_name,
+            c.icon as category_icon
+        FROM products p
+        JOIN inventory_categories c ON p.category_id = c.id
+        WHERE p.id = ?
+    `;
+
+    db.query(query, [productId], (err, productResults) => {
+        if (err) {
+            console.error('Product query error:', err);
+            return res.status(500).json({ error: 'Failed to fetch product' });
+        }
+
+        if (productResults.length === 0) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        const product = productResults[0];
+
+        // Get stock levels for each location
+        const stockQuery = `
+            SELECT
+                s.*,
+                l.name as location_name
+            FROM inventory_stock s
+            JOIN locations l on s.location_id = l.id
+            WHERE s.product_id = ?
+            ORDER BY l.name
+        `;
+
+        db.query(stockQuery, [productId], (err, stockResults) => {
+            if (err) {
+                console.error('Stock query error:', err);
+                return res.status(500).json({ error: 'Failed to fetch stock levels' });
+            }
+
+            product.stock_by_location = stockResults;
+            product.total_quantity = stockResults.reduce((sum, s) => sum + s.quantity, 0);
+
+            res.json(product);
+        });
+    });
+});
+
+/* ============================================
+   POST /api/inventory/products
+   Create new product
+   ============================================ */
+
+router.post('/products', (req, res) => {
+    const {
+        name, 
+        description, 
+        category_id, 
+        unit_price, 
+        cost_price, 
+        reorder_point, 
+        reorder_quantity
+    } = req.body;
+
+    // Validate required fields
+    if (!name || !category_id) {
+        return res.status(404).json({
+            error: 'Missing required fields', 
+            required: ['name', 'category_id']
+        });
+    }
+
+    // STEP 1: Generate SKU based on category
+    const prefix = CATEGORY_PREFIXES[category_id];
+
+    if (!prefix) {
+        return res.status(400).json({ error: 'Invalid category' });
+    }
+
+    // Find the highest existing SKU number for this prefix
+    const getMaxSkuQuery = `
+        SELECT MAX(CAST(SUBSTRING(sku, LENGTH(?) + 2) AS UNSIGNED)) as max_num
+        FROM products
+        WHERE sku LIKE ?
+    `;
+
+    db.query(getMaxSkuQuery, [prefix, `${prefix}-%`], (err, results) => {
+        if (err) {
+            console.error('Error generating SKU:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        // Generate next SKU
+        const nextNum = (results[0].max_num || 0) + 1;
+        const sku = `${prefix}-${String(nextNum).padStart(3, '0')}`;
+
+        // STEP 2: Insert the product
+        const insertQuery = `
+            INSERT INTO products (
+                sku, name, description, category_id,
+                unit_price, cost_price, reorder_point, reorder_quantity
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ? , ?)
+        `;
+
+        const values = [
+            sku, 
+            name, 
+            description || null, 
+            category_id, 
+            unit_price || 0, 
+            cost_price || 0, 
+            reorder_point || 10, 
+            reorder_quantity || 25
+        ];
+
+        db.query(insertQuery, values, (err, result) => {
+            if (err) {
+                console.error('Insert error:', err);
+                return res.status(500).json({ error: 'Failed to create product' });
+            }
+
+            const newProductId = result.insertId;
+
+            // STEP 3: Create stock records for each location (starting at 0)
+            // auto-create: Ensures every product has stock records at all locations
+            const stockInsertQuery = `
+                INSERT INTO inventory_stock (product_id, location_id, quantity)
+                SELECT ?, id, 0 FROM locations
+            `;
+
+            db.query(stockInsertQuery, [newProductId], (err) => {
+                if (err) {
+                    console.error('Stock initialization error:', err);
+                    // Product created but stock records failed - not critical
+                }
+
+                // Fetch and return the created product
+                const fetchQuery = `
+                    SELECT p.*, c.name as category_name, c.icon as category_icon
+                    FROM products p
+                    JOIN inventory_categories c ON p.category_id = c.id
+                    WHERE p.id = ?
+                `;
+
+                db.query(fetchQuery, [newProductId], (err, product) => {
+                    if (err) {
+                        console.error('Fetch error:', err);
+                        return res.status(500).json({ error: 'Product created but failed to fetch' });
+                    }
+
+                    res.status(201).json({
+                        success: true, 
+                        sku: sku, 
+                        message: 'Product created successfully', 
+                        product: product[0]
+                    });
+                });
+            });
+        });
+    });
+});
+
+/* ============================================
+   PUT /api/inventory/products/:id
+   Update product details
+   ============================================ */
+
+router.put('/products/:id', (req, res) => {
+    const productId = req.params.id;
+    const {
+        name, 
+        description, 
+        category_id, 
+        unit_price, 
+        cost_price, 
+        reorder_point, 
+        reorder_quantity, 
+        status
+    } = req.body;
+
+    // Validate required fields
+    if (!name || !category_id) {
+        return res.status(400).json({
+            error: 'Missing required fields', 
+            required: ['name', 'category_id']
+        });
+    }
+
+    const updateQuery = `
+        UPDATE products
+        SET
+            name = ?,
+            description = ?,
+            category_id = ?,
+            unit_price = ?,
+            cost_price = ?,
+            reorder_point = ?,
+            reorder_quantity = ?,
+            status = ?
+        WHERE id = ?
+    `;
+
+    const values = [
+        name, 
+        description || null, 
+        category_id, 
+        unit_price || 0, 
+        cost_price || 0, 
+        reorder_point || 10, 
+        reorder_quantity || 25, 
+        status || 'active', 
+        productId
+    ];
+
+    db.query(updateQuery, values, (err, result) => {
+        if (err) {
+            console.error('Update error:', err);
+            return res.status(500).json({ error: 'Failed to update product' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        // Fetch updated product
+        const fetchQuery = `
+            SELECT p.*, c.name as category_name, c.icon as category_icon
+            FROM products p
+            JOIN inventory_categories c ON p.category_id = c.id
+            WHERE p.id = ?
+        `;
+
+        db.query(fetchQuery, [productId], (err, product) => {
+            if (err) {
+                console.error('Fetch error:', err);
+                return res.status(500).json({ error: 'Product created but failed to fetch' });
+            }
+
+            res.json({
+                success: true, 
+                message: 'Product updated successfully', 
+                product: product[0]
+            });
+        });
+    });
+});
+
+/* ============================================
+   PUT /api/inventory/stock/:productId/:locationId
+   Update stock quantity for a specific product at a specific location
+   ============================================ */
+
+router.put('/stock/:productId/:locationId', (req, res) => {
+    const { productId, locationId } = req.params;
+    const { quantity, adjustment_type, adjustment_reason } = req.body;
+
+    // Validate quantity
+    if (quantity === undefined || quantity < 0) {
+        return res.status(400).json({ error: 'Invalid quantity' });
+    }
+
+    const updateQuery = `
+        UPDATE inventory_stock
+        SET quantity = ?, updated_at = NOW()
+        WHERE product_id = ? AND location_id = ?
+    `;
+
+    db.query(updateQuery, [quantity, productId, locationId], (err, result) => {
+        if (err) {
+            console.error('Stock update error:', err);
+            return res.status(500).json({ error: 'Failed to update stock' });
+        }
+
+        if (result.affectedRows === 0) {
+            // Record doesn't exist, create it
+            const insertQuery = `
+                INSERT INTO inventory_stock (product_id, location_id, quantity)
+                VALUES (?, ?, ?)
+            `;
+
+            db.query(insertQuery, [productId, locationId, quantity], (err) => {
+                if (err) {
+                    console.error('Stock insert error:', err);
+                    return res.status(500).json({ error: 'Failed to create stock record' });
+                }
+
+                res.json({
+                    success: true, 
+                    message: 'Stock record created'
+                });
+            });
+
+            return;
+        }
+
+        res.json({
+            success: true, 
+            message: ' Stock updated successfully'
+        });
+    });
+});
+
+/* ============================================
+   GET /api/inventory/chart/stock-health
+   Get data for stock health doughnut chart
+   ============================================ */
+
+router.get('/chart/stock-health', (req, res) => {
+    const query = `
+        SELECT
+            -- In stock (above reorder point)
+            SUM(CASE
+                WHEN COALESCE(stock_totals.total_qty, 0) > p.reorder_point
+                THEN 1 ELSE 0
+            END) as in_stock,
+            
+            -- Low stock (at or below reorder point, but > 0)
+            SUM(CASE
+                WHEN COALESCE(stock_totals.total_qty, 0) <= p.reorder_point
+                AND COALESCE(stock_totals.total_qty, 0) > 0
+                THEN 1 ELSE 0
+            END) as low_stock,
+            
+            -- Out of stock (zero quantity)
+            SUM(CASE
+                WHEN COALESCE(stock_totals.total_qty, 0) = 0
+                THEN 1 ELSE 0
+            END) as out_of_stock
+        
+        FROM products p
+        LEFT JOIN (
+            SELECT product_id, SUM(quantity) as total_qty
+            FROM inventory_stock
+            GROUP BY product_id
+        ) stock_totals ON p.id = stock_totals.product_id
+        WHERE p.status = 'active'
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Chart query error:', err);
+            return res.status(500).json({ error: 'Failed to fetch chart data' });
+        }
+
+        const data = results[0];
+
+        res.json({
+            labels: ['In Stock', 'Low Stock', 'Out of Stock'], 
+            values: [
+                parseInt(data.in_stock) || 0, 
+                parseInt(data.low_stock) || 0, 
+                parseInt(data.out_of_stock) || 0
+            ], 
+            colors: ['#10b981', '#f59e0b', '#ef4444']
+        });
+    });
+});
+
+/* ============================================
+   GET /api/inventory/chart/stock-by-category
+   Get data for stock by category bar chart
+   ============================================ */
+
+router.get('/chart/stock-by-category', (req, res) => {
+
+    const query = `
+        SELECT
+            c.name as category,
+            c.icon,
+            COALESCE(SUM(s.quantity), 0) as total_quantity,
+            COUNT(DISTINCT p.id) as product_count
+        FROM inventory_categories c
+        LEFT JOIN products p ON c.id = p.category_id AND p.status = 'active'
+        LEFT JOIN inventory_stock s ON p.id = s.product_id
+        GROUP BY c.id, c.name, c.icon
+        ORDER BY total_quantity DESC
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Chart query error:', err);
+            return res.status(500).json({ error: 'Failed to fetch chart data' });
+        }
+
+        res.json({
+            labels: results.map(r => r.category), 
+            values: results.map(r => parseInt(r.total_quantity) || 0), 
+            product_counts: results.map(r => parseInt(r.product_count) || 0)
+        });
+    });
+});
+
+/* ============================================
+   POST /api/inventory/reorder
+   Create a reorder request
+   ============================================ */
+
+router.post('/reorders', (req, res) => {
+
+    const {
+        product_id, 
+        location_id, 
+        quantity, 
+        notes, 
+        requested_by
+    } = req.body;
+
+    // Validate required fields
+    if (!product_id || !location_id || !quantity) {
+        return res.status(400).json({
+            error: 'Missing required fields', 
+            required: ['product_id', 'location_id', 'quantity']
+        });
+    }
+
+    // STEP 1: Generate request number (RO-0001)
+    const getMaxNumQuery = `
+        SELECT MAX(CAST(SUBSTRING(request_number, 4) AS UNSIGNED)) as max_num
+        FROM reorder_requests
+    `;
+
+    db.query(getMaxNumQuery, (err, results) => {
+        if (err) {
+            console.error('Error generating request number:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        const nextNum = (results[0].max_num || 0) + 1;
+        const request_number = `RO-${String(nextNum).padStart(4, '0')}`;
+
+        // STEP 2: Get product cost price for total calculation
+        db.query('SELECT cost_price FROM products WHERE id = ?', [product_id], (err, productResults) => {
+            if (err || productResults.length === 0) {
+                console.error('Product lookup error:', err);
+                return res.status(500).json({ error: 'Failed to lookup product' });
+            }
+
+            const unit_cost = productResults[0].cost_price;
+            const total_cost = unit_cost * quantity;
+
+            // STEP 3: Insert reorder request
+            const insertQuery = `
+                INSERT INTO reorder_requests (
+                    request_number, product_id, location_id,
+                    quantity_requested, unit_cost, total_cost,
+                    notes, requested_by
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `;
+
+            const values = [
+                request_number, 
+                product_id, 
+                location_id, 
+                quantity, 
+                unit_cost, 
+                total_cost, 
+                notes || null, 
+                requested_by || 'System'
+            ];
+
+            db.query(insertQuery, values, (err, result) => {
+                if (err) {
+                    console.error('Insert error:', err);
+                    return res.status(500).json({ error: 'Failed to create reorder request' });
+                }
+
+                // Fetch the created request with product and location names
+                const fetchQuery = `
+                    SELECT
+                        r.*,
+                        p.name as product_name,
+                        p.sku as product_sku,
+                        l.name as location_name
+                    FROM reorder_requests r
+                    JOIN products p ON r.product_id = p.id
+                    JOIN locations l ON r.location_id = l.id
+                    WHERE r.id = ?
+                `;
+
+                db.query(fetchQuery, [result.insertId], (err, request) => {
+                    if (err) {
+                        console.error('Fetch error:', err);
+                        return res.status(500).json({ error: 'Request created but failed to fetch' });
+                    }
+
+                    res.status(201).json({
+                        success: true, 
+                        request_number: request_number, 
+                        message: 'Reorder request created successfully', 
+                        request: request[0]
+                    });
+                });
+            });
+        });
+    });
+});
+
+// Export router
+module.exports = router;

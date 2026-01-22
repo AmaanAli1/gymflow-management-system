@@ -198,8 +198,6 @@ const validateAddMember = [
 // - Server is the LAST LINE OF DEFENSE
 // - NEVER TRUST THE CLIENT!
 
-console.log('✅ Add member validation rules configured');
-
 /* ============================================
    VALIDATION RULES: EDIT MEMBER
    Applied to PUT /api/members/:id
@@ -270,8 +268,6 @@ const validateEditMember = [
         .withMessage('Invalid location')
 ];
 
-console.log('✅ Edit member validation rules configured');
-
 /* ============================================
    VALIDATION RULES: RECORD PAYMENT
    Applied to POST /api/members/:id/payments
@@ -331,8 +327,6 @@ const validateRecordPayment = [
         .isLength({ max: 500 })
         .withMessage('Notes must be less than 500 characters')
 ];
-
-console.log('✅ Record payment validation rules configured');
 
 /* ============================================
    VALIDATION RULES: FREEZE MEMBER
@@ -419,8 +413,6 @@ const validateFreezeMember = [
         .withMessage('Notes must be less than 500 characters')
 ];
 
-console.log('✅ Freeze member validation rules configured');
-
 /* ============================================
    VALIDATION RULES: UNFREEZE MEMBER
    Applied to POST /api/members/:id/unfreeze
@@ -455,8 +447,6 @@ const validateUnfreezeMember = [
             });
         })
 ];
-
-console.log('✅ Unfreeze member validation rules configured');
 
 /* ============================================
    VALIDATION RULES: REACTIVATE MEMBER
@@ -550,8 +540,6 @@ const validateReactivateMember = [
         .isLength({ max: 500 })
         .withMessage('Notes must be less than 500 characters')
 ];
-
-console.log('✅ Reactivate member validation rules configured');
 
 /* ============================================
    VALIDATION RULES: MEMBER CHECK-IN
@@ -652,8 +640,6 @@ const validateCheckIn = [
         })
 ];
 
-console.log('✅ Check-in validation rules configured');
-
 /* ============================================
    VALIDATION RULES: GET CHECK-IN HISTORY
    Applied to GET /api/members/:id/check-ins
@@ -665,8 +651,6 @@ const validateGetCheckIns = [
         .isInt({ min: 1 })
         .withMessage('Invalid member ID')
 ];
-
-console.log('✅ Get check-in history validation rules configured');
 
 /* ============================================
    VALIDATION RULES: ADD STAFF
@@ -739,8 +723,6 @@ const validateAddStaff = [
         .withMessage('Invalid date format')
 ];
 
-console.log('✅ Add staff validation rules configured');
-
 /* ============================================
    VALIDATION RULES: EDIT STAFF
    Applied to PUT /api/staff/:id
@@ -812,8 +794,6 @@ const validateEditStaff = [
         .isIn(['active', 'inactive'])
         .withMessage('Status must be active or inactive')
 ];
-
-console.log('✅ Edit staff validation rules configured');
 
 /* ============================================
    VALIDATION RULES: ADD SHIFT

@@ -94,28 +94,28 @@ const dashboardRoutes = require('./routes/dashboard');
 const locationsRoutes = require('./routes/locations');
 const shiftsRoutes = require('./routes/shifts');
 const adminRoutes = require('./routes/admin');
+const inventoryRoutes = require('./routes/inventory');
 
 // Mount member routes at /api/members
 app.use('/api/members', memberRoutes);
-console.log('✅ Member routes mounted at /api/members');
 
 // Mount staff routes at /api/staff
 app.use('/api/staff', staffRoutes);
-console.log('✅ Staff routes mounted at /api/staff');
 
 // Mount shift routes at /api/shifts
 app.use('/api/shifts', shiftsRoutes);
-console.log('✅ Shifts routes mounted at /api/shifts');
 
 // Mount dashboard routes at /api/dashboard
 app.use('/api/dashboard', dashboardRoutes);
-console.log('✅ Dashboard routes mounted at /api/dashboard');
 
 // Mount dashboard routes at /api/locations
 app.use('/api/locations', locationsRoutes);
-console.log('✅ Dashboard routes mounted at /api/locations');
 
+// Mount admin routes at /api/admin
 app.use('/api/admin', adminRoutes);
+
+// Mount inventory routes at api/location
+app.use('/api/inventory', inventoryRoutes);
 
 
 // ============================================

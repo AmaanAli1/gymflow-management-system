@@ -317,36 +317,3 @@
    
    No need to duplicate here! This is why modular CSS rocks.
    Each component handles its own states. */
-
-/* ============================================
-   NOTES FOR FUTURE DEVELOPMENT
-   ============================================
-   
-   FEATURES TO ADD LATER:
-   
-   1. Staff schedule view:
-      - Weekly calendar grid
-      - Drag-and-drop shifts
-      - Conflict detection
-   
-   2. Performance metrics:
-      - Sales numbers (for sales staff)
-      - Customer satisfaction scores
-      - Attendance tracking
-   
-   3. Certification tracking:
-      - Expiration warnings
-      - Renewal reminders
-      - Required training alerts
-   
-   4. Bulk actions:
-      - Select multiple staff
-      - Bulk status updates
-      - Export to CSV
-      
-   5. Advanced filters:
-      - Hire date range
-      - Tenure (< 6 months, 1+ year, etc.)
-      - Role + Location combination
-      
-   ============================================ */
