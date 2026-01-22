@@ -34,6 +34,7 @@
         <link rel="stylesheet" href="../css/components//slide-panel.css">
 
         <!-- Page-Specific Styles -->
+        <link rel="stylesheet" href="../css/pages/inventory.css">
         
     </head>
     <body>
@@ -181,10 +182,329 @@
                     <img src="https://i.pravatar.cc/100?img=12" alt="Admin" class="topbar-profile">
                 </div>
             </header>
+
+            <!-- ============================================ 
+                 INVENTORY PAGE CONTENT
+                 ============================================ -->
+
+            <section class="inventory-page">
+
+
+                <!-- ============================================ 
+                     KPI CARDS ROW
+                     ============================================ -->
+
+                <div class="inventory-kpi-row">
+                    <!-- Total Products -->
+                    <div class="kpi-card small">
+                        <div class="kpi-icon primary">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                        </div>
+                        <p class="kpi-label">Total Products</p>
+                        <p class="kpi-value" data-stat="totalProducts">---</p>
+                        <p class="kpi-sub">Active items in catalog</p>
+                    </div>
+
+                    <!-- Total Stock Value -->
+                    <div class="kpi-card small">
+                        <div class="kpi-icon success">
+                            <i class="fa-solid fa-dollar-sign"></i>
+                        </div>
+                        <p class="kpi-label">Stock Value</p>
+                        <p class="kpi-value" data-stat="stockValue">---</p>
+                        <p class="kpi-sub">Total inventory value</p>
+                    </div>
+
+                    <!-- Low Stock -->
+                    <div class="kpi-card small">
+                        <div class="kpi-icon warning">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <p class="kpi-label">Low Stock</p>
+                        <p class="kpi-value" data-stat="lowStock">---</p>
+                        <p class="kpi-sub">Items need attention</p>
+                    </div>
+
+                    <!-- Out of Stock -->
+                    <div class="kpi-card small">
+                        <div class="kpi-icon danger">
+                            <i class="fa-solid fa-box-open"></i>
+                        </div>
+                        <p class="kpi-label">Out of Stock</p>
+                        <p class="kpi-value" data-stat="outOfStock">---</p>
+                        <p class="kpi-sub">Required immediate reorder</p>
+                    </div>
+                </div>
+
+                <!-- ============================================ 
+                     CHARTS ROW
+                     ============================================ -->
+
+                <div class="charts-row">
+                    <!-- Stock Health Doughnut Chart -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <div>
+                                <h3 class="chart-card-title">Stock Health</h3>
+                                <p class="chart-card-subtitle">Overview of inventory</p>
+                            </div>
+                        </div>
+                        <div class="chart-container doughnut">
+                            <canvas id="stockHealthChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Stock by Category Bar Chart -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <div>
+                                <h3 class="chart-card-title">Stock by Category</h3>
+                                <p class="chart-card-subtitle">Quantity across categories</p>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="stockByCategoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================ 
+                     TOOLBAR: Filters + Search + Actions
+                     ============================================ -->
+
+                <div class="inventory-toolbar">
+                    <div class="inventory-filters">
+                        <!-- Category Filter -->
+                        <select id="filterCategory" aria-label="Filter by category">
+                            <option value="all">All Categories</option>
+                            <!-- Populated by JavaScript -->
+                        </select>
+
+                        <!-- Location Filter -->
+                        <select id="filterLocation" aria-label="Filter by location">
+                            <option value="all">All Locations</option>
+                            <!-- Populated by JavaScript -->
+                        </select>
+
+                        <!-- Stock Status Filter -->
+                        <select id="filterStockStatus" aria-label="Filter by stock status">
+                            <option value="all">All Stock Status</option>
+                            <option value="in_stock">In Stock</option>
+                            <option value="low">Low Stock</option>
+                            <option value="out">Out of Stock</option>
+                        </select>
+                    </div>
+
+                    <div class="inventory-actions">
+                        <!-- Search -->
+                        <div class="inventory-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text"
+                                id="searchProducts"
+                                placeholder="Search products..."
+                                aria-label="Search products">
+                        </div>
+
+                        <!-- Add Product Button -->
+                        <button class="btn primary" id="addProductBtn">
+                            <i class="fa-solid fa-plus"></i>
+                            Add Product
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ============================================ 
+                     PRODUCT CARDS GRID
+                     ============================================ -->
+
+                <div class="products-grid" id="productsGrid">
+                    <!-- Loading State -->
+                    <div class="products-loading">
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                        <p>Loading products...</p>
+                    </div>
+                </div>
+
+            </section>
         </div>
 
         <!-- ============================================ 
              MODALS
+             ============================================ -->
+
+        <!-- Add/Edit Product Modal -->
+        <div class="modal-overlay" id="product-modal" aria-hidden="true">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2 id="productModalTitle">Add New Product</h2>
+                    <button class="modal-close" data-close-modal aria-label="Close modal">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Error/Success Messages -->
+                    <div id="productError" class="modal-error" style="display: none;"></div>
+                    <div id="productSuccess" class="modal-success" style="display: none;"></div>
+
+                    <form id="productForm">
+                        <!-- Hidden ID for editing -->
+                        <input type="hidden" id="productId">
+
+                        <div class="modal-grid">
+                            <!-- Product Name -->
+                            <div class="field">
+                                <label for="productName">Product Name *</label>
+                                <input type="text"
+                                       id="productName"
+                                       name="name"
+                                       placeholder="e.g. Whey Protein 2lb"
+                                       required>
+                            </div>
+
+                            <!-- Category -->
+                            <div class="field">
+                                <label for="productCategory">Category *</label>
+                                <select id="productCategory" name="category_id" required>
+                                    <option value="">Select category...</option>
+                                    <!-- Populated by JavaScript -->
+                                </select>
+                            </div>
+
+                            <!-- Unit Price (Selling) -->
+                            <div class="field">
+                                <label for="productUnitPrice">Selling Price ($)</label>
+                                <input type="number"
+                                       id="productUnitPrice"
+                                       name="unit_price"
+                                       placeholder="e.g. 45.99"
+                                       step="0.01"
+                                       min="0">
+                            </div>
+
+                            <!-- Cost Price -->
+                            <div class="field">
+                                <label for="productCostPrice">Cost Price ($)</label>
+                                <input type="number"
+                                       id="productCostPrice"
+                                       name="cost_price"
+                                       placeholder="e.g. 28.00"
+                                       step="0.01"
+                                       min="0">
+                            </div>
+
+                            <!-- Reorder Point -->
+                            <div class="field">
+                                <label for="productReorderPoint">Reorder Point</label>
+                                <input type="number"
+                                       id="productReorderPoint"
+                                       name="reorder_point"
+                                       placeholder="e.g. 10"
+                                       min="0"
+                                       value="10">
+                            </div>
+
+                            <!-- Reorder Quantiy -->
+                            <div class="field">
+                                <label for="productReorderQty">Reorder Quantity</label>
+                                <input type="number"
+                                       id="productReorderQty"
+                                       name="reorder_quantity"
+                                       placeholder="e.g. 25"
+                                       min="1"
+                                       value="25">
+                            </div>
+                        </div>
+
+                        <!-- Description (full width) -->
+                        <div class="field">
+                            <label for="productDescription">Description</label>
+                            <textarea id="productDescription"
+                                      name="description"
+                                      rows="3"
+                                      placeholder="Product description..."></textarea>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn ghost" data-close-modal>Cancel</button>
+                    <button type="submit" class="btn primary" form="productForm" id="saveProductBtn">
+                        <i class="fa-solid fa-plus"></i>
+                        Add Product
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reorder Modal -->
+        <div class="modal-overlay" id="reorder-modal" aria-hidden="true">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2>Create Reorder Request</h2>
+                    <button class="modal-close" data-close-modal aria-label="Close modal">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Error/Success Messages -->
+                    <div id="reorderError" class="modal-error" style="display: none;"></div>
+                    <div id="reorderSuccess" class="modal-success" style="display: none;"></div>
+
+                    <!-- Product Info Display -->
+                    <div class="reorder-product-info">
+                        <p class="reorder-product-name" id="reorderProductName">---</p>
+                        <p class="reorder-product-sku" id="reorderProductSku">SKU: ---</p>
+                    </div>
+
+                    <form id="reorderForm">
+                        <!-- Hidden product ID -->
+                        <input type="hidden" id="reorderProductId">
+
+                        <div class="modal-grid">
+                            <!-- Location -->
+                            <div class="field">
+                                <label for="reorderLocation">Destination Location *</label>
+                                <select id="reorderLocation" name="location_id" required>
+                                    <option value="">Select location...</option>
+                                    <!-- Populated by JavaScript -->
+                                </select>
+                            </div>
+
+                            <!-- Quantity -->
+                            <div class="field">
+                                <label for="reorderQuantity">Quantity *</label>
+                                <input type="number"
+                                       id="reorderQuantity"
+                                       name="quantity"
+                                       placeholder="e.g. 25"
+                                       min="1"
+                                       required>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="field">
+                            <label for="reorderNotes">Notes (Optional)</label>
+                            <textarea id="reorderNotes"
+                                      name="notes"
+                                      rows="2"
+                                      placeholder="Reason for reorder, urgency level..."></textarea>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn ghost" data-close-modal>Cancel</button>
+                    <button type="submit" class="btn primary" form="reorderForm" id="submitReorderBtn">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        Submit Request
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================ 
+             SHARED MODALS
              ============================================ -->
         
         <!-- Add Member Modal -->
@@ -532,6 +852,9 @@
         <!-- ============================================ 
              JAVASCRIPT FILES
              ============================================ -->
+        <!-- Chart.js library (for charts) -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+
         <!-- Shared JS: Used by all admin pages -->
         <script src="../js/main.js"></script>
         <script src="../js/sidebar.js"></script>
@@ -539,6 +862,7 @@
         <script src="../js/shared.js"></script>
 
         <!-- Staff-specific JS: Fetch and display staff data -->
+        <script src="../js/pages/inventory.js"></script>
         
     </body>
 </html>

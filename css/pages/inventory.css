@@ -1,0 +1,528 @@
+/* ============================================
+   INVENTORY PAGE STYLES
+   Stock Overview dashboard layout and components
+   ============================================ */
+
+/* ============================================
+   PAGE LAYOUT
+   ============================================ */
+
+.inventory-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-xl);
+    padding: var(--space-4xl);
+}
+
+/* ============================================
+   KPI CARDS ROW
+   4 cards showing key metrics
+   ============================================ */
+
+.inventory-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--gap-xl);
+}
+
+/* Small variant for inventory KPIs */
+.kpi-card.small {
+    min-height: auto;
+    padding: var(--space-lg) var(--space-2xl);
+}
+
+.kpi-card.small .kpi-value {
+    font-size: 1.5rem;
+}
+
+/* Icon inside KPI card */
+.kpi-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    font-size: 1.1rem;
+    margin-bottom: var(--space-sm);
+}
+
+/* Icon color variants */
+.kpi-icon.primary {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.kpi-icon.success {
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.kpi-icon.warning {
+    background: var(--color-warning-light);
+    color: var(--color-warning);
+}
+
+.kpi-icon.danger {
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+}
+
+.kpi-icon.info {
+    background: var(--color-info-light);
+    color: var(--color-info);
+}
+
+/* ============================================
+   CHARTS SECTION
+   Two charts side by side
+   ============================================ */
+
+.charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gap-xl);
+}
+
+.chart-card {
+    background: var(--color-bg-sidebar);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border-light);
+    padding: var(--space-4xl);
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
+}
+
+.chart-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-3xl);
+}
+
+.chart-card-title {
+    font-family: var(--font-heading);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+.chart-card-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin-top: 2px;
+}
+
+/* Chart container - controls chart size */
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 220px;
+}
+
+/* Doughnut chart needs different sizing */
+.chart-container.doughnut {
+    height: 200px;
+    max-width: 200px;
+    margin: 0 auto;
+}
+
+/* ============================================
+   TOOLBAR
+   Filters, search, and actions
+   ============================================ */
+
+.inventory-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--gap-lg);
+    padding: var(--space-2xl) 0;
+    border-top: 1px solid var(--color-border-light);
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.inventory-filters {
+    display: flex;
+    gap: var(--gap-md);
+    flex-wrap: wrap;
+}
+
+.inventory-filters select {
+    padding: var(--space-md) var(--space-lg);
+    background: var(--color-bg-input);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+}
+
+.inventory-filters select:hover,
+.inventory-filters select:focus {
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+.inventory-actions {
+    display: flex;
+    gap: var(--gap-md);
+    align-items: center;
+}
+
+/* Search input with icon */
+.inventory-search {
+    position: relative;
+}
+
+.inventory-search i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.inventory-search input {
+    padding: var(--space-md) var(--space-lg) var(--space-md) 36px;
+    background: var(--color-bg-input);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    width: 240px;
+    transition: border-color var(--transition-fast);
+}
+
+.inventory-search input:focus {
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+.inventory-search input::placeholder {
+    color: var(--color-text-dim);
+}
+
+/* ============================================
+   PRODUCT CARDS GRID
+   ============================================ */
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--gap-xl);
+}
+
+/* Loading state */
+.products-grid.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+    color: var(--color-text-muted);
+}
+
+/* Empty state */
+.products-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: var(--space-5xl);
+    color: var(--color-text-muted);
+}
+
+.products-empty i {
+    font-size: 3rem;
+    margin-bottom: var(--space-lg);
+    opacity: 0.5;
+}
+
+.products-empty p {
+    font-size: var(--font-size-base);
+}
+
+/* ============================================
+   PRODUCT CARD
+   Individual product display
+   ============================================ */
+
+.product-card {
+    background: var(--color-bg-sidebar);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border-light);
+    padding: var(--space-3xl);
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
+    transition: transform var(--transition-fast), 
+                box-shadow var(--transition-fast), 
+                border-color var(--transition-fast);
+}
+
+.product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 22px var(--color-primary-light);
+    border-color: rgba(var(--color-primary-rgb), 0.5);
+}
+
+/* Card Header: Category badge + Status */
+.product-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-lg);
+}
+
+/* Category badge with icon */
+.category-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-xs) var(--space-md);
+    background: var(--color-bg-input);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.category-badge i {
+    font-size: 0.65rem;
+}
+
+/* Stock status pill */
+.stock-status {
+    padding: var(--space-xs) var(--space-md);
+    border-radius: 999px;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stock-status.in-stock {
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.stock-status.low-stock {
+    background: var(--color-warning-light);
+    color: var(--color-warning);
+}
+
+.stock-status.out-of-stock {
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+}
+
+/* Product Info */
+.product-card-body {
+    margin-bottom: var(--space-lg);
+}
+
+.product-name {
+    font-family: var(--font-heading);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: 2px;
+    
+    /* Truncate long names */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.product-sku {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-dim);
+    margin-bottom: var(--space-lg);
+}
+
+/* Stock Level Progress Bar */
+.stock-level {
+    margin-bottom: var(--space-lg);
+}
+
+.stock-level-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+}
+
+.stock-level-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+}
+
+.stock-level-value {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+}
+
+/* Progress bar track */
+.stock-progress {
+    width: 100%;
+    height: 6px;
+    background: var(--color-bg-input);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+/* Progress bar fill */
+.stock-progress-bar {
+    height: 100%;
+    border-radius: 999px;
+    transition: width var(--transition-base);
+}
+
+/* Progress bar colors based on stock level */
+.stock-progress-bar.good {
+    background: var(--color-success);
+}
+
+.stock-progress-bar.warning {
+    background: var(--color-warning);
+}
+
+.stock-progress-bar.danger {
+    background: var(--color-danger);
+}
+
+/* Location Breakdown */
+.location-breakdown {
+    display: flex;
+    gap: var(--space-md);
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--color-border-light);
+    margin-bottom: var(--space-lg);
+}
+
+.location-stock {
+    flex: 1;
+    text-align: center;
+    padding: var(--space-sm);
+    background: var(--color-bg-input);
+    border-radius: var(--radius-sm);
+}
+
+.location-name {
+    font-size: 0.65rem;
+    color: var(--color-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.location-qty {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+/* Price Info */
+.product-price {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+}
+
+.price-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+}
+
+.price-value {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+/* Card Actions */
+.product-card-actions {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.product-card-actions .btn {
+    flex: 1;
+    padding: var(--space-md);
+    font-size: var(--font-size-xs);
+}
+
+/* Small button variants for cards */
+.btn.sm {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-size-xs);
+}
+
+.btn.icon-only {
+    padding: var(--space-md);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Reorder button special style */
+.btn.reorder {
+    background: var(--color-info-light);
+    color: var(--color-info);
+    border: 1px solid transparent;
+}
+
+.btn.reorder:hover {
+    background: var(--color-info);
+    color: white;
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 1400px) {
+    .products-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 1100px) {
+    .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .charts-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .inventory-kpi-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .products-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .inventory-kpi-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .inventory-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .inventory-filters {
+        flex-direction: column;
+    }
+    
+    .inventory-search input {
+        width: 100%;
+    }
+}
