@@ -745,5 +745,457 @@ router.post('/reorders', (req, res) => {
     });
 });
 
+/* ============================================
+   GET /api/inventory/reorders/stats
+   Get KPI statistics for reorder requests page
+   ============================================ */
+
+router.get('/reorders/stats', (req, res) => {
+    // Query to calculate all stats in one database call
+    // More efficient than multiple separate queries
+    const statsQuery = `
+        SELECT
+            -- Total pending requests (needs admin action)
+            (SELECT COUNT(*) FROM reorder_requests WHERE status = 'pending') as pending_count,
+            
+            -- Total pending value (sum of all pending request costs)
+            (SELECT COALESCE(SUM(total_cost), 0) FROM reorder_requests WHERE status = 'pending') as pending_value,
+            
+            -- Requests completed this week (approved or received in last 7 days)
+            (SELECT COUNT(*)
+             FROM reorder_requests
+             WHERE status IN ('approved', 'received')
+             AND requested_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) as completed_this_week,
+             
+            -- Total requests count (all time)
+            (SELECT COUNT(*) FROM reorder_requests) as total_requests
+        `;
+
+        db.query(statsQuery, (err, results) => {
+            if (err) {
+                console.error('Reorder stats query error:', error);
+                return res.status(500).json({ error: 'Failed to fetch reorder stats' });
+            }
+
+            const stats = results[0];
+
+            // Format currency values to 2 decimal places
+            stats.pending_value = parseFloat(stats.pending_value) || 0;
+
+            res.json(stats);
+        });
+});
+
+/* ============================================
+   GET /api/inventory/reorders/chart/status-breakdown
+   Get data for status breakdown doughnut chart
+   Shows distribution of pending/approved/received/rejected
+   ============================================ */
+
+router.get('/reorders/chart/status-breakdown', (req, res) => {
+
+    const query = `
+        SELECT
+            status,
+            COUNT(*) as count
+        FROM reorder_requests
+        GROUP BY status
+        ORDER BY status
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Chart query error:', err);
+            return res.status(500).json({ error: 'Failed to fetch chart data' });
+        }
+
+        // Transform database results into Chart.js format
+        // Need separate arrays for labels, values, and colors
+        const labels = [];
+        const values = [];
+        const colors = [];
+
+        // Color mapping for each status
+        const statusColors = {
+            'pending': '#f59e0b',       // Yellow/Orange
+            'approved': '#10b981',      // Green
+            'received': '#3b82f6',      // Blue
+            'rejected': '#ef4444'       // Red
+        };
+
+        results.forEach(row => {
+            // Capitalize first letter for display
+            const label = row.status.charAt(0).toUpperCase() + row.status.slice(1);
+            labels.push(label);
+            values.push(parseInt(row.count));
+            colors.push(statusColors[row.status] || '#6b7280');
+        });
+
+        res.json({
+            labels: labels, 
+            values: values, 
+            colors: colors
+        });
+    });
+});
+
+/* ============================================
+   GET /api/inventory/reorders/chart/trends
+   Get data for requests over time line chart
+   Shows last 7 days of request activity
+   ============================================ */
+
+router.get('/reorders/chart/trends', (req, res) => {
+    // Generate last 7 days of data
+    const query = `
+        SELECT
+            DATE(requested_at) as date,
+            COUNT(*) as count
+        FROM reorder_requests
+        WHERE requested_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+        GROUP BY DATE(requested_at)
+        ORDER BY date ASC
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Trends chart query error:', err);
+            return res.status(500).json({ error: 'Failed to fetch trend data' });
+        }
+
+        // Format dates for display (e.g., "Jan 20")
+        const labels = results.map(row => {
+            const date = new Date(row.date);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        });
+
+        const values = results.map(row => parseInt(row.count));
+
+        res.json({
+            labels: labels, 
+            values: values
+        });
+    });
+});
+
+/* ============================================
+   GET /api/inventory/reorders
+   Get all reorder requests with filters
+   Query params: status, location_id, date_from, date_to
+   ============================================ */
+
+router.get('/reorders', (req, res) => {
+    // Extract filter parameters from query string
+    const {
+        status, 
+        location_id, 
+        date_from, 
+        date_to
+    } = req.query;
+
+    // Base query joins all related tables to get full context
+    let query = `
+        SELECT
+            r.*,
+            p.name as product_name,
+            p.sku as product_sku,
+            c.name as category_name,
+            l.name as location_name
+        FROM reorder_requests r
+        JOIN products p ON r.product_id = p.id
+        JOIN inventory_categories c ON p.category_id = c.id
+        JOIN locations l ON r.location_id = l.id
+        WHERE 1=1
+    `;
+
+    const params = [];
+
+    // Apply status filter if provided
+    if (status && status !== 'all') {
+        query += ` AND r.status = ?`;
+        params.push(status);
+    }
+
+    // Apply location filter if provided
+    if (location_id && location_id !== 'all') {
+        query += ` AND r.location_id = ?`;
+        params.push(location_id);
+    }
+
+    // Apply date range filters if provided
+    if (date_from) {
+        query += ` AND DATE(r.requested_at) >= ?`;
+        params.push(date_from);
+    }
+
+    if (date_to) {
+        query += ` AND DATE(r.requested_at) <= ?`;
+        params.push(date_to);
+    }
+
+    // Order by most recent first, then by status priority
+    // Pending requests should appear first
+    query += ` ORDER BY
+        CASE r.status
+            WHEN 'pending' THEN 1
+            WHEN 'approved' THEN 2
+            WHEN 'received' THEN 3
+            WHEN 'rejected' THEN 4
+        END,
+        r.requested_at DESC
+    `;
+
+    db.query(query, params, (err, results) => {
+        if (err) {
+            console.error('Reorders query error:', err);
+            return res.status(500).json({ error: 'Failed to fetch reorder requests' });
+        }
+
+        res.json({ requests: results });
+    });
+});
+
+/* ============================================
+   GET /api/inventory/reorders/:id
+   Get single reorder request with full details
+   ============================================ */
+
+router.get('/reorders/:id', (req, res) => {
+    const requestId = req.params.id;
+
+    const query = `
+        SELECT
+            r.*,
+            p.name as product_name,
+            p.sku as product_sku,
+            p.unit_price,
+            c.name as category_name,
+            l.name as location_name
+        FROM reorder_requests r
+        JOIN products p ON r.product_id = p.id
+        JOIN inventory_categories c ON p.category_id = c.id
+        JOIN locations l ON r.location_id = l.id
+        WHERE r.id = ?
+    `;
+
+    db.query(query, [requestId], (err, results) => {
+        if (err) {
+            console.error('Reorder query error:', err);
+            return res.status(500).json({ error: 'Failed to fetch reorder request' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Reorder request not found' });
+        }
+
+        res.json(results[0]);
+    });
+});
+
+/* ============================================
+   PUT /api/inventory/reorders/:id/approve
+   Approve a pending reorder request
+   Sets status to 'approved' and records who approved it
+   ============================================ */
+
+router.put('/reorders/:id/approve', (req, res) => {
+    const requestId = req.params.id;
+    const { approved_by } = req.body;
+
+    // Validate that approved_by is provided
+    if (!approved_by) {
+        return res.status(400).json({ error: 'approved_by is required' });
+    }
+
+    // First check if request exists and is pending
+    const checkQuery = `SELECT status FROM reorder_requests WHERE id = ?`;
+
+    db.query(checkQuery, [requestId], (err, results) => {
+        if (err) {
+            console.error('Check query error:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Reorder request not found' });
+        }
+
+        if (results[0].status !== 'pending') {
+            return res.status(400).json({ error: 'Only pending requests can be approved' });
+        }
+
+        // Update the request status
+        const updateQuery = `
+            UPDATE reorder_requests
+            SET status = 'approved',
+                approved_by = ?,
+                approved_at = NOW()
+            WHERE id = ?
+        `;
+
+        db.query(updateQuery, [approved_by, requestId], (err, result) => {
+            if (err) {
+                console.error('Update error:', err);
+                return res.status(500).json({ error: 'Failed to approve request' });
+            }
+
+            res.json({
+                success: true, 
+                message: 'Reorder request approved successfully'
+            });
+        });
+    });
+});
+
+/* ============================================
+   PUT /api/inventory/reorders/:id/reject
+   Reject a pending reorder request
+   ============================================ */
+
+router.put('/reorders/:id/reject', (req, res) => {
+    const requestId = req.params.id;
+    const {
+        rejected_by, 
+        rejection_reason
+    } = req.body;
+
+    // First check if request exists and is pending
+    const checkQuery = `SELECT status FROM reorder_requests WHERE id = ?`;
+
+    db.query(checkQuery, [requestId], (err, results) => {
+        if (err) {
+            console.error('Check query error:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Reorder request not found' });
+        }
+
+        if (results[0].status !== 'pending') {
+            return res.status(400).json({ error: 'Only pending requests can be rejected' });
+        }
+
+        // Update the request status
+        // Append rejection reason to notes field
+        const updateQuery = `
+            UPDATE reorder_requests
+            SET status = 'rejected',
+                notes = CONCAT(COALESCE(notes, ''), '\nRejected by: ', ?, '\nReason: ', ?)
+            WHERE id = ?
+        `;
+
+        db.query(updateQuery, [rejected_by || 'Admin', rejection_reason || 'No reason provided', requestId], (err, result) => {
+            if (err) {
+                console.error('Update error:', err);
+                return res.status(500).json({ error: 'Failed to reject request' });
+            }
+
+            res.json({
+                success: true, 
+                message: 'Reorder request rejected'
+            });
+        });
+    });
+});
+
+/* ============================================
+   PUT /api/inventory/reorders/:id/receive
+   Mark an approved request as received
+   Updates inventory stock when items arrive
+   ============================================ */
+
+router.put('/reorders/:id/receive', (req, res) => {
+    const requestId = req.params.id;
+    const { quantity_received } = req.body;
+
+    // Validate quantity
+    if (!quantity_received || quantity_received <= 0) {
+        return res.status(400).json({ error: 'Valid quantity_received is required '});
+    }
+
+    // Get request details first
+    const getRequestQuery = `
+        SELECT product_id, location_id, quantity_requested, status
+        FROM reorder_requests
+        WHERE id = ?
+    `;
+
+    db.query(getRequestQuery, [requestId], (err, results) => {
+        if (err) {
+            console.error('Get request error:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Reorder request not found' });
+        }
+
+        const request = results[0];
+
+        // Only approved requests can be marked as received
+        if (request.status !== 'approved') {
+            return res.status(400).json({ error: 'Only approved requests can be marked as received' });
+        }
+
+        // Start transaction to update both reorder_requests and inventory_stock
+        db.beginTransaction((err) => {
+            if (err) {
+                console.error('Transaction error:', err);
+                return res.status(500).json({ error: 'Failed to start transaction' });
+            }
+
+            // STEP 1: Update reorder request status
+            const updateRequestQuery = `
+                UPDATE reorder_requests
+                SET status = 'received',
+                    quantity_received = ?
+                WHERE id = ?
+            `;
+
+            db.query(updateRequestQuery, [quantity_received, requestId], (err) => {
+                if (err) {
+                    return db.rollback(() => {
+                        console.error('Update request error:', err);
+                        res.status(500).json({ error: 'Failed to update request' });
+                    });
+                }
+
+                // STEP 2: Update inventory stock
+                const updateStockQuery = `
+                    UPDATE inventory_stock
+                    SET quantity = quantity + ?,
+                        last_restocked = NOW()
+                    WHERE product_id = ? AND location_id = ?
+                `;
+
+                db.query(updateStockQuery, [quantity_received, request.product_id, request.location_id], (err) => {
+                    if (err) {
+                        return db.rollback(() => {
+                            console.error('Update stock error:', err);
+                            res.status(500).json({ error: 'Failed to update stock' });
+                        });
+                    }
+
+                    // Commit transaction
+                    db.commit((err) => {
+                        if (err) {
+                            return db.rollback(() => {
+                                console.error('Commit error:', err);
+                                res.status(500).json({ error: 'Failed to commit changes'});
+                            });
+                        }
+
+                        res.json({
+                            success: true, 
+                            message: 'Request marked as received and stock updated'
+                        });
+                    });
+                });
+            });
+        });
+    });
+});
+
 // Export router
 module.exports = router;

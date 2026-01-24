@@ -5,6 +5,13 @@
    Prevents brute force attacks and Dos
    ============================================ */
 
+/* ============================================
+   ENVIRONMENT DETECTION
+   Use generous limits in development, strict in production
+   ============================================ */
+
+const isDevelopment = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
+
 // SECURITY: Rate limiting to prevent abuse
 const rateLimit = require('express-rate-limit');
 
@@ -16,12 +23,18 @@ const rateLimit = require('express-rate-limit');
 const apiLimiter = rateLimit({
     // windowMs: Time window in milliseconds
     // 15 minutes = 15 * 60 seconds * 1000 milliseconds
-    windowMs: 15 * 60 * 1000, 
+
+    // Development: 1 minute window (faster reset)
+    // Production: 15 minute window (standard)
+    windowMs: isDevelopment ? 1 * 60 * 1000 : 15 * 60 * 1000, 
 
     // max: Maximum number of requests allowed in the window
     // 100 requests per 15 minutes = ~7 requests per minute
     // This is generous for normal use, strict enough to stop attacks
-    max: 100, 
+
+    // Development: 500 requests (generous for testing)
+    // Production: 100 requests (strict for security)
+    max: isDevelopment ? 500 : 100, 
 
     // message: What to tell the user when they're blocked
     // This appears in the API response
@@ -118,6 +131,13 @@ const checkInLimiter = rateLimit({
     standardHeaders: true, 
     legacyHeaders: false,
 });
+
+// Log which environment is being used
+if (isDevelopment) {
+    console.log('Development mode: Rate limiting is RELAXED for testing');
+} else {
+    console.log('Production mode: Rate limiting is STRICT for security');
+}
 
 // WHY 50 check-ins per 15 minutes?
 // - Front desk staff might check in many members quickly

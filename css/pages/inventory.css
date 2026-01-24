@@ -122,7 +122,7 @@
 /* Doughnut chart needs different sizing */
 .chart-container.doughnut {
     height: 200px;
-    max-width: 200px;
+    max-width: 520px;
     margin: 0 auto;
 }
 
@@ -523,6 +523,280 @@
     }
     
     .inventory-search input {
+        width: 100%;
+    }
+}
+
+/* ============================================
+   REORDER REQUESTS PAGE STYLES
+   Uses shared table styles from components/tables.css
+   Only page-specific styles defined here
+   ============================================ */
+
+/* ========================================
+   PAGE LAYOUT
+   ======================================== */
+
+.reorders-page {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-xl);
+    
+    /* Spacing */
+    padding: var(--space-4xl);
+}
+
+/* ========================================
+   KPI CARDS ROW
+   ======================================== */
+
+.reorders-kpi-row {
+    /* Layout - 4 cards in a row */
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--gap-xl);
+}
+
+/* ========================================
+   CONTROLS SECTION
+   ======================================== */
+
+.reorders-controls {
+    /* Layout */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--gap-lg);
+    
+    /* Spacing */
+    padding: var(--space-2xl) 0;
+    
+    /* Styling */
+    border-top: 1px solid var(--color-border-light);
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+/* ========================================
+   STATUS TABS
+   ======================================== */
+
+.status-tabs {
+    /* Layout */
+    display: flex;
+    gap: var(--gap-sm);
+    flex-wrap: wrap;
+}
+
+.status-tab {
+    /* Spacing */
+    padding: var(--space-md) var(--space-xl);
+    
+    /* Styling */
+    background: var(--color-bg-input);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    
+    /* Typography */
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    
+    /* Interaction */
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.status-tab:hover {
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border-color: var(--color-primary);
+}
+
+.status-tab.active {
+    /* Styling */
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    
+    /* Typography */
+    color: white;
+}
+
+/* ========================================
+   FILTERS + SEARCH
+   ======================================== */
+
+.reorders-actions {
+    /* Layout */
+    display: flex;
+    gap: var(--gap-md);
+    align-items: center;
+}
+
+.reorders-actions select {
+    /* Spacing */
+    padding: var(--space-md) var(--space-lg);
+    
+    /* Styling */
+    background: var(--color-bg-input);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    
+    /* Typography */
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    
+    /* Interaction */
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+}
+
+.reorders-actions select:hover,
+.reorders-actions select:focus {
+    /* Styling */
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+.reorders-search {
+    /* Layout */
+    position: relative;
+}
+
+.reorders-search i {
+    /* Layout */
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    
+    /* Typography */
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.reorders-search input {
+    /* Spacing */
+    padding: var(--space-md) var(--space-lg) var(--space-md) 36px;
+    width: 240px;
+    
+    /* Styling */
+    background: var(--color-bg-input);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    
+    /* Typography */
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    
+    /* Animation */
+    transition: border-color var(--transition-fast);
+}
+
+.reorders-search input:focus {
+    /* Styling */
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+.reorders-search input::placeholder {
+    /* Typography */
+    color: var(--color-text-dim);
+}
+
+/* ========================================
+   STATUS BADGES
+   ======================================== */
+
+.status-badge {
+    /* Layout */
+    display: inline-block;
+    
+    /* Spacing */
+    padding: var(--space-xs) var(--space-md);
+    
+    /* Styling */
+    border-radius: 999px;
+    
+    /* Typography */
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.pending {
+    /* Styling */
+    background: var(--color-warning-light);
+    
+    /* Typography */
+    color: var(--color-warning);
+}
+
+.status-badge.approved {
+    /* Styling */
+    background: var(--color-success-light);
+    
+    /* Typography */
+    color: var(--color-success);
+}
+
+.status-badge.received {
+    /* Styling */
+    background: var(--color-info-light);
+    
+    /* Typography */
+    color: var(--color-info);
+}
+
+.status-badge.rejected {
+    /* Styling */
+    background: var(--color-danger-light);
+    
+    /* Typography */
+    color: var(--color-danger);
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 1100px) {
+    .reorders-kpi-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .charts-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .reorders-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .reorders-search input {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .reorders-kpi-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .reorders-page {
+        /* Spacing */
+        padding: var(--space-2xl);
+    }
+    
+    .reorders-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .reorders-actions select {
         width: 100%;
     }
 }
