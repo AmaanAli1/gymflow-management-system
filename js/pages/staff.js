@@ -400,13 +400,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Update sort indicators in table header
       // Remove all sort classes first
       document.querySelectorAll('.sortable').forEach(header => {
-         header.classList.remove('sort-asc', 'sort-desc');
+         header.classList.remove('sorted-asc', 'sorted-desc');
       });
 
       // Add class to current sorted column
       const currentHeader = document.querySelector(`[data-sort="${column}"]`);
       if (currentHeader) {
-         currentHeader.classList.add(`sort-${currentSort.direction}`);
+         currentHeader.classList.add(`sorted-${currentSort.direction}`);
       }
 
       // Re-apply filters (which will use the sorted array)

@@ -20,6 +20,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     let allRequests = [];               // All reorder requests from API
     let currentStatusFilter = 'all';    // Current active tab
 
+    let currentSort = {
+        column: 'requested_at',         // Default sort by date
+        direction: 'desc'
+    };
+
     /* ============================================
        CHART INSTANCES
        Store chart objects so we can update them later
@@ -442,6 +447,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Listen on the table body, check what was clicked
         const tableBody = document.getElementById('reordersTableBody');
         tableBody.addEventListener('click', handleTableAction);
+
+        // Table sorting
+        document.querySelectorAll('.sortable').forEach(header => {
+            header.addEventListener('click', () => {
+                const column = header.dataset.sort;
+                handleSort(column);
+            });
+        });
     }
 
     /* ============================================
@@ -529,6 +542,60 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Re-render with filtered requests
         renderReorders(filtered);
+    }
+
+    /* ============================================
+       SORTING FUNCTIONALITY
+       Sort table by column
+       ============================================ */
+
+    function handleSort(column) {
+        // Toggle direction if same column, otherwise default to 'asc'
+        if (currentSort.column === column) {
+            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSort.column = column;
+            currentSort.direction = 'asc';
+        }
+
+        // Sort the alLRequests array
+        allRequests.sort((a, b) => {
+            let aVal = a[column];
+            let bVal = b[column];
+
+            // Handle null/undefined values
+            if (aVal === null || aVal === undefined) aVal = '';
+            if (bVal === null || bVal === undefined) bVal = '';
+
+            // Convert to lowercase for string comparison
+            if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+            if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+
+            // Special handling for dates
+            if (column === 'requested_at') {
+                aVal = new Date(aVal).getTime();
+                bVal = new Date(bVal).getTime();
+            }
+
+            // Compare
+            if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
+            if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        // Update sort indicators in table header
+        document.querySelectorAll('.sortable').forEach(header => {
+            header.classList.remove('sorted-asc', 'sorted-desc');
+        });
+
+        // Add class to current sorted column
+        const currentHeader = document.querySelector(`[data-sort="${column}"]`);
+        if (currentHeader) {
+            currentHeader.classList.add(`sorted-${currentSort.direction}`);
+        }
+
+        // Re-apply filters (which will use the sorted array)
+        applyFilters();
     }
 
     /* ============================================

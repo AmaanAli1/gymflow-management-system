@@ -329,6 +329,7 @@
 
 .sortable:hover {
     background: rgba(255, 255, 255, 0.05);
+    color: var(--color-text-primary);
 }
 
 .sortable i {
@@ -346,6 +347,7 @@
 .sortable.sorted-asc i, 
 .sortable.sorted-desc i {
     opacity: 1;
+    color: var(--color-primary);
 }
 
 /* Arrow direcion */
