@@ -800,3 +800,76 @@
         width: 100%;
     }
 }
+
+/* ========================================
+   MODAL CONTENT STYLES
+   ======================================== */
+
+/* Detail grid layout for modal content */
+.detail-grid {
+    /* Layout */
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gap-lg);
+}
+
+/* Individual detail item */
+.detail-item {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-xs);
+}
+
+/* Full width detail item (for notes) */
+.detail-item.full-width {
+    grid-column: 1 / -1;
+}
+
+/* Detail labels */
+.detail-item label {
+    /* Typography */
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: var(--font-weight-semibold);
+}
+
+/* Detail values */
+.detail-item span,
+.detail-item p {
+    /* Typography */
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Notes paragraph */
+.detail-item p {
+    /* Styling */
+    white-space: pre-wrap;
+    line-height: var(--line-height-relaxed);
+}
+
+/* Form group in modals */
+.form-group {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-sm);
+}
+
+.form-group label {
+    /* Typography */
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Responsive - stack on mobile */
+@media (max-width: 768px) {
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}

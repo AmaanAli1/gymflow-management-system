@@ -280,6 +280,17 @@ document.addEventListener('DOMContentLoaded', async () => {
        ============================================ */
 
     async function initCharts() {
+        // Destroy existing charts before recreating
+        if (statusBreakdownChart) {
+            statusBreakdownChart.destroy();
+            statusBreakdownChart = null;
+        }
+
+        if (trendsChart) {
+            trendsChart.destroy();
+            trendsChart = null;
+        }
+
         await initStatusBreakdownChart();
         await initTrendsChart();
     }
@@ -608,138 +619,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     /* ============================================
-       APPROVE REQUEST
-       Called when approve button is clicked
-       ============================================ */
-
-    async function approveRequest(requestId) {
-        // Confirm action
-        if (!confirm('Are you sure you want to approve this reorder request?')) {
-            return;
-        }
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/inventory/reorders/${requestId}/approve`, {
-                method: 'PUT', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({
-                    approved_by: 'Admin'
-                })
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || 'Failed to approve request');
-            }
-
-            // Show success notification
-            showNotification('Request approved successfully!', 'success');
-
-            // Refresh data
-            await fetchReorders({ status: currentStatusFilter });
-            await fetchStats();
-            await initCharts();
-
-        } catch (error) {
-            console.error('Failed to approve request:', error);
-            showNotification(error.message, 'error');
-        }
-    };
-
-    /* ============================================
-       REJECT REQUEST
-       Called when reject button is clicked
-       ============================================ */
-
-     async function rejectRequest(requestId) {
-        // Get rejection reason
-        const reason = prompt('Enter rejection reason (optional):');
-
-        // User cancelled
-        if (reason === null) {
-            return;
-        }
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/inventory/reorders/${requestId}/reject`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    rejected_by: 'Admin',
-                    rejection_reason: reason || 'No reason provided'
-                })
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || 'Failed to reject request');
-            }
-
-            // Show success notification
-            showNotification('Request rejected', 'success');
-
-            // Refresh data
-            await fetchReorders({ status: currentStatusFilter });
-            await fetchStats();
-            await initCharts();
-
-        } catch (error) {
-            console.error('Failed to reject request:', error);
-            showNotification(error.message, 'error');
-        }
-    };
-
-    /* ============================================
-       RECEIVE REQUEST
-       Called when receive button is clicked
-       ============================================ */
-
-    async function receiveRequest(requestId) {
-        // Get quantity received
-        const quantity = prompt('Enter quantity received:');
-
-        // User cancelled or invalid input
-        if (quantity === null || quantity === '' || isNaN(quantity) || parseInt(quantity) <= 0) {
-            if (quantity !== null) {
-                alert('Please enter a valid quantity');
-            }
-            return;
-        }
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/inventory/reorders/${requestId}/receive`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    quantity_received: parseInt(quantity)
-                })
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || 'Failed to mark as received');
-            }
-
-            // Show success notification
-            showNotification('Request marked as received and inventory updated!', 'success');
-
-            // Refresh data
-            await fetchReorders({ status: currentStatusFilter });
-            await fetchStats();
-            await initCharts();
-
-        } catch (error) {
-            console.error('Failed to receive request:', error);
-            showNotification(error.message, 'error');
-        }
-    };
-
-    /* ============================================
        VIEW REQUEST DETAILS
-       Called when view details button is clicked
+       Populate and show view details modal
        ============================================ */
 
     async function viewRequestDetails(requestId) {
@@ -752,28 +633,299 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const request = await response.json();
 
-            // Build details message
-            const details = `
-                Request Number: ${request.request_number}
-                Product: ${request.product_name} (${request.product_sku})
-                Category: ${request.category_name}
-                Location: ${request.location_name}
-                Quantity Requested: ${request.quantity_requested}
-                Unit Cost: ${formatCurrency(request.unit_cost)}
-                Total Cost: ${formatCurrency(request.total_cost)}
-                Status: ${request.status}
-                Requested By: ${request.requested_by}
-                Requested At: ${new Date(request.requested_at).toLocaleString()}
-                ${request.approved_by ? `Approved By: ${request.approved_by}` : ''}
-                ${request.approved_at ? `Approved At: ${new Date(request.approved_at).toLocaleString()}` : ''}
-                ${request.notes ? `\nNotes: ${request.notes}` : ''}
-            `;
+            // Populate modal with all details
+            document.getElementById('detail-request-number').textContent = request.request_number;
+            document.getElementById('detail-status').innerHTML = getStatusBadge(request.status);
+            document.getElementById('detail-product').textContent = request.product_name;
+            document.getElementById('detail-sku').textContent = request.product_sku;
+            document.getElementById('detail-category').textContent = request.category_name;
+            document.getElementById('detail-location').textContent = request.location_name;
+            document.getElementById('detail-quantity').textContent = request.quantity_requested;
+            document.getElementById('detail-unit-cost').textContent = formatCurrency(request.unit_cost);
+            document.getElementById('detail-total-cost').textContent = formatCurrency(request.total_cost);
+            document.getElementById('detail-requested-by').textContent = request.requested_by;
+            document.getElementById('detail-requested-at').textContent = new Date(request.requested_at).toLocaleString();
 
-            alert(details);
+            // Show/hide optional fields
+            if (request.approved_by) {
+                document.getElementById('detail-approved-by').textContent = request.approved_by;
+                document.getElementById('approved-by-section').style.display = 'flex';
+            } else {
+                document.getElementById('approved-by-section').style.display = 'none';
+            }
+
+            if (request.approved_at) {
+                document.getElementById('detail-approved-at').textContent = new Date(request.approved_at).toLocaleString();
+                document.getElementById('approved-at-section').style.display = 'flex';
+            } else {
+                document.getElementById('approved-at-section').style.display = 'none';
+            }
+
+            if (request.notes) {
+                document.getElementById('detail-notes').textContent = request.notes;
+                document.getElementById('notes-section').style.display = 'flex';
+            } else {
+                document.getElementById('notes-section').style.display = 'none';
+            }
+
+            // Open modal directly
+            const modal = document.getElementById('viewDetailsModal');
+            modal.classList.add('show');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+            
 
         } catch (error) {
             console.error('Failed to view request details:', error);
             showNotification('Error loading request details', 'error');
         }
-    };
+    }
+
+    /* ============================================
+       APPROVE REQUEST
+       Populate and show approve modal
+       ============================================ */
+
+    async function approveRequest(requestId) {
+        try {
+            // Fetch request details
+            const response = await fetch(`${API_BASE_URL}/inventory/reorders/${requestId}`);
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch request details');
+            }
+            
+            const request = await response.json();
+            
+            // Populate modal
+            document.getElementById('approve-request-number').textContent = request.request_number;
+            document.getElementById('approve-product').textContent = request.product_name;
+            document.getElementById('approve-quantity').textContent = request.quantity_requested;
+            document.getElementById('approve-total-cost').textContent = formatCurrency(request.total_cost);
+            document.getElementById('approve-request-id').value = requestId;
+            
+            // Open modal programmatically
+            const modal = document.getElementById('approveModal');
+            modal.classList.add('show');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+
+        } catch (error) {
+            console.error('Failed to load request details:', error);
+            showNotification('Error loading request details', 'error');
+        }
+    }
+
+    /* ============================================
+       REJECT REQUEST
+       Populate and show reject modal
+       ============================================ */
+
+    async function rejectRequest(requestId) {
+        try {
+            // Fetch request details
+            const response = await fetch(`${API_BASE_URL}/inventory/reorders/${requestId}`);
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch request details');
+            }
+            
+            const request = await response.json();
+            
+            // Populate modal
+            document.getElementById('reject-request-number').textContent = request.request_number;
+            document.getElementById('reject-product').textContent = request.product_name;
+            document.getElementById('rejectionReason').value = '';
+            document.getElementById('reject-request-id').value = requestId;
+            
+            // Open modal programmatically
+            const modal = document.getElementById('rejectModal');
+            modal.classList.add('show');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+
+        } catch (error) {
+            console.error('Failed to load request details:', error);
+            showNotification('Error loading request details', 'error');
+        }
+    }
+
+    /* ============================================
+       RECEIVE REQUEST
+       Populate and show receive modal
+       ============================================ */
+
+    async function receiveRequest(requestId) {
+        try {
+            // Fetch request details
+            const response = await fetch(`${API_BASE_URL}/inventory/reorders/${requestId}`);
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch request details');
+            }
+            
+            const request = await response.json();
+            
+            // Populate modal
+            document.getElementById('receive-request-number').textContent = request.request_number;
+            document.getElementById('receive-product').textContent = request.product_name;
+            document.getElementById('receive-quantity-requested').textContent = request.quantity_requested;
+            document.getElementById('quantityReceived').value = '';
+            document.getElementById('receiveError').style.display = 'none';
+            document.getElementById('receive-request-id').value = requestId;
+            
+            // Open modal programmatically
+            const modal = document.getElementById('receiveModal');
+            modal.classList.add('show');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+
+        } catch (error) {
+            console.error('Failed to load request details:', error);
+            showNotification('Error loading request details', 'error');
+        }
+    }
+
+    /*  ============================================
+        CONFIRM ACTIONS
+        Handle confirm button clicks in modals
+        ============================================ */
+
+        // Approve confirm button
+        document.getElementById('confirmApproveBtn').addEventListener('click', async () => {
+            const requestId = document.getElementById('approve-request-id').value;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/inventory/reorders/${requestId}/approve`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ approved_by: 'Admin' })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to approve request');
+                }
+
+                // Close modal
+                const modal = document.getElementById('approveModal');
+
+                // Remove focus from button before closing modal
+                document.activeElement.blur();
+
+                modal.classList.remove('show');
+                modal.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+
+                showNotification('Request approved successfully!', 'success');
+
+                // Refresh data
+                await fetchReorders({ status: currentStatusFilter });
+                await fetchStats();
+                await initCharts();
+
+            } catch (error) {
+                console.error('Failed to approve request:', error);
+                showNotification(error.message, 'error');
+            }
+        });
+
+        // Reject confirm button
+        document.getElementById('confirmRejectBtn').addEventListener('click', async () => {
+            const requestId = document.getElementById('reject-request-id').value;
+            const reason = document.getElementById('rejectionReason').value.trim();
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/inventory/reorders/${requestId}/reject`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        rejected_by: 'Admin',
+                        rejection_reason: reason || 'No reason provided'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to reject request');
+                }
+
+                // Close modal
+                const modal = document.getElementById('rejectModal');
+
+                // Remove focus from button before closing modal
+                document.activeElement.blur();
+
+                modal.classList.remove('show');
+                modal.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+
+                showNotification('Request rejected', 'success');
+
+                // Refresh data
+                await fetchReorders({ status: currentStatusFilter });
+                await fetchStats();
+                await initCharts();
+
+            } catch (error) {
+                console.error('Failed to reject request:', error);
+                showNotification(error.message, 'error');
+            }
+        });
+
+        // Receive confirm button
+        document.getElementById('confirmReceiveBtn').addEventListener('click', async () => {
+            const requestId = document.getElementById('receive-request-id').value;
+            const quantityInput = document.getElementById('quantityReceived');
+            const quantity = parseInt(quantityInput.value);
+            const errorMsg = document.getElementById('receiveError');
+            
+            // Validate input
+            if (!quantityInput.value || isNaN(quantity) || quantity <= 0) {
+                errorMsg.style.display = 'block';
+                quantityInput.style.borderColor = 'var(--color-danger)';
+                return;
+            }
+            
+            // Hide error
+            errorMsg.style.display = 'none';
+            quantityInput.style.borderColor = 'var(--color-border-light)';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/inventory/reorders/${requestId}/receive`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ quantity_received: quantity })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to mark as received');
+                }
+
+                // Close modal
+                const modal = document.getElementById('receiveModal');
+
+                // Remove focus from button before closing modal
+                document.activeElement.blur();
+
+                modal.classList.remove('show');
+                modal.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+
+                showNotification('Request marked as received and inventory updated!', 'success');
+
+                // Refresh data
+                await fetchReorders({ status: currentStatusFilter });
+                await fetchStats();
+                await initCharts();
+
+            } catch (error) {
+                console.error('Failed to receive request:', error);
+                showNotification(error.message, 'error');
+            }
+        });
 });

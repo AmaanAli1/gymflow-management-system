@@ -374,6 +374,202 @@
         </div>
 
         <!-- ============================================ 
+             ACTION MODALS
+             ============================================ -->
+
+        <!-- View Details Modal -->
+        <div class="modal-overlay" id="viewDetailsModal" aria-hidden="true">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2>Request Details</h2>
+                    <button class="modal-close" data-close-modal>&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>Request Number:</label>
+                            <span id="detail-request-number">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Status:</label>
+                            <span id="detail-status">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Product:</label>
+                            <span id="detail-product">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>SKU:</label>
+                            <span id="detail-sku">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Category:</label>
+                            <span id="detail-category">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Location:</label>
+                            <span id="detail-location">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Quantity Requested:</label>
+                            <span id="detail-quantity">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Unit Cost:</label>
+                            <span id="detail-unit-cost">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Total Cost:</label>
+                            <span id="detail-total-cost">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Requested By:</label>
+                            <span id="detail-requested-by">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Requested At:</label>
+                            <span id="detail-requested-at">---</span>
+                        </div>
+                        <div class="detail-item" id="approved-by-section" style="display: none;">
+                            <label>Approved By:</label>
+                            <span id="detail-approved-by">---</span>
+                        </div>
+                        <div class="detail-item" id="approved-at-section" style="display: none;">
+                            <label>Approved At:</label>
+                            <span id="detail-approved-at">---</span>
+                        </div>
+                        <div class="detail-item full-width" id="notes-section" style="display: none;">
+                            <label>Notes:</label>
+                            <p id="detail-notes">---</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn ghost" data-close-modal>Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approve Modal -->
+        <div class="modal-overlay" id="approveModal" aria-hidden="true">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2>Approve Reorder Request</h2>
+                    <button class="modal-close" data-close-modal>&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to approve this reorder request?</p>
+                    <div class="detail-grid" style="margin-top: 1rem;">
+                        <div class="detail-item">
+                            <label>Request Number:</label>
+                            <span id="approve-request-number">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Product:</label>
+                            <span id="approve-product">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Quantity:</label>
+                            <span id="approve-quantity">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Total Cost:</label>
+                            <span id="approve-total-cost">---</span>
+                        </div>
+                    </div>
+                    <!-- Hidden field to store request ID -->
+                    <input type="hidden" id="approve-request-id">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn ghost" data-close-modal>Cancel</button>
+                    <button class="btn primary" id="confirmApproveBtn">Approve Request</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reject Modal -->
+        <div class="modal-overlay" id="rejectModal" aria-hidden="true">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2>Reject Reorder Request</h2>
+                    <button class="modal-close" data-close-modal>&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Please provide a reason for rejecting this request:</p>
+                    <div class="detail-grid" style="margin-top: 1rem; margin-bottom: 1rem;">
+                        <div class="detail-item">
+                            <label>Request Number:</label>
+                            <span id="reject-request-number">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Product:</label>
+                            <span id="reject-product">---</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="rejectionReason">Rejection Reason</label>
+                        <textarea 
+                            id="rejectionReason" 
+                            rows="4" 
+                            placeholder="Enter reason for rejection..."
+                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--color-border-light); border-radius: var(--radius-md); background: var(--color-bg-input); color: var(--color-text-secondary); font-family: inherit; resize: vertical;">
+                        </textarea>
+                    </div>
+                    <!-- Hidden field to store request ID -->
+                    <input type="hidden" id="reject-request-id">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn ghost" data-close-modal>Cancel</button>
+                    <button class="btn danger" id="confirmRejectBtn">Reject Request</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receive Modal -->
+        <div class="modal-overlay" id="receiveModal" aria-hidden="true">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2>Mark as Received</h2>
+                    <button class="modal-close" data-close-modal>&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Enter the quantity received to update inventory:</p>
+                    <div class="detail-grid" style="margin-top: 1rem; margin-bottom: 1rem;">
+                        <div class="detail-item">
+                            <label>Request Number:</label>
+                            <span id="receive-request-number">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Product:</label>
+                            <span id="receive-product">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Quantity Requested:</label>
+                            <span id="receive-quantity-requested">---</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantityReceived">Quantity Received <span style="color: var(--color-danger);">*</span></label>
+                        <input 
+                            type="number" 
+                            id="quantityReceived" 
+                            min="1" 
+                            placeholder="Enter quantity..."
+                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--color-border-light); border-radius: var(--radius-md); background: var(--color-bg-input); color: var(--color-text-secondary); font-family: inherit;">
+                        <span class="error-message" id="receiveError" style="display: none; color: var(--color-danger); font-size: 0.75rem; margin-top: 0.25rem;">Please enter a valid quantity</span>
+                    </div>
+                    <!-- Hidden field to store request ID -->
+                    <input type="hidden" id="receive-request-id">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn ghost" data-close-modal>Cancel</button>
+                    <button class="btn primary" id="confirmReceiveBtn">Mark as Received</button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ============================================ 
              SHARED MODALS
              ============================================ -->
         

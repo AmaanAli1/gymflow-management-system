@@ -304,6 +304,18 @@ document.addEventListener('DOMContentLoaded', async () => {
        ============================================ */
 
     async function initCharts() {
+        
+        // Destroy existing chart before recreating
+        if (stockHealthChart) {
+            membershipChart.destroy();
+            membershipChart = null;
+        }
+
+        if (stockByCategory) {
+            stockByCategory.destroy();
+            stockByCategory = null;
+        }
+
         await initStockHealthChart();
         await initStockByCategoryChart();
     }

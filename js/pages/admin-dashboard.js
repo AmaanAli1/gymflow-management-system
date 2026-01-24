@@ -207,6 +207,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Destroy existing chart before recreating
+        if (membershipChartInstance) {
+            membershipChartInstance.destroy();
+            membershipChartInstance = null;
+        }
+
         // Safety Check: make sure data exists
         if (!data || !data.labels || !data.datasets) {
             console.error('❌ Invalid chart data:', data);
@@ -265,6 +271,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof Chart === 'undefined') {
             console.error('❌ Chart.js not loaded!');
             return;
+        }
+
+        // Destroy existing chart before recreating
+        if (revenueChartInstance) {
+            revenueChartInstance.destroy();
+            revenueChartInstance = null;
         }
         
         revenueChartInstance = new Chart(canvas, {
