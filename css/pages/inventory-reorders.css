@@ -1,0 +1,458 @@
+/* ============================================
+   REORDER REQUESTS PAGE STYLES
+   Uses shared table styles from components/tables.css
+   Only page-specific styles defined here
+   ============================================ */
+
+/* ============================================
+   KPI CARDS ROW
+   4 cards showing key metrics
+   ============================================ */
+
+.inventory-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--gap-xl);
+}
+
+/* Small variant for inventory KPIs */
+.kpi-card.small {
+    min-height: auto;
+    padding: var(--space-lg) var(--space-2xl);
+}
+
+.kpi-card.small .kpi-value {
+    font-size: 1.5rem;
+}
+
+/* Icon inside KPI card */
+.kpi-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    font-size: 1.1rem;
+    margin-bottom: var(--space-sm);
+}
+
+/* Icon color variants */
+.kpi-icon.primary {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.kpi-icon.success {
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.kpi-icon.warning {
+    background: var(--color-warning-light);
+    color: var(--color-warning);
+}
+
+.kpi-icon.danger {
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+}
+
+.kpi-icon.info {
+    background: var(--color-info-light);
+    color: var(--color-info);
+}
+
+/* ============================================
+   CHARTS SECTION
+   Two charts side by side
+   ============================================ */
+
+.charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gap-xl);
+}
+
+.chart-card {
+    background: var(--color-bg-sidebar);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border-light);
+    padding: var(--space-4xl);
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+}
+
+.chart-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-3xl);
+}
+
+.chart-card-title {
+    font-family: var(--font-heading);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+.chart-card-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin-top: 2px;
+}
+
+/* Chart container - controls chart size */
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 120px;
+    overflow: hidden;
+}
+
+.chart-container canvas {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+/* ========================================
+   PAGE LAYOUT
+   ======================================== */
+
+.reorders-page {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-xl);
+    
+    /* Spacing */
+    padding: var(--space-4xl);
+}
+
+/* ========================================
+   KPI CARDS ROW
+   ======================================== */
+
+.reorders-kpi-row {
+    /* Layout - 4 cards in a row */
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--gap-xl);
+}
+
+/* ========================================
+   CONTROLS SECTION
+   ======================================== */
+
+.reorders-controls {
+    /* Layout */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--gap-lg);
+    
+    /* Spacing */
+    padding: var(--space-2xl) 0;
+    
+    /* Styling */
+    border-top: 1px solid var(--color-border-light);
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+/* ========================================
+   STATUS TABS
+   ======================================== */
+
+.status-tabs {
+    /* Layout */
+    display: flex;
+    gap: var(--gap-sm);
+    flex-wrap: wrap;
+}
+
+.status-tab {
+    /* Spacing */
+    padding: var(--space-md) var(--space-xl);
+    
+    /* Styling */
+    background: var(--color-bg-input);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    
+    /* Typography */
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    
+    /* Interaction */
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.status-tab:hover {
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border-color: var(--color-primary);
+}
+
+.status-tab.active {
+    /* Styling */
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    
+    /* Typography */
+    color: white;
+}
+
+/* ========================================
+   FILTERS + SEARCH
+   ======================================== */
+
+.reorders-actions {
+    /* Layout */
+    display: flex;
+    gap: var(--gap-md);
+    align-items: center;
+}
+
+.reorders-actions select {
+    /* Spacing */
+    padding: var(--space-md) var(--space-lg);
+    
+    /* Styling */
+    background: var(--color-bg-input);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    
+    /* Typography */
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    
+    /* Interaction */
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+}
+
+.reorders-actions select:hover,
+.reorders-actions select:focus {
+    /* Styling */
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+.reorders-search {
+    /* Layout */
+    position: relative;
+}
+
+.reorders-search i {
+    /* Layout */
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    
+    /* Typography */
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.reorders-search input {
+    /* Spacing */
+    padding: var(--space-md) var(--space-lg) var(--space-md) 36px;
+    width: 240px;
+    
+    /* Styling */
+    background: var(--color-bg-input);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    
+    /* Typography */
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    
+    /* Animation */
+    transition: border-color var(--transition-fast);
+}
+
+.reorders-search input:focus {
+    /* Styling */
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+.reorders-search input::placeholder {
+    /* Typography */
+    color: var(--color-text-dim);
+}
+
+/* ========================================
+   STATUS BADGES
+   ======================================== */
+
+.status-badge {
+    /* Layout */
+    display: inline-block;
+    
+    /* Spacing */
+    padding: var(--space-xs) var(--space-md);
+    
+    /* Styling */
+    border-radius: 999px;
+    
+    /* Typography */
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.pending {
+    /* Styling */
+    background: var(--color-warning-light);
+    
+    /* Typography */
+    color: var(--color-warning);
+}
+
+.status-badge.approved {
+    /* Styling */
+    background: var(--color-success-light);
+    
+    /* Typography */
+    color: var(--color-success);
+}
+
+.status-badge.received {
+    /* Styling */
+    background: var(--color-info-light);
+    
+    /* Typography */
+    color: var(--color-info);
+}
+
+.status-badge.rejected {
+    /* Styling */
+    background: var(--color-danger-light);
+    
+    /* Typography */
+    color: var(--color-danger);
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 1100px) {
+    .reorders-kpi-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .charts-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .reorders-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .reorders-search input {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .reorders-kpi-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .reorders-page {
+        /* Spacing */
+        padding: var(--space-2xl);
+    }
+    
+    .reorders-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .reorders-actions select {
+        width: 100%;
+    }
+}
+
+/* ========================================
+   MODAL CONTENT STYLES
+   ======================================== */
+
+/* Detail grid layout for modal content */
+.detail-grid {
+    /* Layout */
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gap-lg);
+}
+
+/* Individual detail item */
+.detail-item {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-xs);
+}
+
+/* Full width detail item (for notes) */
+.detail-item.full-width {
+    grid-column: 1 / -1;
+}
+
+/* Detail labels */
+.detail-item label {
+    /* Typography */
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: var(--font-weight-semibold);
+}
+
+/* Detail values */
+.detail-item span,
+.detail-item p {
+    /* Typography */
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Notes paragraph */
+.detail-item p {
+    /* Styling */
+    white-space: pre-wrap;
+    line-height: var(--line-height-relaxed);
+}
+
+/* Form group in modals */
+.form-group {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-sm);
+}
+
+.form-group label {
+    /* Typography */
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Responsive - stack on mobile */
+@media (max-width: 768px) {
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}

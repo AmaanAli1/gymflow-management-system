@@ -1197,5 +1197,543 @@ router.put('/reorders/:id/receive', (req, res) => {
     });
 });
 
+/* ============================================
+   VENDORS MANAGEMENT ROUTES
+   ============================================ */
+
+
+/* ============================================
+   GET /api/inventory/vendors/stats
+   GET KPI statistics for vendors page
+   ============================================ */
+
+router.get('/vendors/stats', (req, res) => {
+    // Need to calculate multiple stats in one query for efficiency
+    const statsQuery = `
+        SELECT
+            -- Total active vendors (excludes inactive ones)
+            (SELECT COUNT(*)
+             FROM vendors
+             WHERE status = 'Active') as total_vendors,
+            
+            -- Total spent this month across all vendors
+            -- COALESCE returns 0 if no orders exist (prevents NULL)
+            (SELECT COALESCE(SUM(rr.total_cost), 0)
+             FROM reorder_requests rr
+             WHERE rr.vendor_id IS NOT NULL
+             AND MONTH(rr.requested_at) = MONTH(CURRENT_DATE())
+             AND YEAR(rr.requested_at) = YEAR(CURRENT_DATE())) as total_spent_month,
+             
+            -- Count of pending orders (orders awaiting fulfillment)
+            (SELECT COUNT(*)
+             FROM reorder_requests
+             WHERE vendor_id IS NOT NULL
+             AND status IN ('pending', 'approved')) as active_orders,
+             
+            -- Find top vendor by total spending (lifetime)
+            -- Uses a subquery to calculate spending per vendor, then picks the max
+            (SELECT v.vendor_name
+             FROM vendors v
+             LEFT JOIN reorder_requests rr ON v.id = rr.vendor_id
+             WHERE v.status = 'Active'
+             GROUP BY v.id, v.vendor_name
+             ORDER BY COALESCE(SUM(rr.total_cost), 0) DESC
+             LIMIT 1) as top_vendor
+    `;
+
+    db.query(statsQuery, (err, results) => {
+        if (err) {
+            console.error('Vendors stats query error:', err);
+            return res.status(500).json({ error: 'Failed to fetch vendor stats' });
+        }
+
+        const stats = results[0];
+
+        // Format currency values to 2 decimal places
+        stats.total_spent_month = parseFloat(stats.total_spent_month) || 0;
+
+        res.json(stats);
+    });
+});
+
+/* ============================================
+   GET /api/inventory/vendors/chart/spending
+   Get data for spending by vendor bar chart
+   Shows top 5 vendors by total spending
+   ============================================ */
+
+router.get('/vendors/chart/spending', (req, res) => {
+    // Join vendors with reorder_requests to calculate total spending
+    // GROUP BY vendor to sum all their orders
+    // ORDER BY total spending descending to get top spenders first
+    // LIMIT 5 to show only top 5 vendors (keeps chart readable)
+    const query = `
+        SELECT
+            v.vendor_name as label,
+            COALESCE(SUM(rr.total_cost), 0) as value
+        FROM vendors v
+        LEFT JOIN reorder_requests rr ON v.id = rr.vendor_id
+        WHERE v.status = 'Active'
+        GROUP BY v.id, v.vendor_name
+        ORDER BY value DESC
+        LIMIT 5
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Spending chart query error:', err);
+            return res.status(500).json({ error: 'Failed to fetch spending data' });
+        }
+    
+
+        // Transform database results into chart.js format
+        // Chart.js expects separate arrays for labels and values
+        const labels = results.map(row => row.label);
+        const values = results.map(row => parseFloat(row.value));
+
+        res.json({
+            labels: labels, 
+            values: values
+        });
+    });
+});
+
+/* ============================================
+   GET /api/inventory/vendors/chart/trends
+   Get data for order volume trends line chart
+   Shows number of orders per month for last 6 months
+   ============================================ */
+
+router.get('/vendors/chart/trends', (req, res) => {
+    // Count orders grouped by month
+    // DATE_FORMAT extracts month name from date (e.g., "Jan", "Feb")
+    // Last 6 months using DATE_SUB and INTERVAL
+    const query = `
+        SELECT
+            DATE_FORMAT(requested_at, '%b') as month,
+            COUNT(*) as count
+        FROM reorder_requests
+        WHERE vendor_id IS NOT NULL
+        AND requested_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
+        GROUP BY YEAR(requested_at), MONTH(requested_at), DATE_FORMAT(requested_at, '%b')
+        ORDER BY YEAR(requested_at), MONTH(requested_at)
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Trends chart query error:', err);
+            return res.status(500).json({ error: 'Failed to fetch trend data' });
+        }
+    
+
+        // Format for Chart.js
+        const labels = results.map(row => row.month);
+        const values = results.map(row => parseInt(row.count));
+
+        res.json({
+            labels: labels, 
+            values: values
+        });
+    });
+});
+
+/* ============================================
+   GET /api/inventory/vendors
+   Get all vendors with optional filters
+   Query params: category, status, search
+   ============================================ */
+
+router.get('/vendors', (req, res) => {
+    // Extract filter parameters from query string
+    const {
+        category, 
+        status, 
+        search
+    } = req.query;
+
+    // Base query: Get vendors with their order statistics
+    // LEFT JOIN ensures vendors with no orders still appear
+    // COUNT and SUM are aggregated per vendor using GROUP BY
+    let query = `
+        SELECT
+            v.*,
+            COUNT(rr.id) as total_orders,
+            COALESCE(SUM(rr.total_cost), 0) as total_spent,
+            MAX(rr.requested_at) as last_order_date
+        FROM vendors v
+        LEFT JOIN reorder_requests rr on v.id = rr.vendor_id
+        WHERE 1=1
+    `;
+
+    const params = [];
+
+    // Apply category filter if provided
+    // Only filter if user selected a specific category (not "all")
+    if (category && category !== 'all') {
+        query += ` AND v.category = ?`;
+        params.push(category);
+    }
+
+    // Apply status filter if provided
+    if (status && status !== 'all') {
+        query += ` AND v.status = ?`;
+        params.push(status);
+    }
+
+    // Apply search filter if provided
+    // LIKE with % wildcards allows partial matching
+    // Search across vendor_name, contact_person, and email
+    if (search) {
+        query += ` AND (
+            v.vendor_name LIKE ? OR
+            v.contact_person LIKE ? OR
+            v.email LIKE ?
+        )`;
+        
+        const searchPattern = `%${search}%`;
+        params.push(searchPattern, searchPattern, searchPattern);
+    }
+
+    // GROUP BY is required because we're using COUNT and SUM
+    // All non-aggregated columns must be in GROUP BY
+    query += ` GROUP BY v.id`;
+
+    // Order by vendor name alphabetically for consistency
+    query += ` ORDER BY v.vendor_name ASC`;
+
+    db.query(query, params, (err, results) => {
+        if (err) {
+            console.error('Vendors query error:', err);
+            return res.status(500).json({ error: 'Failed to fetch vendors' });
+        }
+
+        // Format currency values before sending
+        results.forEach(vendor => {
+            vendor.total_spent = parseFloat(vendor.total_spent) || 0;
+        });
+
+        res.json({ vendors: results });
+    });
+});
+
+/* ============================================
+   GET /api/inventory/vendors/:id
+   Get single vendor with detailed information
+   ============================================ */
+
+router.get('/vendors/:id', (req, res) => {
+    const vendorId = req.params.id;
+
+    // Fetch vendor with aggregated order statisitcs
+    const query = `
+        SELECT
+            v.*,
+            COUNT(rr.id) as total_orders,
+            COALESCE(SUM(rr.total_cost), 0) as total_spent,
+            COALESCE(AVG(rr.total_cost), 0) as avg_order_value,
+            MAX(rr.requested_at) as last_order_date
+        FROM vendors v
+        LEFT JOIN reorder_requests rr ON v.id = rr.vendor_id
+        WHERE v.id = ?
+        GROUP BY v.id
+    `;
+
+    db.query(query, [vendorId], (err, results) => {
+        if (err) {
+            console.error('Vendor query error:', err);
+            return res.status(500).json({ error: 'Failed to fetch vendor' });
+        }
+
+        // Check if vendor exsits
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Vendor not found' });
+        }
+
+        const vendor = results[0];
+
+        // Format currency values
+        vendor.total_spent = parseFloat(vendor.total_spent) || 0;
+        vendor.avg_order_value = parseFloat(vendor.avg_order_value) || 0;
+
+        res.json(vendor);
+    });
+});
+
+/* ============================================
+   GET /api/inventory/vendors/:id/orders
+   Get order history for a specific vendor
+   Used in "View Details" modal to show past orders
+   ============================================ */
+
+router.get('/vendors/:id/orders', (req, res) => {
+    const vendorId = req.params.id;
+
+    // Fetch all reorder requests for this vendor
+    // JOIN with products and locations to get readable names
+    const query = `
+        SELECT
+            rr.id,
+            rr.request_number,
+            rr.requested_at,
+            rr.quantity_requested,
+            rr.total_cost,
+            rr.status,
+            p.name as product_name,
+            p.sku as product_sku,
+            l.name as location_name
+        FROM reorder_requests rr
+        JOIN products p ON rr.product_id = p.id
+        JOIN locations l ON rr.location_id = l.id
+        WHERE rr.vendor_id = ?
+        ORDER BY rr.requested_at DESC
+    `;
+
+    db.query(query, [vendorId], (err, results) => {
+        if (err) {
+            console.error('Vendor ordes query error:', err);
+            return res.status(500).json({ error: 'Failed to fetch vendor orders' });
+        }
+
+        // Format currency valeus in each order
+        results.forEach(order => {
+            order.total_cost = parseFloat(order.total_cost) || 0;
+        });
+
+        res.json({ orders: results });
+    });
+});
+
+/* ============================================
+   POST /api/inventory/vendors
+   Create a new vendor
+   ============================================ */
+
+router.post('/vendors', (req, res) => {
+    // Extract vendor data from request body
+    const {
+        vendor_name, 
+        category, 
+        contact_person, 
+        email, 
+        phone, 
+        address_street, 
+        address_city, 
+        address_province, 
+        address_postal_code, 
+        payment_terms, 
+        tax_id, 
+        notes, 
+        status
+    } = req.body;
+
+    // Validate required fields
+    // Vendor_name is the only truly required field
+    if (!vendor_name) {
+        return res.status(400).json({
+            error: 'Missing required field', 
+            required: ['vendor_name']
+        });
+    }
+
+    // Insert new vendor into database
+    const insertQuery = `
+        INSERT INTO vendors (
+            vendor_name, category, contact_person, email, phone,
+            address_street, address_city, address_province, address_postal_code,
+            payment_terms, tax_id, notes, status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? , ?, ?)
+    `;
+
+    const values = [
+        vendor_name, 
+        category || 'Supplies',             // Default to 'Supplies' if not provided
+        contact_person || null, 
+        email || null, 
+        phone || null, 
+        address_street || null, 
+        address_city || null, 
+        address_province || null, 
+        address_postal_code || null, 
+        payment_terms || 'Net 30',          // Default payment terms
+        tax_id || null, 
+        notes || null, 
+        status || 'Active'                  // Default to Active
+    ];
+
+    db.query(insertQuery, values, (err, result) => {
+        if (err) {
+            console.error('Insert vendor error:', err);
+            return res.status(500).json({ error: 'Failed to create vendor' });
+        }
+
+        // Fetch the newly created vendor to return complete data
+        // This ensures frontend gets the full vendor_object with defaults applied
+        const fetchQuery = `SELECT * FROM vendors WHERE id = ?`;
+
+        db.query(fetchQuery, [result.insertId], (err, vendor) => {
+            if (err) {
+                console.error('Fetch vendor error:', err);
+                return res.status(500).json({ error: 'Vendor created but failed to fetch' });
+            }
+
+            res.status(201).json({
+                success: true, 
+                message: 'Vendor created successfully', 
+                vendor: vendor[0]
+            });
+        });
+    });
+});
+
+/* ============================================
+   PUT /api/inventory/vendors/:id
+   Update an existing vendor
+   ============================================ */
+
+router.put('/vendors/:id', (req, res) => {
+    const vendorId = req.params.id;
+
+    const {
+        vendor_name, 
+        category, 
+        contact_person, 
+        email, 
+        phone, 
+        address_street, 
+        address_city, 
+        address_province, 
+        address_postal_code, 
+        payment_terms, 
+        tax_id, 
+        notes, 
+        status
+    } = req.body;
+
+    // Validate vendor name (required field)
+    if (!vendor_name) {
+        return res.status(400).json({ error: 'Vendor name is required' });
+    }
+
+    // Check if vendor exists before updating
+    const checkQuery = `SELECT id FROM vendors WHERE id = ?`;
+
+    db.query(checkQuery, [vendorId], (err, results) => {
+        if (err) {
+            console.error('Check vendor error:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Vendor not found' });
+        }
+
+        // Update vendor
+        // updated_at is automatically updated by MySQL (ON UPDATE CURRENT_TIMESTAMP)
+        const updateQuery = `
+            UPDATE vendors
+            SET vendor_name = ?,
+                category = ?,
+                contact_person = ?,
+                email = ?,
+                phone = ?,
+                address_street = ?,
+                address_city = ?,
+                address_province = ?,
+                address_postal_code = ?,
+                payment_terms = ?,
+                tax_id = ?,
+                notes = ?,
+                status = ?
+            WHERE id = ?
+        `;
+
+        const values = [
+            vendor_name, 
+            category, 
+            contact_person, 
+            email, 
+            phone, 
+            address_street, 
+            address_city, 
+            address_province, 
+            address_postal_code, 
+            payment_terms, 
+            tax_id, 
+            notes, 
+            status, 
+            vendorId
+        ];
+
+        db.query(updateQuery, values, (err, result) => {
+            if (err) {
+                console.error('Update vendor error:', err);
+                return res.status(500).json({ error: 'Failed to update vendor' });
+            }
+
+            // Fetch updated vendor to return complete data
+            const fetchQuery = `SELECT * FROM vendors WHERE id = ?`;
+            db.query(fetchQuery, [vendorId], (err, vendor) => {
+                if (err) {
+                console.error('Fetch vendor error:', err);
+                return res.status(500).json({ error: 'Vendor updated by failed to fetch' });
+            }
+
+            res.json({
+                success: true, 
+                message: 'Vendor updated successfully', 
+                vendor: vendor[0]
+            });
+        });
+    });
+});
+
+/* ============================================
+   DELETE /api/inventory/vendors/:id
+   Soft delete a vendor (set status to Inactive)
+   We use soft delete instead of hard delete to preserve order history
+   ============================================ */
+
+router.delete('/vendors/:id', (req, res) => {
+    const vendorId = req.params.id;
+
+    // Check if vendor exists
+    const checkQuery = `SELECT id, vendor_name FROM vendors WHERE id = ?`;
+
+    db.query(checkQuery, [vendorId], (err, results) => {
+        if (err) {
+            console.error('Check vendor error:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Vendor not found' });
+        }
+
+        // Soft delete: Set status to 'Inactive' instead of deleting row
+        // This preserves historical data and foreign key relationships
+        // If this vendor has past orders, those records remain intact
+        const softDeleteQuery = `
+            UPDATE vendors
+            SET status = 'Inactive'
+            WHERE id = ?
+        `;
+
+        db.query(softDeleteQuery, [vendorId], (err, result) => {
+            if (err) {
+                console.error('Delete vendor error:', err);
+                return res.status(500).json({ error: 'Failed to delete vendor' });
+            }
+
+            res.json({
+                success: true, 
+                message: 'Vendor deactivated successfully'
+            });
+        });
+    });
+});
+
+});
+
 // Export router
 module.exports = router;

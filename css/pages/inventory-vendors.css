@@ -1,0 +1,498 @@
+/* ============================================
+   INVENTORY VENDORS PAGE STYLES
+   Clean, isolated styles - no inheritance mess
+   ============================================ */
+
+/* ============================================
+   KPI CARDS ROW
+   4 cards showing key metrics
+   ============================================ */
+
+.inventory-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--gap-xl);
+}
+
+/* Small variant for inventory KPIs */
+.kpi-card.small {
+    min-height: auto;
+    padding: var(--space-lg) var(--space-2xl);
+}
+
+.kpi-card.small .kpi-value {
+    font-size: 1.5rem;
+}
+
+/* Icon inside KPI card */
+.kpi-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    font-size: 1.1rem;
+    margin-bottom: var(--space-sm);
+}
+
+/* Icon color variants */
+.kpi-icon.primary {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.kpi-icon.success {
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.kpi-icon.warning {
+    background: var(--color-warning-light);
+    color: var(--color-warning);
+}
+
+.kpi-icon.danger {
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+}
+
+.kpi-icon.info {
+    background: var(--color-info-light);
+    color: var(--color-info);
+}
+
+/* ========================================
+   PAGE LAYOUT
+   ======================================== */
+
+.vendors-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-xl);
+    padding: var(--space-4xl);
+}
+
+/* ========================================
+   KPI CARDS ROW
+   ======================================== */
+
+.vendors-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--gap-xl);
+}
+
+/* ========================================
+   CHARTS ROW
+   ======================================== */
+
+.charts-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gap-xl);
+    margin-bottom: var(--gap-xl);
+}
+
+.chart-card {
+    background: var(--color-bg-sidebar);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border-light);
+    padding: var(--space-2xl);
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+}
+
+.chart-title {
+    font-family: var(--font-heading);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-2xl) 0;
+}
+
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    overflow: hidden;
+}
+
+.chart-container canvas {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+/* ========================================
+   VENDORS SECTION
+   ======================================== */
+
+.vendors-section {
+    margin-top: var(--gap-xl);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--gap-lg);
+}
+
+.section-header h2 {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+/* ========================================
+   CONTROLS SECTION
+   ======================================== */
+
+.vendors-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--gap-lg);
+    padding: var(--space-2xl) 0;
+    border-top: 1px solid var(--color-border-light);
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.filters-group {
+    display: flex;
+    gap: var(--gap-md);
+}
+
+.filter-select {
+    min-width: 180px;
+    padding: var(--space-md) var(--space-lg);
+    background: var(--color-bg-input);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+}
+
+.filter-select:hover,
+.filter-select:focus {
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+/* ========================================
+   ACTIONS + SEARCH
+   ======================================== */
+
+.vendors-actions {
+    /* Layout */
+    display: flex;
+    gap: var(--gap-md);
+    align-items: center;
+}
+
+.vendors-search {
+    /* Layout */
+    position: relative;
+}
+
+.vendors-search i {
+    /* Layout */
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    
+    /* Typography */
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.vendors-search input {
+    /* Spacing */
+    padding: var(--space-md) var(--space-lg) var(--space-md) 36px;
+    width: 280px;
+    
+    /* Styling */
+    background: var(--color-bg-input);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    
+    /* Typography */
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    font-family: inherit;
+    
+    /* Interaction */
+    transition: border-color var(--transition-fast);
+}
+
+.vendors-search input:focus {
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+.vendors-search input::placeholder {
+    color: var(--color-text-dim);
+}
+
+/* ========================================
+   SEARCH BOX
+   ======================================== */
+
+.search-box {
+    display: flex;
+    align-items: center;
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-box i {
+    position: absolute;
+    left: 12px;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    pointer-events: none;
+}
+
+.search-input {
+    flex: 1;
+    padding: var(--space-md) var(--space-lg) var(--space-md) 36px;
+    background: var(--color-bg-input);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    font-family: inherit;
+    transition: border-color var(--transition-fast);
+}
+
+.search-input:focus {
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+.search-input::placeholder {
+    color: var(--color-text-muted);
+}
+
+/* ========================================
+   STATUS BADGES
+   ======================================== */
+
+.status-badge {
+    display: inline-block;
+    padding: var(--space-xs) var(--space-md);
+    border-radius: 999px;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.pending {
+    background: var(--color-warning-light);
+    color: var(--color-warning);
+}
+
+.status-badge.approved {
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.status-badge.received {
+    background: var(--color-info-light);
+    color: var(--color-info);
+}
+
+.status-badge.rejected {
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+}
+
+/* ========================================
+   MODAL CONTENT STYLES
+   ======================================== */
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gap-lg);
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-xs);
+}
+
+.detail-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.detail-item label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: var(--font-weight-semibold);
+}
+
+.detail-item span,
+.detail-item p {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-medium);
+}
+
+.detail-item p {
+    white-space: pre-wrap;
+    line-height: var(--line-height-relaxed);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-sm);
+}
+
+.form-group label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    font-weight: var(--font-weight-medium);
+}
+
+.form-section-title {
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin-top: var(--gap-lg);
+    margin-bottom: var(--gap-md);
+    padding-bottom: var(--gap-sm);
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.form-section-title:first-child {
+    margin-top: 0;
+}
+
+.field.full-width {
+    grid-column: 1 / -1;
+}
+
+.modal-large {
+    width: 90%;
+    max-width: 800px;
+    max-height: 94vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Make the modal body scrollable, not the whole moda */
+.modal-large .modal-body {
+    max-height: calc(85vh - 140px); /* Subtract header + footer height */
+    overflow-y: auto;
+}
+
+/* ========================================
+   TABLE SORTING INDICATORS
+   ======================================== */
+
+.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+
+.sortable:hover {
+    background: var(--color-bg-input);
+}
+
+.sortable i {
+    opacity: 0.3;
+    transition: opacity var(--transition-fast);
+}
+
+.sortable:hover i {
+    opacity: 0.6;
+}
+
+.sortable.sorted-asc i::before,
+.sortable.sorted-desc i::before {
+    opacity: 1;
+    color: var(--color-primary);
+}
+
+.sortable.sorted-asc i::before {
+    content: "\f0de"; /* fa-sort-up */
+}
+
+.sortable.sorted-desc i::before {
+    content: "\f0dd"; /* fa-sort-down */
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 1100px) {
+    .vendors-kpi-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .charts-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .vendors-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-box {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .vendors-kpi-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .vendors-page {
+        padding: var(--space-2xl);
+    }
+    
+    .filters-group {
+        flex-direction: column;
+    }
+    
+    .filter-select {
+        width: 100%;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--gap-md);
+    }
+    
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .vendors-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .vendors-search input {
+        width: 100%;
+    }
+}

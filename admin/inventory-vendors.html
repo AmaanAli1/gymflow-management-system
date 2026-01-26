@@ -34,7 +34,7 @@
         <link rel="stylesheet" href="../css/components//slide-panel.css">
 
         <!-- Page-Specific Styles -->
-         <link rel="stylesheet" href="../css/pages/inventory.css">
+        <link rel="stylesheet" href="../css/pages/inventory-vendors.css">
         
         
     </head>
@@ -165,6 +165,505 @@
                     <img src="https://i.pravatar.cc/100?img=12" alt="Admin" class="topbar-profile">
                 </div>
             </header>
+
+            <!-- ============================================ 
+                 VENDORS PAGE CONTENT
+                 ============================================ -->
+
+            <section class="vendors-page">
+
+                <!-- ============================================ 
+                     KPI CARDS ROW
+                     ============================================ -->
+
+                <div class="vendors-kpi-row">
+                    <!-- Total Vendors-->
+                    <div class="kpi-card small">
+                        <div class="kpi-icon info">
+                            <i class="fa-solid fa-building"></i>
+                        </div>
+                        <p class="kpi-label">Total Vendors</p>
+                        <p class="kpi-value" data-stat="totalVendors">---</p>
+                        <p class="kpi-sub">Active suppliers</p>
+                    </div>
+                    
+                    <!-- Spent This Month -->
+                    <div class="kpi-card small">
+                        <div class="kpi-icon primary">
+                            <i class="fa-solid fa-dollar-sign"></i>
+                        </div>
+                        <p class="kpi-label">Spent This Month</p>
+                        <p class="kpi-value" data-stat="totalSpentMonth">---</p>
+                        <p class="kpi-sub">January spending</p>
+                    </div>
+
+                    <!-- Active Orders -->
+                    <div class="kpi-card small">
+                        <div class="kpi-icon warning">
+                            <i class="fa-solid fa-clock"></i>
+                        </div>
+                        <p class="kpi-label">Active Orders</p>
+                        <p class="kpi-value" data-stat="activeOrders">---</p>
+                        <p class="kpi-sub">Pending + Approved</p>
+                    </div>
+
+                    <!-- Top Vendor -->
+                    <div class="kpi-card small">
+                        <div class="kpi-icon success">
+                            <i class="fa-solid fa-trophy"></i>
+                        </div>
+                        <p class="kpi-label">Top Vendor</p>
+                        <p class="kpi-value" data-stat="topVendor">---</p>
+                        <p class="kpi-sub">Highest spending</p>
+                    </div>
+                </div>
+
+                <!-- ============================================ 
+                     CHARTS ROW
+                     ============================================ -->
+
+                <div class="charts-row">
+                    <!-- Spending by Vendor Bar Chart -->
+                    <div class="chart-card">
+                        <h2 class="chart-title">Spending by Vendor</h2>
+                        <div class="chart-container">
+                            <canvas id="spendingChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Order Volume Trends Line Chart -->
+                    <div class="chart-card">
+                        <h2 class="chart-title">Order Volume Trends</h2>
+                        <div class="chart-container">
+                            <canvas id="trendsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================
+                     VENDORS: TABLE SECTION
+                     ============================================ -->
+
+                <div class="vendors-section">
+
+                    <!-- Filters -->
+                    <div class="vendors-controls">
+                        <div class="filters-group">
+                            <select id="filterCategory" class="filter-select">
+                                <option value="all">All Categories</option>
+                                <option value="Equipment">Equipment</option>
+                                <option value="Supplies">Supplies</option>
+                                <option value="Services">Services</option>
+                                <option value="Other">Other</option>
+                            </select>
+
+                            <select id="filterStatus" class="filter-select">
+                                <option value="all">All Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+
+                        <div class="vendors-actions">
+                            <!-- Search -->
+                            <div class="vendors-search">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" 
+                                       id="searchVendors"
+                                       placeholder="Search vendors, contacts, email..."
+                                       aria-label="Search vendors">
+                            </div>
+
+                            <button class="btn primary" id="addVendorBtn">
+                                <i class="fa-solid fa-plus"></i>
+                                Add Vendor
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <!-- ============================================
+                         VENDORS TABLE
+                         ============================================ -->
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th class="sortable" data-sort="vendor_name">
+                                        Vendor Name
+                                        <i class="fa-solid fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-sort="contact_person">
+                                        Contact
+                                        <i class="fa-solid fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-sort="email">
+                                        Email / Phone
+                                        <i class="fa-solid fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-sort="address_city">
+                                        Location
+                                        <i class="fa-solid fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-sort="total_orders">
+                                        Orders
+                                        <i class="fa-solid fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-sort="total_spent">
+                                        Total Spent
+                                        <i class="fa-solid fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-sort="last_order_date">
+                                        Last Order
+                                        <i class="fa-solid fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-sort="status">
+                                        Status
+                                        <i class="fa-solid fa-sort"></i>
+                                    </th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vendorsTableBody">
+                                <!-- Populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+            </section>
+        </div>
+
+        <!-- ============================================ 
+             VENDOR MODALS
+             ============================================ -->
+
+        <!-- Add Vendor Modal -->
+        <div class="modal-overlay" id="addVendorModal" aria-hidden="true">
+            <div class="modal-card modal-large">
+                <div class="modal-header">
+                    <h2>Add New Vendor</h2>
+                    <button class="modal-close" data-close-modal>&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <div id="addVendorError" class="modal-error" style="display: none;"></div>
+
+                    <form id="addVendorForm">
+                        <h3 class="form-section-title">Basic Information</h3>
+                        <div class="modal-grid">
+                            <div class="field">
+                                <label for="addVendorName">Vendor Name *</label>
+                                <input type="text" id="addVendorName" required placeholder="ABC Fitness Supply">
+                            </div>
+
+                            <div class="field">
+                                <label for="addVendorCategory">Category *</label>
+                                <select id="addVendorCategory" required>
+                                    <option value="Supplies">Supplies</option>
+                                    <option value="Equipment">Equipment</option>
+                                    <option value="Services">Services</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="field">
+                                <label for="addContactPerson">Contact Person</label>
+                                <input type="text" id="addContactPerson" placeholder="John Smith">
+                            </div>
+
+                            <div class="field">
+                                <label for="addEmail">Email</label>
+                                <input type="email" id="addEmail" placeholder="john@abcfitness.com">
+                            </div>
+
+                            <div class="field">
+                                <label for="addPhone">Phone</label>
+                                <input type="tel" id="addPhone" placeholder="(416) 555-0100">
+                            </div>
+
+                            <div class="field">
+                                <label for="addPaymentTerms">Payment Terms</label>
+                                <input type="text" id="addPaymentTerms" placeholder="Net 30" value="Net 30">
+                            </div>
+                        </div>
+
+                        <h3 class="form-section-title">Address</h3>
+                        <div class="modal-grid">
+                            <div class="field full-width">
+                                <label for="addAddressStreet">Street Address</label>
+                                <input type="text" id="addAddressStreet" placeholder="123 Industrial Ave">
+                            </div>
+
+                            <div class="field">
+                                <label for="addAddressCity">City</label>
+                                <input type="text" id="addAddressCity" placeholder="Toronto">
+                            </div>
+
+                            <div class="field">
+                                <label for="addAddressProvince">Province</label>
+                                <input type="text" id="addAddressProvince" placeholder="ON">
+                            </div>
+
+                            <div class="field">
+                                <label for="addPostalCode">Postal Code</label>
+                                <input type="text" id="addPostalCode" placeholder="M5V 2T6">
+                            </div>
+                        </div>
+
+                        <h3 class="form-section-title">Additional Details</h3>
+                        <div class="modal-grid">
+                            <div class="field">
+                                <label for="addTaxId">Tax ID / Business Number</label>
+                                <input type="text" id="addTaxId" placeholder="BN123456789">
+                            </div>
+
+                            <div class="field">
+                                <label for="addStatus">Status</label>
+                                <select id="addStatus">
+                                    <option value="Active">Active</option>
+                                    <option value="Inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="addNotes">Notes</label>
+                            <textarea id="addNotes" rows="3" placeholder="Certifications, delivery schedule, special terms..."></textarea>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn ghost" data-close-modal>Cancel</button>
+                    <button class="btn primary" type="submit" form="addVendorForm">
+                        <i class="fa-solid fa-plus"></i>
+                        Add Vendor
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Vendor Modal -->
+        <div class="modal-overlay" id="editVendorModal" aria-hidden="true">
+            <div class="modal-card modal-large">
+                <div class="modal-header">
+                    <h2>Edit Vendor</h2>
+                    <button class="modal-close" data-close-modal>&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <div id="editVendorError" class="modal-error" style="display: none;"></div>
+
+                    <form id="editVendorForm">
+                        <input type="hidden" id="editVendorId">
+
+                        <h3 class="form-section-title">Basic Information</h3>
+                        <div class="modal-grid">
+                            <div class="field">
+                                <label for="editVendorName">Vendor Name *</label>
+                                <input type="text" id="editVendorName" required>
+                            </div>
+
+                            <div class="field">
+                                <label for="editVendorCategory">Category *</label>
+                                <select id="editVendorCategory" required>
+                                    <option value="Supplies">Supplies</option>
+                                    <option value="Equipment">Equipment</option>
+                                    <option value="Services">Services</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="field">
+                                <label for="editContactPerson">Contact Person</label>
+                                <input type="text" id="editContactPerson">
+                            </div>
+
+                            <div class="field">
+                                <label for="editEmail">Email</label>
+                                <input type="email" id="editEmail">
+                            </div>
+
+                            <div class="field">
+                                <label for="editPhone">Phone</label>
+                                <input type="tel" id="editPhone">
+                            </div>
+
+                            <div class="field">
+                                <label for="editPaymentTerms">Payment Terms</label>
+                                <input type="text" id="editPaymentTerms">
+                            </div>
+                        </div>
+
+                        <h3 class="form-section-title">Address</h3>
+                        <div class="modal-grid">
+                            <div class="field full-width">
+                                <label for="editAddressStreet">Street Address</label>
+                                <input type="text" id="editAddressStreet">
+                            </div>
+
+                            <div class="field">
+                                <label for="editAddressCity">City</label>
+                                <input type="text" id="editAddressCity">
+                            </div>
+
+                            <div class="field">
+                                <label for="editAddressProvince">Province</label>
+                                <input type="text" id="editAddressProvince">
+                            </div>
+
+                            <div class="field">
+                                <label for="editPostalCode">Postal Code</label>
+                                <input type="text" id="editPostalCode">
+                            </div>
+                        </div>
+
+                        <h3 class="form-section-title">Additional Details</h3>
+                        <div class="modal-grid">
+                            <div class="field">
+                                <label for="editTaxId">Tax ID / Business Number</label>
+                                <input type="text" id="editTaxId">
+                            </div>
+
+                            <div class="field">
+                                <label for="editStatus">Status</label>
+                                <select id="editStatus">
+                                    <option value="Active">Active</option>
+                                    <option value="Inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="editNotes">Notes</label>
+                            <textarea id="editNotes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn ghost" data-close-modal>Cancel</button>
+                    <button class="btn primary" type="submit" form="editVendorForm">
+                        <i class="fa-solid fa-save"></i>
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Vendor Details Modal -->
+        <div class="modal-overlay" id="viewDetailsModal" aria-hidden="true">
+            <div class="modal-card modal-large">
+                <div class="modal-header">
+                </div>
+
+                <div class="modal-body">
+                    <h3 class="form-section-title">Vendor Information</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>Vendor Name:</label>
+                            <span id="detail-vendor-name">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Category:</label>
+                            <span id="detail-category">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Contact Person:</label>
+                            <span id="detail-contact-person">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Email:</label>
+                            <span id="detail-email">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Phone:</label>
+                            <span id="detail-phone">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Payment Terms:</label>
+                            <span id="detail-payment-terms">---</span>
+                        </div>
+                        <div class="detail-item full-width">
+                            <label>Address:</label>
+                            <span id="detail-address">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Tax ID:</label>
+                            <span id="detail-tax-id">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Status:</label>
+                            <span id="detail-status">---</span>
+                        </div>
+                        <div class="detail-item full-width" id="notes-section" style="display: none;">
+                            <label>Notes:</label>
+                            <p id="detail-notes">---</p>
+                        </div>
+                    </div>
+
+                    <h3 class="form-section-title" style="margin-top: 2rem;">Performance Metrics</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>Total Orders:</label>
+                            <span id="detail-total-orders">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Total Spent:</label>
+                            <span id="detail-total-spent">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Average Order Value:</label>
+                            <span id="detail-avg-order">---</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Last Order:</label>
+                            <span id="detail-last-order">---</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn ghost" data-close-modal>Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Vendor Modal -->
+        <div class="modal-overlay" id="deleteVendorModal" aria-hidden="true">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2>Confirm Deletion</h2>
+                    <button class="modal-close" data-close-modal>&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <p>Are you sure you want to deactivate this vendor?</p>
+                    <div class="detail-grid" style="margin-top: 1rem;">
+                        <div class="detail-item">
+                            <label>Vendor Name:</label>
+                            <span id="deleteVendorName">---</span>
+                        </div>
+                    </div>
+                    <p style="margin-top: 1rem; color: var(--color-text-muted); font-size: 0.875rem;">
+                        <i class="fa-solid fa-info-circle"></i>
+                        This will set the vendor status to "Inactive". Order history will be preserved.
+                    </p>
+                    <input type="hidden" id="deleteVendorId">
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn ghost" data-close-modal>Cancel</button>
+                    <button class="btn danger" id="confirmDeleteBtn">
+                        <i class="fa-solid fa-trash"></i>
+                        Deactivate Vendor
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <!-- ============================================ 
              SHARED MODALS
@@ -525,6 +1024,7 @@
         <script src="../js/shared.js"></script>
 
         <!-- Inventory-specific JS: Fetch and display inventory data -->
+        <script src="../js/pages/inventory-vendors.js"></script>
         
         
     </body>
