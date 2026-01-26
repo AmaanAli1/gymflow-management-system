@@ -64,8 +64,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const stats = await response.json();
 
-            console.log('Stats received', stats);
-
             // Update KPI cards with data
             // Uses data-stat attribute to target specific cards
             document.querySelector('[data-stat="totalVendors"]').textContent = stats.total_vendors || 0;
@@ -124,7 +122,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             const data = await response.json();
-            console.log('Vendors received', data);
 
             allVendors = data.vendors || [];
 
@@ -278,8 +275,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const response = await fetch(`${API_BASE_URL}/inventory/vendors/chart/spending`);
             const data = await response.json();
 
-            console.log('Spending chart data:', data);
-
             const ctx = document.getElementById('spendingChart').getContext('2d');
 
             spendingChart = new Chart(ctx, {
@@ -345,8 +340,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const response = await fetch(`${API_BASE_URL}/inventory/vendors/chart/trends`);
             const data = await response.json();
-
-            console.log('Trends chart data:', data);
 
             const ctx = document.getElementById('trendsChart').getContext('2d');
 

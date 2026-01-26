@@ -222,8 +222,8 @@
     padding: var(--space-md) var(--space-lg);
     
     /* Styling */
-    background: var(--color-bg-input);
-    border: 1px solid var(--color-border-light);
+    background: var(--color-bg-sidebar);
+    border: 1px solid var(--color-border-base);
     border-radius: var(--radius-md);
     
     /* Typography */
@@ -232,7 +232,7 @@
     
     /* Interaction */
     cursor: pointer;
-    transition: border-color var(--transition-fast);
+    transition: all var(--transition-base);
 }
 
 .reorders-actions select:hover,
@@ -265,22 +265,24 @@
     width: 240px;
     
     /* Styling */
-    background: var(--color-bg-input);
-    border: 1px solid var(--color-border-light);
+    background: var(--color-bg-sidebar);
+    border: 1px solid var(--color-border-base);
     border-radius: var(--radius-md);
     
     /* Typography */
-    color: var(--color-text-secondary);
+    color: var(--color-text-primary);
     font-size: var(--font-size-sm);
     
     /* Animation */
-    transition: border-color var(--transition-fast);
+    transition: all var(--transition-base);
 }
 
 .reorders-search input:focus {
     /* Styling */
     border-color: var(--color-primary);
     outline: none;
+    box-shadow: 0 0 0 3px rgba(230, 0, 48, 0.1);
+    background: rgba(255, 255, 255, 0.02);
 }
 
 .reorders-search input::placeholder {
