@@ -414,7 +414,7 @@ async function fetchDashboardData() {
         // Remove loading cursor
         document.body.style.cursor = 'default';
 
-        console.log('✅ Dashboard loaded with REAL MySQL data!');
+        console.log('✅ Dashboard loaded');
 
     } catch (error) {
         console.error('❌ Failed to load dashboard data:', error);

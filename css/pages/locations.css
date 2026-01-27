@@ -1,0 +1,598 @@
+/* ============================================
+   LOCATIONS PAGE STYLES
+   Manages gym locations dashboard with KPIs, 
+   location cards, and comparison charts
+   ============================================ */
+
+/* ========================================
+   PAGE LAYOUT
+   Main container for entire locations page
+   ======================================== */
+
+.locations-page {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-xl);
+    
+    /* Spacing */
+    padding: var(--space-4xl);
+}
+
+/* ========================================
+   KPI CARDS ROW
+   4 cards showing aggregate stats
+   ======================================== */
+
+.locations-kpi-row {
+    /* Layout - 4 equal columns */
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--gap-xl);
+}
+
+/* Small variant for locations KPI cards */
+.kpi-card.small {
+    /* Sizing - compact version */
+    min-height: auto;
+    padding: var(--space-lg) var(--space-2xl);
+}
+
+.kpi-card.small .kpi-value {
+    /* Typography - slightly smaller than default */
+    font-size: 1.5rem;
+}
+
+/* ========================================
+   KPI ICON STYLES
+   Colored icons inside KPI cards
+   ======================================== */
+
+.kpi-icon {
+    /* Sizing */
+    width: 40px;
+    height: 40px;
+    
+    /* Layout */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Styling */
+    border-radius: var(--radius-md);
+    font-size: 1.1rem;
+    margin-bottom: var(--space-sm);
+}
+
+/* Icon color variants - match status colors */
+.kpi-icon.primary {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.kpi-icon.success {
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.kpi-icon.warning {
+    background: var(--color-warning-light);
+    color: var(--color-warning);
+}
+
+.kpi-icon.danger {
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+}
+
+.kpi-icon.info {
+    background: var(--color-info-light);
+    color: var(--color-info);
+}
+
+/* ========================================
+   LOCATION CARDS CONTAINER
+   Grid for 3 branch cards
+   ======================================== */
+
+.location-cards-container {
+    /* Layout - 3 equal columns */
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--gap-xl);
+    
+    /* Spacing */
+    margin-top: var(--gap-lg);
+}
+
+/* Loading state (shown while fetching data) */
+.location-card-loading {
+    /* Layout */
+    grid-column: 1 / -1;  /* Span all 3 columns */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-md);
+    
+    /* Sizing */
+    padding: var(--space-5xl);
+    
+    /* Styling */
+    color: var(--color-text-muted);
+}
+
+.location-card-loading i {
+    /* Typography */
+    font-size: 2rem;
+    color: var(--color-primary);
+}
+
+/* ========================================
+   INDIVIDUAL LOCATION CARD
+   Shows stats for one branch
+   ======================================== */
+
+.location-card {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-lg);
+    
+    /* Sizing */
+    padding: var(--space-3xl);
+    
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border-light);
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
+    
+    /* Animation */
+    transition: all var(--transition-base);
+}
+
+.location-card:hover {
+    /* Styling */
+    transform: translateY(-4px);
+    box-shadow: 0 0 22px rgba(var(--color-primary-rgb), 0.3);
+    border-color: rgba(var(--color-primary-rgb), 0.5);
+}
+
+/* Location Card Header */
+.location-card-header {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gap-md);
+    
+    /* Spacing */
+    padding-bottom: var(--space-lg);
+    
+    /* Styling */
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+/* Location Name with Icon */
+.location-name {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: var(--gap-md);
+    
+    /* Typography */
+    font-family: var(--font-heading);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+.location-name i {
+    /* Styling */
+    color: var(--color-primary);
+    font-size: var(--font-size-md);
+}
+
+/* Edit Button */
+.location-edit-btn {
+    /* Sizing */
+    padding: var(--space-sm) var(--space-lg);
+    
+    /* Styling */
+    background: transparent;
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    
+    /* Interaction */
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.location-edit-btn:hover {
+    /* Styling */
+    background: var(--color-bg-input);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.location-edit-btn i {
+    /* Spacing */
+    margin-right: var(--space-xs);
+}
+
+/* ========================================
+   CAPACITY DISPLAY
+   Shows members / capacity ratio
+   ======================================== */
+
+.location-capacity {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-sm);
+}
+
+/* Capacity Numbers */
+.capacity-numbers {
+    /* Layout */
+    display: flex;
+    align-items: baseline;
+    gap: var(--gap-sm);
+    
+    /* Typography */
+    font-family: var(--font-heading);
+}
+
+.capacity-current {
+    /* Typography */
+    font-size: 2rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+}
+
+.capacity-separator {
+    /* Typography */
+    font-size: var(--font-size-lg);
+    color: var(--color-text-dim);
+}
+
+.capacity-max {
+    /* Typography */
+    font-size: var(--font-size-lg);
+    color: var(--color-text-muted);
+}
+
+.capacity-label {
+    /* Typography */
+    font-size: var(--font-size-xs);
+    color: var(--color-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ========================================
+   PROGRESS BAR (Utilization)
+   Visual representation of capacity usage
+   ======================================== */
+
+.progress-bar-container {
+    /* Sizing */
+    width: 100%;
+    height: 12px;
+    
+    /* Styling */
+    background: var(--color-bg-input);
+    border-radius: 999px;
+    overflow: hidden;
+    
+    /* Spacing */
+    margin-top: var(--space-sm);
+}
+
+.progress-bar {
+    /* Sizing */
+    height: 100%;
+    
+    /* Styling */
+    background: linear-gradient(90deg, var(--color-primary), var(--color-primary-hover));
+    border-radius: 999px;
+    
+    /* Animation */
+    transition: width 0.6s ease;
+}
+
+/* Progress bar colors based on utilization % */
+.progress-bar.low {
+    /* Styling - Under 50% */
+    background: linear-gradient(90deg, var(--color-success), #1ea854);
+}
+
+.progress-bar.medium {
+    /* Styling - 50-80% */
+    background: linear-gradient(90deg, var(--color-warning), #d4a80d);
+}
+
+.progress-bar.high {
+    /* Styling - Over 80% */
+    background: linear-gradient(90deg, var(--color-danger), #dc2626);
+}
+
+/* Utilization percentage text */
+.utilization-percent {
+    /* Typography */
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-muted);
+    
+    /* Spacing */
+    margin-top: var(--space-xs);
+}
+
+/* ========================================
+   LOCATION STATS GRID
+   Staff count, check-ins, etc.
+   ======================================== */
+
+.location-stats {
+    /* Layout */
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gap-md);
+    
+    /* Spacing */
+    padding-top: var(--space-lg);
+    
+    /* Styling */
+    border-top: 1px solid var(--color-border-light);
+}
+
+.location-stat-item {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-xs);
+}
+
+.location-stat-label {
+    /* Typography */
+    font-size: var(--font-size-xs);
+    color: var(--color-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.location-stat-value {
+    /* Typography */
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+.location-stat-value i {
+    /* Styling */
+    color: var(--color-primary);
+    margin-right: var(--space-xs);
+    font-size: var(--font-size-md);
+}
+
+/* ========================================
+   CHARTS ROW
+   Two charts side by side
+   ======================================== */
+
+.charts-row {
+    /* Layout */
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gap-xl);
+    
+    /* Spacing */
+    margin-top: var(--gap-lg);
+}
+
+.chart-card {
+    /* Sizing */
+    padding: var(--space-3xl);
+    
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border-light);
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+}
+
+.chart-title {
+    /* Typography */
+    font-family: var(--font-heading);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    
+    /* Spacing */
+    margin: 0 0 var(--space-sm) 0;
+}
+
+.chart-subtitle {
+    /* Typography */
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    
+    /* Spacing */
+    margin-bottom: var(--space-3xl);
+}
+
+.chart-container {
+    /* Sizing */
+    position: relative;
+    width: 100%;
+    height: 300px;
+    overflow: hidden;
+}
+
+.chart-container canvas {
+    /* Sizing - Chart.js responsive sizing */
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+/* ========================================
+   EDIT MODAL - STATS GRID
+   Shows current stats in edit modal
+   ======================================== */
+
+.stats-grid {
+    /* Layout */
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--gap-md);
+    
+    /* Sizing */
+    padding: var(--space-lg);
+    
+    /* Styling */
+    background: var(--color-bg-input);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-light);
+}
+
+.stat-item {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-xs);
+    
+    /* Alignment */
+    text-align: center;
+}
+
+.stat-label {
+    /* Typography */
+    font-size: var(--font-size-xs);
+    color: var(--color-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    /* Typography */
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+/* ========================================
+   RESPONSIVE - TABLET (iPad, etc.)
+   ======================================== */
+
+@media (max-width: 1100px) {
+    .locations-kpi-row {
+        /* Layout - 2 columns on tablets */
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .location-cards-container {
+        /* Layout - 2 columns on tablets */
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .charts-row {
+        /* Layout - stack charts vertically */
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========================================
+   RESPONSIVE - MOBILE
+   ======================================== */
+
+@media (max-width: 768px) {
+    .locations-page {
+        /* Spacing - reduce padding on mobile */
+        padding: var(--space-2xl);
+    }
+    
+    .locations-kpi-row {
+        /* Layout - single column */
+        grid-template-columns: 1fr;
+    }
+    
+    .location-cards-container {
+        /* Layout - single column */
+        grid-template-columns: 1fr;
+    }
+    
+    .location-card {
+        /* Spacing - reduce padding */
+        padding: var(--space-2xl);
+    }
+    
+    .location-stats {
+        /* Layout - single column for stats */
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+        /* Layout - single column in modal */
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-container {
+        /* Sizing - smaller charts on mobile */
+        height: 250px;
+    }
+}
+
+/* ========================================
+   LOADING STATES
+   Skeleton/placeholder styles
+   ======================================== */
+
+.location-card.loading {
+    /* Animation */
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* ========================================
+   EMPTY STATE
+   When no locations exist
+   ======================================== */
+
+.locations-empty {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-lg);
+    
+    /* Sizing */
+    padding: var(--space-5xl);
+    
+    /* Styling */
+    color: var(--color-text-muted);
+    text-align: center;
+}
+
+.locations-empty i {
+    /* Typography */
+    font-size: 3rem;
+    color: var(--color-text-dim);
+}
+
+.locations-empty p {
+    /* Typography */
+    font-size: var(--font-size-md);
+}
