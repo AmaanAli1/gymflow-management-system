@@ -246,3 +246,114 @@ img {
 }
 
 /* This makes selected text use brand color */
+
+/* ============================================
+   DEMO BANNER
+   Shows at top of all pages in demo mode
+   ============================================ */
+
+.demo-banner {
+    /* Positioning */
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;  /* Above everything */
+    
+    /* Layout */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* Sizing */
+    padding: 12px 20px;
+    
+    /* Styling */
+    background: linear-gradient(135deg, 
+        rgba(230, 0, 48, 0.95), 
+        rgba(200, 0, 40, 0.95)
+    );
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.demo-banner-content {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    
+    /* Typography */
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.demo-banner-content i {
+    /* Icon styling */
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.demo-banner-text {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.demo-banner-text strong {
+    /* Emphasis */
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* Adjust page layout to account for banner */
+body {
+    padding-top: 48px;  /* Height of banner */
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+    .demo-banner {
+        padding: 10px 16px;
+    }
+    
+    .demo-banner-content {
+        font-size: 0.8rem;
+    }
+    
+    .demo-banner-text {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+    
+    body {
+        padding-top: 60px;  /* Slightly taller on mobile */
+    }
+}
+
+.demo-banner-close {
+    /* Reset button styles */
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    
+    /* Styling */
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    font-size: 1rem;
+    
+    /* Animation */
+    transition: all 0.2s ease;
+}
+
+.demo-banner-close:hover {
+    color: #fff;
+    transform: scale(1.1);
+}

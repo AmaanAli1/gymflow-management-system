@@ -11,6 +11,10 @@ const mysql = require('mysql2');
 // CORS: Allow frontend to talk to backend (different ports)
 const cors = require('cors');
 
+// Database reset
+const cron = require('node-cron');
+const resetDatabase = require('./utils/resetDatabase');
+
 // Bcrypt Import
 const bcrypt = require('bcrypt');
 
@@ -49,6 +53,49 @@ app.use(cors());
 
 // PARSE JSON in request body - so we can receive data from frontend
 app.use(express.json());
+
+// ============================================
+// AUTO-RESET SCHEDULER (DEMO MODE)
+// Resets database daily at 3:00 AM EST
+// ============================================
+
+// Schedule database reset every day at 3:00 AM EST
+cron.schedule('0 0 3 * * *', async () => {
+    console.log('Running scheduled database reset (3:00 AM EST)...');
+    const result = await resetDatabase();
+
+    if (result.success) {
+        console.log('Scheduled reset completed successfully');
+    } else {
+        console.error('Scheduled reset failed:', result.error);
+    }
+}, {
+    schedule: true, 
+    timezone: "America/Toronto" // EST timezone
+});
+
+console.log('Auto-reset scheduled for 3:00 AM EST daily!');
+
+// Manual reset endpoint for testing
+app.post('/api/admin/reset-database', async (req, res) => {
+    console.log('Manual database reset requested');
+
+    const result = await resetDatabase();
+
+    if (result.success) {
+        res.json({
+            message: 'Database reset successfully', 
+            timestamp: new Date().toISOString(), 
+            successCount: result.successCount, 
+            errorCount: result.errorCount
+        });
+    } else {
+        res.status(500).json({
+            error: 'Failed to reset database', 
+            details: result.error
+        });
+    }
+});
 
 /* ============================================
    APPLY RATE LIMITERS

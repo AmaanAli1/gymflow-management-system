@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Set up event listeners
       setupEventListeners();
 
-      console.log('✅ Staff page initialized!');
+      console.log('Staff page initialized!');
    
 
    /* ============================================
@@ -56,7 +56,6 @@ document.addEventListener('DOMContentLoaded', async () => {
          }
 
          const stats = await response.json();
-         console.log('✅ Stats received:', stats);
 
          // Update KPI cards using data-stat attributes
          document.querySelector('[data-stat="totalStaff"]').textContent = stats.total || 0;
@@ -100,8 +99,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
          // API returns
          allStaff = data.staff || [];
-
-         console.log(`✅ Received ${allStaff.length} staff members`);
 
          // Display them in the table
          populateTable(allStaff);
@@ -694,8 +691,6 @@ document.addEventListener('DOMContentLoaded', async () => {
          notes: formData.get('notes') || null
       };
 
-      console.log('📤 Updated staff data:', staffData);
-
       // Hide previous messages
       const errorMsg = document.getElementById('editErrorMessage');
       const successMsg = document.getElementById('editSuccessMessage');
@@ -723,8 +718,6 @@ document.addEventListener('DOMContentLoaded', async () => {
          if (!response.ok) {
             throw new Error(result.error || 'Failed to update staff member');
          }
-
-         console.log('✅ Staff member updated:', result);
 
          // Show success message
          if (successMsg) {
@@ -927,8 +920,6 @@ document.addEventListener('DOMContentLoaded', async () => {
          if (!deleteResponse.ok) {
             throw new Error(deleteResult.error || 'Failed to delete staff member');
          }
-
-         console.log('✅ Staff member deleted', deleteResult);
 
          // Show success message
          const successMsg = document.getElementById('deleteSuccessMessage');
@@ -1342,8 +1333,6 @@ document.addEventListener('DOMContentLoaded', async () => {
          notes: formData.get('notes') || null
       };
 
-      console.log('✅ Saving shift:', shiftData);
-
       // Validate required fields
       if (!shiftData.staff_id || !shiftData.location_id || !shiftData.shift_date || 
           !shiftData.start_time || !shiftData.end_time || !shiftData.role) {
@@ -1395,8 +1384,6 @@ document.addEventListener('DOMContentLoaded', async () => {
          if (!response.ok) {
             throw new Error(result.error || 'Failed to save shift');
          }
-
-         console.log('✅ Shift saved:', result);
 
          // Show success message
          const successMsg = document.getElementById('shiftFormSuccess');
@@ -1550,8 +1537,6 @@ document.addEventListener('DOMContentLoaded', async () => {
          if (!deleteResponse.ok) {
             throw new Error(deleteResult.error || 'Failed to delete shift');
          }
-
-         console.log('✅ Shift deleted:', deleteResult);
 
          // Show success message
          const successMsg = document.getElementById('deleteShiftSuccess');

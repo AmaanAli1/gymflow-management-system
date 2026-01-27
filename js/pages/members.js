@@ -148,8 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const stats = await response.json();
             
-            console.log('✅ Stats received:', stats);
-            
             updateStats(stats);
             
         } catch (error) {
@@ -631,7 +629,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(member => {
                 const totalCheckIns = member.total_check_ins || 0;
                 document.getElementById('panelStatCheckins').textContent = totalCheckIns;
-                console.log(`✅ Updated check-in count: ${totalCheckIns}`);
             })
             .catch(err => {
                 console.error('❌ Failed to update check-in count:', err);
@@ -882,8 +879,6 @@ document.addEventListener('DOMContentLoaded', () => {
             notes: formData.get('notes') || null
         };
 
-        console.log('❄️ Freezing member:', freezeData);
-
         // Hide previous messages
         document.getElementById('freezeErrorMessage').style.display = 'none';
         document.getElementById('freezeSuccessMessage').style.display = 'none';
@@ -902,8 +897,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 throw new Error(result.error || 'Failed to freeze member');
             }
-
-            console.log('❄️ Member frozen:', result);
 
             // Show success message
             const successMsg = document.getElementById('freezeSuccessMessage');
@@ -943,7 +936,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let unfreezeTargetMemberId = null;
 
     async function unfreezeMember(memberId) {
-        console.log('🔥 Unfreezing member:', memberId);
 
         // Find member info
         const member = allMembers.find(m => m.id == memberId);
@@ -963,8 +955,6 @@ document.addEventListener('DOMContentLoaded', () => {
     async function confirmUnfreezeAction() {
         if (!unfreezeTargetMemberId) return;
 
-        console.log('🔥 Confirming unfreeze:', unfreezeTargetMemberId);
-
         try {
             const response = await fetch(`${API_BASE_URL}/members/${unfreezeTargetMemberId}/unfreeze`, {
                 method: 'POST'
@@ -975,8 +965,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 throw new Error(result.error || 'Failed to unfreeze member');
             }
-
-            console.log('✅ Member unfrozen:', result);
 
             // Update the member in allMembers array
             const index = allMembers.findIndex(m => m.id == unfreezeTargetMemberId);
@@ -1225,8 +1213,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
             notes: formData.get('notes') || null
         };
 
-        console.log('🔄 Reactivating member:', reactivateData);
-
         // Hide previous messages
         document.getElementById('reactivateErrorMessage').style.display = 'none';
         document.getElementById('reactivateSuccessMessage').style.display = 'none';
@@ -1251,8 +1237,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
             if (!response.ok) {
                 throw new Error(result.error || 'Failed to reactivate member');
             }
-
-            console.log('✅ Member reactivated:', result);
 
             // Show success message
             const successMsg = document.getElementById('reactivateSuccessMessage');
@@ -1296,12 +1280,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
 
         // Enable button only if checkbox is checked
         reactivateBtn.disabled = !checkbox.checked;
-
-        if (checkbox.checked) {
-            console.log('✅ Reactivate button enabled');
-        } else {
-            console.log('❌ Reactivate button disabled');
-        }
     }
 
     /* ========================================
@@ -1415,7 +1393,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
             console.log('✅ Admin verified');
 
             // STEP 2: Delete the member (soft delete)
-            console.log('🗑️ Deleting member...');
 
             const deleteResponse = await fetch(`${API_BASE_URL}/members/${memberId}`, {
                 method: 'DELETE', 
@@ -1435,8 +1412,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
             if (!deleteResponse.ok) {
                 throw new Error(deleteResult.error || 'Failed to delete member');
             }
-
-            console.log('✅ Member deleted:', deleteResult);
 
             // Show success message
             const successMsg = document.getElementById('deleteSuccessMessage');
@@ -1688,8 +1663,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
                 </div>
             `;
 
-            console.log('✅ Loaded payment method');
-
         } catch (error) {
             console.error('❌ Failed to load payment method:', error);
         }
@@ -1749,8 +1722,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
             notes: formData.get('notes') || null
         };
 
-        console.log('💰 Submitting payment:', paymentData);
-
         // Hide previous message
         document.getElementById('recordPaymentError').style.display = 'none';
         document.getElementById('recordPaymentSuccess').style.display = 'none';
@@ -1777,7 +1748,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
                 throw new Error(result.error || 'Failed to record payment');
             }
 
-            console.log('✅ Payment recorded:', result);
 
             // Show success message
             const successMsg = document.getElementById('recordPaymentSuccess');
@@ -1887,8 +1857,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
             billing_zip: formData.get('billing_zip') || null
         };
 
-        console.log('💳 Submitting payment method:', methodData);
-
         // Hide previous messages
         document.getElementById('updatePaymentMethodError').style.display = 'none';
         document.getElementById('updatePaymentMethodSuccess').style.display = 'none';
@@ -1907,8 +1875,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
             if (!response.ok) {
                 throw new Error(result.error || 'Failed to update payment method');
             }
-
-            console.log('✅ Payment method updated:', result);
 
             // Show success message
             const successMsg = document.getElementById('updatePaymentMethodSuccess');
@@ -1974,8 +1940,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
             if (!response.ok) {
                 throw new Error(result.error || 'Failed to update member');
             }
-
-            console.log('✅ Member updated:', result);
 
             // Show success message
             const successMsg = document.getElementById('editSuccessMessage');
@@ -2125,7 +2089,6 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
 
     // Cancel reactivate button
     document.getElementById('cancelReactivateBtn').addEventListener('click', () => {
-        console.log('❌ Cancelling reactivate');
         switchToViewMode();
     });
 
@@ -2233,7 +2196,7 @@ window.switchToCheckInHistoryMode = switchToCheckInHistoryMode;
         currentFilters = { location: '', plan: '', status: '', search: '' };
         await fetchMembers();
         
-        console.log(`✅ Members page initialized with real data! (${allMembers.length} total members)`);
+        console.log('Members page initialized');
     }
     
     // Run initialization

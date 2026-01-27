@@ -3,6 +3,18 @@
    Shared utilities and initialization
    ============================================ */
 
+window.dismissDemoBanner = () => {
+    
+    const banner = document.getElementById('demoBanner');
+    
+    if (banner) {
+        banner.style.display = 'none';
+        sessionStorage.setItem('demoBannerDismissed', 'true');
+        document.body.style.paddingTop = '0';
+    } 
+};
+
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ GymFlow initialized');
     
@@ -105,5 +117,71 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => toast.remove(), 300);
         }, 3000);
     };
+
+    /* ========================================
+       DEMO BANNER - ATTACH CLOSE BUTTON
+       ======================================== */
     
+    const closeBannerBtn = document.getElementById('closeBannerBtn');
+    if (closeBannerBtn) {
+        closeBannerBtn.addEventListener('click', () => {
+            window.dismissDemoBanner();
+        });
+    }
+
+    /* ========================================
+       DEMO BANNER FUNCTIONALITY
+       Handle banner dismissal and countdown
+       ======================================== */
+
+    /**
+     * Check if banner was dismissed this session
+     */
+
+    const wasDismissed = sessionStorage.getItem('demoBannerDismissed');
+    if (wasDismissed) {
+        const banner = document.getElementById('demoBanner');
+        if (banner) {
+            banner.style.display = 'none';
+            document.body.style.paddingTop = '0';
+        }
+    }
+    
+    /**
+     * Update countdown timer showing time until next reset
+     * Resets daily at 3:00 AM EST
+     */
+    function updateResetCountdown() {
+        const nextResetElement = document.getElementById('nextReset');
+        
+        // Only run if element exists on page
+        if (!nextResetElement) return;
+        
+        // Get current time in EST
+        const now = new Date();
+        
+        // Create next reset time (3:00 AM EST today)
+        const nextReset = new Date();
+        nextReset.setHours(3, 0, 0, 0);
+        
+        // If it's already past 3 AM today, show tomorrow's reset
+        if (now.getHours() >= 3) {
+            nextReset.setDate(nextReset.getDate() + 1);
+        }
+        
+        // Calculate time difference
+        const diff = nextReset - now;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        // Update countdown display
+        nextResetElement.textContent = `(Resets in ${hours}h ${minutes}m)`;
+    }
+    
+    // Update countdown immediately on page load
+    updateResetCountdown();
+    
+    // Update countdown every minute
+    setInterval(updateResetCountdown, 60000);
+
 });

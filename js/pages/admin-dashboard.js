@@ -400,8 +400,6 @@ async function fetchDashboardData() {
         // Parse JSON response
         const data = await response.json();
 
-        console.log('✅ Data Received from API:', data);
-
         // Update all dashboard sections with REAL data
         updateKPIs(data.kpis);
         updateBranches(data.branches);
@@ -414,7 +412,7 @@ async function fetchDashboardData() {
         // Remove loading cursor
         document.body.style.cursor = 'default';
 
-        console.log('✅ Dashboard loaded');
+        console.log('Dashboard loaded');
 
     } catch (error) {
         console.error('❌ Failed to load dashboard data:', error);

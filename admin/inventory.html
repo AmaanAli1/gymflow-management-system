@@ -40,6 +40,25 @@
     <body>
 
         <!-- ============================================ 
+             DEMO MODE BANNER
+             Visible on all pages
+             ============================================ -->
+
+        <div class="demo-banner" id="demoBanner">
+            <div class="demo-banner-content">
+                <i class="fa-solid fa-info-circle"></i>
+                <div class="demo-banner-text">
+                    <strong>Demo Mode:</strong>
+                    Feel free to explore and modify data! The database automatically resets daily at 3:00 AM EST.
+                    <span id="nextReset"></span>
+                </div>
+                <button class="demo-banner-close" onclick="dismissDemoBanner()">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ============================================ 
              SIDEBAR NAVIGATION
              Shared across all pages
              ============================================ -->

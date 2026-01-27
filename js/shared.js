@@ -346,7 +346,6 @@ async function fetchAllMembersForCheckIn() {
         const response = await fetch(`${API_BASE_URL}/members`);
         const data = await response.json();
         allMembers = data.members || [];
-        console.log(`✅ Loaded ${allMembers.length} members for check-in search`);
     } catch {
         console.error('❌ Failed to fetch members for check-in:', error);
     }
