@@ -168,6 +168,28 @@ app.use('/api/inventory', inventoryRoutes);
 // Mount settings routes at api/settings
 app.use('/api/settings', settingsRoutes);
 
+// ============================================
+// SERVER STATIC FRONTEND FILES
+// Serves the admin pages in production
+// ============================================
+
+const path = require('path');
+
+// Serve static files from the parent directory (frontend)
+app.use(express.static(path.join(__dirname, '..')));
+
+// Serve admin pages
+app.get('/admin/*', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', req.path + '.html'));
+});
+
+// Root redirect to dashboard
+app.get('/', (req, res) => {
+    res.redirect('/admin/dashboard');
+});
+
+console.log('Static file serving configured');
+
 
 // ============================================
 // START THE SERVER

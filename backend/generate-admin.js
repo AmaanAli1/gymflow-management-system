@@ -33,7 +33,7 @@ const bcrypt = require('bcrypt');
 async function generateAdmin() {
 
     // ===== STEP 1: Define the password =====
-    const password = "Admin123!";   // Change THIS to desired admin password
+    const password = "admin";   // Change THIS to desired admin password
 
     // ===== STEP 2: Set salt rounds =====
     const saltRounds = 10;
@@ -84,9 +84,9 @@ generateAdmin();
    ======================================== */
 
 // When user logs in:
-// 1. User enters : "Admin123!"
+// 1. User enters : "admin"
 // 2. Backend retrieves hash from database
-// 3. Backend runs: bcrypt.compare("Admin123!", hash)
+// 3. Backend runs: bcrypt.compare("admin", hash)
 // 4. Bcrypt applies same algorithm and checks if they match
 // 5. Returns true/false
 //
