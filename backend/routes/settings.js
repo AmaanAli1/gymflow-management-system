@@ -9,6 +9,11 @@ const router = express.Router();
 // Import database connection
 const db = require('../config/database');
 
+const {
+    validateUpdateSettings, 
+    handleValidationErrors
+} = require('../middleware/validation');
+
 /* ============================================
    GET /api/settings
    Fetch current system settings
@@ -43,7 +48,7 @@ router.get('/', (req, res) => {
    Used by: Settings page save button
    ============================================ */
 
-router.put('/', (req, res) => {
+router.put('/', validateUpdateSettings, handleValidationErrors, (req, res) => {
 
     // Extract settings from request body
     const {

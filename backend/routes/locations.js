@@ -9,6 +9,11 @@ const router = express.Router();
 // Import database
 const db = require('../config/database');
 
+const {
+    validateEditLocation, 
+    handleValidationErrors
+} = require('../middleware/validation');
+
 /* ============================================
    GET /api/locations
    Get all gym locations
@@ -186,7 +191,7 @@ router.get('/:id', (req, res) => {
    Used by: Edit location modal
    ============================================ */
 
-router.put('/:id', (req, res) => {
+router.put('/:id', validateEditLocation, handleValidationErrors, (req, res) => {
 
     const locationId = parseInt(req.params.id);
     const { capacity } = req.body;

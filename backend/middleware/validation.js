@@ -1320,6 +1320,774 @@ const validateAddTrainer = [
         .withMessage('Notes must be less than 500 characters')
 ];
 
+/* ============================================
+   VALIDATION RULES: ADD INVENTORY PRODUCT
+   Applied to POST /api/inventory/products
+   ============================================ */
+
+const validateAddProduct = [
+    // PRODUCT NAME VALIDATION
+    body('product_name')
+        .trim()
+        .notEmpty()
+        .withMessage('Product name is required')
+        .isLength({ min: 3, max: 100 })
+        .withMessage('Product name must be between 3 and 100 characters')
+
+        // Custom validation: Check if product already exists
+        // Prevents duplicate inventory entries
+        .custom(async (productName) => {
+            return new Promise((resolve, reject) => {
+                const query = 'SELECT id FROM inventory_products WHERE product_name = ?';
+
+                db.query(query, [productName], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length > 0) {
+                        return reject(new Error('Product name already exists'));
+                    }
+
+                    return resolve();
+                });
+            });
+        }), 
+    
+    // CATEGORY VALIDATION
+    body('category')
+        .notEmpty()
+        .withMessage('Category is required')
+        .isIn(['Beverages', 'Equipment', 'Merchandise', 'Supplements', 'Supplies'])
+        .withMessage('Category must be Beverages, Equipment, Merchandise, Supplements, or Supplies'), 
+
+    // SELLING PRICE VALIDATION
+    body('selling_price')
+        .notEmpty()
+        .withMessage('Selling price is required')
+        .isFloat({ min: 0.01, max: 10000 })
+        .withMessage('Selling price must be between $0.01 and $10,000'), 
+
+    // COST PRICE VALIDATION
+    body('cost_price')
+        .notEmpty()
+        .withMessage('Cost price is required')
+        .isFloat({ min: 0.01, max: 10000 })
+        .withMessage('Cost price must be between $0.01 and $10,000')
+
+        // Custom validation: Cost typically should be less than selling price
+        // Should NOT sell at a loss
+        // Making this a warning, not a hard error (some loss leaders are intentional)
+        .custom((costPrice, { req }) => {
+            const sellingPrice = parseFloat(req.body.selling_price);
+            const cost = parseFloat(costPrice);
+
+            if (cost > sellingPrice) {
+                // We'll allow it, but include warning in response
+                req.priceWarning = 'Cost price exceeds selling price - this will result in a loss';
+            }
+
+            return true;
+        }), 
+
+    // REORDER POINT VALIDATION
+    body('reorder_point')
+        .notEmpty()
+        .withMessage('Reorder point is required')
+        .isInt({ min: 1, max: 1000 })
+        .withMessage('Reorder point must be between 1 and 1,000 units'), 
+
+    // REORDER QUANTITY VALIDATION
+    body('reorder_quantity')
+        .notEmpty()
+        .withMessage('Reorder quantity is required')
+        .isInt({ min: 1, max: 1000 })
+        .withMessage('Reorder quantity must be between 1 and 1,000 units')
+
+        // Business logic: Reorder quantity should probably be more than reorder point
+        // If reorder_point = 10 and reorder_quantity = 5, you'll STILL be low after reordering
+        .custom((reorderQty, { req }) => {
+            const reorderPoint = parseInt(req.body.reorder_point);
+            const quantity = parseInt(reorderQty);
+
+            if (quantity <= reorderPoint) {
+                req.reorderWarning = 'Reorder quantity should typically exceed reorder point';
+            }
+
+            return true;
+        }), 
+
+    // DESCRIPTION VALIDATION
+    body('description')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ max: 500 })
+        .withMessage('Description must be less than 500 characters')
+];
+
+/* ============================================
+   VALIDATION RULES: EDIT INVENTORY PRODUCT
+   Applied to PUT /api/inventory/products/:id
+   ============================================ */
+
+const validateEditProduct = [
+    // Validate product ID in URL
+    param('id')
+        .isInt({ min: 1 })
+        .withMessage('Invalid product ID'), 
+
+    body('product_name')
+        .trim()
+        .notEmpty()
+        .withMessage('Product name is required')
+        .isLength({ min: 3, max: 100 })
+        .withMessage('Product name must be between 3 and 100 characters')
+        .custom(async (productName, { req }) => {
+            return new Promise((resolve, reject) => {
+                // Check if product name exists for a DIFFERENT product
+                const query = 'SELECT id FROM inventory_products WHERE product_name = ? AND id != ?';
+                db.query(query, [productName, req.params.id], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length > 0) {
+                        return reject(new Error('Product name already exists'));
+                    }
+
+                    return resolve();
+                });
+            });
+        }), 
+    
+    body('category')
+        .notEmpty()
+        .withMessage('Category is required')
+        .isInt(['Beverages', 'Equipment', 'Merchandise', 'Supplements', 'Supplies'])
+        .withMessage('Category must be Beverages, Equipment, Merchandise, Supplements, or Supplies'), 
+
+    body('selling_price')
+        .notEmpty()
+        .withMessage('Selling price is required')
+        .isFloat({ min: 0.01, max: 10000 })
+        .withMessage('Selling price must be between $0.01 and $10,000'), 
+
+    body('cost_price')
+        .notEmpty()
+        .withMessage('Cost price is required')
+        .isFloat({ min: 1, max: 10000 })
+        .withMessage('Cost price must be between $0.01 and $10,000')
+        .custom((costPrice, { req }) => {
+            const sellingPrice = parseFloat(req.body.selling_price);
+            const cost = parseFloat(costPrice);
+
+            if (cost > sellingPrice) {
+                req.priceWarning = 'Cost price exceeds selling price - this will result in a loss';
+            }
+
+            return true;
+        }), 
+
+    body('reorder_point')
+        .notEmpty()
+        .withMessage('Reorder point is required')
+        .isInt({ min: 0, max: 1000 })
+        .withMessage('Reorder point must be between 0 and 1,000 units'), 
+
+    body('reorder_quantity')
+        .notEmpty()
+        .withMessage('Reorder quantity is required')
+        .isInt({ min: 1, max: 1000 })
+        .withMessage('Reorder quantity must be between 1 and 1,000 units')
+        .custom((reorderQty, { req }) => {
+            const reorderPoint = parseInt(req.body.reorder_point);
+            const quantity = parseInt(reorderQty);
+
+            if (quantity <= reorderPoint) {
+                req.reorderWarning = 'Reorder quantity should typically exceed reorder point';
+            }
+
+            return true;
+        }), 
+
+    body('description')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ max: 500 })
+        .withMessage('Description must be less than 500 characters')
+];
+
+/* ============================================
+   VALIDATION RULES: CREATE REORDER REQUEST
+   Applied to POST /api/inventory/products/reorder
+   ============================================ */
+
+const validateCreateReorder = [
+    
+    body('product_id')
+        .notEmpty()
+        .withMessage('Product is required')
+        .isInt({ min: 1 })
+        .withMessage('Invalid product')
+
+        // Custom validation: Product must exist
+        .custom(async (productId) => {
+            return new Promise((resolve, reject) => {
+                const query = 'SELECT id FROM inventory_products WHERE id = ?';
+                db.query(query, [productId], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length === 0) {
+                        return reject(new Error('Product not found'));
+                    }
+
+                    return resolve();
+                });
+            });
+        }), 
+
+    // DESTINATION LOCATION VALIDATION
+    body('destination_location')
+        .notEmpty()
+        .withMessage('Destination location is required')
+
+        // .isInt() - Location IDs are integers (1, 2, 3)
+        .isInt({ min: 1, max: 3 })
+        .withMessage('Invalid destination location')
+
+        // Custom validation: Location must exist in database
+        .custom(async (locationId) => {
+            return new Promise((resolve, reject) => {
+                const query = 'SELECT id FROM locations WHERE id = ?';
+                db.query(query, [locationId], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length === 0) {
+                        return reject(new Error('Location not found'));
+                    }
+
+                    return resolve();
+                });
+            });
+        }), 
+
+    // QUANTITY VALIDATION
+    body('quantity')
+        .notEmpty()
+        .withMessage('Quantity is required')
+        .isInt({ min: 1, max: 1000 })
+        .withMessage('Quantity must be between 1 and 1,000 units'), 
+
+    // NOTES VALIDATION
+    body('notes')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ max: 500 })
+        .withMessage('Notes must be less than 500 characters')
+];
+
+/* ============================================
+   VALIDATION RULES: UPDATE STOCK QUANTITY
+   Applied to PUT /api/inventory/products/:id/stock
+   ============================================ */
+
+const validateUpdateStock = [
+    // Validate product ID in URL
+    param('id')
+        .isInt({ min: 1 })
+        .withMessage('Invalid product ID'), 
+    
+    // QUANTITY VALIDATION
+    body('quantity')
+        .notEmpty()
+        .withMessage('Quantity is required')
+        .isInt({ min: 0, max: 10000 })
+        .withMessage('Quantity must be between 0 and 10,000 units'), 
+
+    // ADJUSTMENT TYPE VALIDATION
+    body('adjustment_type')
+        .optional()
+        .isIn(['set', 'add', 'subtract'])
+        .withMessage('Adjustment type must be set, add, or subtract')
+];
+
+/* ============================================
+   VALIDATION RULES: Reject Reorder Request
+   Applied to PUT /api/inventory/reorders/:id/reject
+   ============================================ */
+
+const validateRejectRequest = [
+
+    // NOTES VALIDATION
+    body('notes')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ max: 500 })
+        .withMessage('Notes must be less than 500 characters')
+];
+
+/* ============================================
+   VALIDATION RULES: Mark Reorder as Received
+   Applied to PUT /api/inventory/reorders/:id/receive
+   ============================================ */
+
+const validateReceiveReorder = [
+    // Validate reorder ID in url
+    param('id')
+        .isInt({ min: 1 })
+        .withMessage('Invalid reorder ID'), 
+
+    // QUANTITY RECEIVED VALIDATION
+    body('quantity_received')
+        .notEmpty()
+        .withMessage('Quantity received is required')
+
+        // Must be at least 1
+        .isInt({ min: 1, max: 10000 })
+        .withMessage('Quantity received must be between 1 and 1,000 units')
+
+        // Custom validation: Quantity received can't exceed quantity ordered
+        .custom(async (quantityReceived, { req }) => {
+            return new Promise((resolve, reject) => {
+                const reorderId = req.params.id;
+
+                // Fetch the original reorder request to check quantity
+                const query = 'SELECT quantity FROM reorder_requests WHERE id = ?';
+
+                db.query(query, [reorderId], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length === 0) {
+                        return reject(new Error('Reorder request not found'));
+                    }
+
+                    const quantityOrdered = results[0].quantity;
+                    const received = parseInt(quantityReceived);
+
+                    // Check if received exceeds ordered
+                    if (received > quantityOrdered) {
+                        return reject(new Error(
+                            `Quantity received (${received}) cannot exceed quantity ordered (${quantityOrdered})`
+                        ));
+                    }
+
+                    // Warn if received is significantly less than ordered
+                    // Does not block the request, just adds a warning
+                    if (received < quantityOrdered * 0.5) {
+                        req.receiveWarning = `Warning: Received only ${received} out of ${quantityOrdered} ordered`;
+                    }
+
+                    return resolve();
+                });
+            });
+        })
+];
+
+/* ============================================
+   VALIDATION RULES: ADD VENDOR
+   Applied to POST /api/inventory/vendors
+   ============================================ */
+
+const validateAddVendor = [
+    // VENDOR NAME VALIDATION
+    body('vendor_name')
+        .trim()
+        .notEmpty()
+        .withMessage('Vendor name is required')
+        .isLength({ min: 3, max: 100 })
+        .withMessage('Vendor name must be between 3 and 100 characters')
+
+        // Custom validation: Check if vendor already exists
+        // Prevents duplicate entries
+        .custom(async (vendorName) => {
+            return new Promise((resolve, reject) => {
+                const query = 'SELECT id FROM vendors WHERE vendor_name = ?';
+
+                db.query(query, [vendorName], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length > 0) {
+                        return reject(new Error('Vendor name already exists'));
+                    }
+
+                    return resolve();
+                });
+            });
+        }), 
+
+    // CATEGORY VALIDATION
+    body('category')
+        .notEmpty()
+        .withMessage('Category is required')
+        .isIn(['Supplies', 'Equipment', 'Servies', 'Other'])
+        .withMessage('Category must be Supplies, Equipment, Services, or Other'), 
+
+    // CONTACT PERSON VALIDATION
+    body('contact_person')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ min: 3, max: 100 })
+        .withMessage('Contact person must be between 3 and 100 characters')
+        .matches(/^[a-zA-Z\s'-]+$/)
+        .withMessage('Contact person can only contain letters, spaces, hyphens, and apostrophes'), 
+
+    // EMAIL VALIDATION
+    body('email')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isEmail()
+        .withMessage('Invalid email format')
+        .normalizeEmail(), 
+
+    // PHONE VALIDATION
+    body('phone')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .matches(/^\(\d{3}\) \d{3}-\d{4}$/)
+        .withMessage('Phone must be in format: (555) 123-4567'), 
+
+    // PAYMENT TERMS VALIDATION
+    body('payment_terms')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('Payment terms must be less than 100 characters'), 
+
+    // STREET ADDRESS VALIDATION
+    body('street_address')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ max: 200 })
+        .withMessage('Street address must be less than 200 characters'), 
+
+    // CITY VALIDATION
+    body('city')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ min: 3, max: 100 })
+        .withMessage('City must be between 3 and 100 characters')
+        .matches(/^[a-zA-Z\s'-]+$/)
+        .withMessage('City can only contain letters, spaces, hyphens, and apostrophes'), 
+
+    // PROVINCE VALIDATION
+    body('province')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ min: 3, max: 100 })
+        .withMessage('Provicne must be between 3 and 100 characters')
+        .matches(/^[a-zA-Z\s'-]+$/)
+        .withMessage('Province can only contain letters, spaces, hyphens, and apostrophes'), 
+
+    // POSTAL CODE VALIDATION
+    body('postal_code')
+        .optional()
+        .trim()
+        .matches(/^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/)
+        .withMessage('Postal code must be in Canadian format: A1A 1A1')
+
+        // Normalize to uppercase with space
+        // "m5v2t6" becomes M5V 2T6
+        .customSanitizer(value => {
+            if (value) {
+                // Remove spaces/hyphens, convert to uppercase
+                const cleaned = value.replace(/[\s-]/g, '').toUpperCase();
+                // Add space in middle
+                return cleaned.slice(0, 3) + ' ' + cleaned.slice(3);
+            }
+
+            return value;
+        }), 
+
+    // TAX ID / BUSINESS NUMBER VALIDATION
+    body('tax_id')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ max: 50 })
+        .withMessage('Tax ID / Business Number must be less than 50 characters')
+        .matches(/^[a-zA-Z\s'-]+$/)
+        .withMessage('Tax ID can only contain letters, spaces, hyphens, and apostrophes'), 
+
+    // STATUS VALIDATION
+    body('status')
+        .notEmpty()
+        .withMessage('Status is required')
+        .isIn(['Active', 'Inactive'])
+        .withMessage('Status must be either Active or Inactive'),
+
+    // NOTES VALIDATION
+    body('notes')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ max: 1000 })
+        .withMessage('Notes must be less than 1000 characters')
+];
+
+/* ============================================
+   VALIDATION RULES: EDIT VENDOR
+   Applied to PUT /api/inventory/vendors/:id
+   ============================================ */
+
+const validateEditVendor = [
+    // Validate vendor ID in URL
+    param('id')
+        .isInt({ min: 1 })
+        .withMessage('Invalid vendor ID'), 
+
+    // Same validation as add vendor, but vendor name uniqueness check
+    // must exclude the current vendor (they can keep their own name)
+    body('vendor_name')
+        .trim()
+        .notEmpty()
+        .withMessage('Vendor name is required')
+        .isLength({ min: 3, max: 100 })
+        .withMessage('Vendor name must be between 3 and 100 characters')
+        .custom(async (vendorName, { req }) => {
+            return new Promise((resolve, reject) => {
+                // Check if vendor name exists for a DIFFERENT vendor
+                const query = 'SELECT id FROM vendors WHERE vendor_name = ? AND id != ?';
+
+                db.query(err, [vendorName, req.params.id], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length > 0) {
+                        return reject(new Error('Vendor name already exists'));
+                    }
+
+                    return resolve();
+                });
+            }); 
+        }), 
+
+    body('category')
+        .notEmpty()
+        .withMessage('Category is required')
+        .isIn(['Supplies', 'Equipment', 'Services', 'Other'])
+        .withMessage('Category must be Supplies, Equipment, Services, or Other'),
+
+    body('contact_person')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ min: 2, max: 100 })
+        .withMessage('Contact person must be between 2 and 100 characters')
+        .matches(/^[a-zA-Z\s'-]+$/)
+        .withMessage('Contact person can only contain letters, spaces, hyphens, and apostrophes'),
+
+    body('email')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isEmail()
+        .withMessage('Invalid email format')
+        .normalizeEmail(),
+
+    body('phone')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .matches(/^\(\d{3}\) \d{3}-\d{4}$/)
+        .withMessage('Phone must be in format: (555) 123-4567'),
+
+    body('payment_terms')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('Payment terms must be less than 100 characters'),
+
+    body('street_address')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ max: 200 })
+        .withMessage('Street address must be less than 200 characters'),
+
+    body('city')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ min: 2, max: 100 })
+        .withMessage('City must be between 2 and 100 characters')
+        .matches(/^[a-zA-Z\s'-]+$/)
+        .withMessage('City can only contain letters, spaces, hyphens, and apostrophes'),
+
+    body('province')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ min: 2, max: 100 })
+        .withMessage('Province must be between 2 and 100 characters')
+        .matches(/^[a-zA-Z\s'-]+$/)
+        .withMessage('Province can only contain letters, spaces, hyphens, and apostrophes'),
+
+    body('postal_code')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .matches(/^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/)
+        .withMessage('Postal code must be in Canadian format: A1A 1A1')
+        .customSanitizer(value => {
+            if (value) {
+                const cleaned = value.replace(/[\s-]/g, '').toUpperCase();
+                return cleaned.slice(0, 3) + ' ' + cleaned.slice(3);
+            }
+            return value;
+        }),
+
+    body('tax_id')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ max: 50 })
+        .withMessage('Tax ID / Business Number must be less than 50 characters')
+        .matches(/^[A-Za-z0-9\s-]+$/)
+        .withMessage('Tax ID can only contain letters, numbers, spaces, and hyphens'),
+
+    body('status')
+        .notEmpty()
+        .withMessage('Status is required')
+        .isIn(['Active', 'Inactive'])
+        .withMessage('Status must be Active or Inactive'),
+
+    body('notes')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ max: 1000 })
+        .withMessage('Notes must be less than 1000 characters')
+];
+
+/* ============================================
+   VALIDATION RULES: EDIT LOCATION
+   Applied to PUT /api/location/:id
+   ============================================ */
+
+const validateEditLocation = [
+    // Validate location ID in URL
+    param('id')
+        .isInt({ min: 1 })
+        .withMessage('Invalid location ID')
+
+        // Custom validation: Location must exist
+        .custom(async (locationId) => {
+            return new Promise((resolve, reject) => {
+                const query = 'SELECT id FROM locations WHERE id = ?';
+                
+                db.query(query, [locationId], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    if (results.length === 0) {
+                        return reject(new Error('Location not found'));
+                    }
+
+                    return resolve();
+                });
+            });
+        }), 
+
+    // CAPACITY VALIDATION
+    body('capacity')
+        .notEmpty()
+        .withMessage('Capacity is required')
+        .isInt({ min: 1, max: 10000 })
+        .withMessage('Capacity must be between 1 and 10,000 members')
+
+        // Custom validation: New capacity should be >= current members
+        // Can't reduce capacity below current member count
+        .custom(async (capacity, { req }) => {
+            return new Promise((resolve, reject) => {
+                const locationId = req.params.id;
+                const newCapacity = parseInt(capacity);
+
+                // Get current member count for this location
+                const query = `
+                    SELECT COUNT(*) as current_members
+                    FROM members
+                    WHERE location_id = ?
+                        AND status = 'active'
+                `;
+
+                db.query(query, [locationId], (err, results) => {
+                    if (err) {
+                        return reject(new Error('Database error'));
+                    }
+
+                    const currentMembers = results[0].current_members;
+
+                    // Check if new capacity is too low
+                    if (newCapacity < currentMembers) {
+                        return reject(new Error(
+                            `Cannot reduce capacity to ${newCapacity}. Location currently has ${currentMembers} active members.` +
+                            `Capacity must be at least ${currentMembers}.`
+                        ));
+                    }
+
+                    // Warning if new capacity is very close to current members
+                    // No error, just warning
+                    if (newCapacity < currentMembers * 1.1) {
+                        req.capacityWarning = `Warning: New capacity (${newCapacity}) is very close to current members (${currentMembers})`;
+                    }
+
+                    return resolve();
+                });
+            });
+        })
+];
+
+/* ============================================
+   VALIDATION RULES: UPDATE SYSTEM SETTINGS
+   Applied to PUT /api/settings
+   ============================================ */
+
+const validateUpdateSettings = [
+    // CURRENCY SYMBOL VALIDATION
+    body('currency_symbol')
+        .notEmpty()
+        .withMessage('Currency symbol is required')
+        .isIn(['CA$', 'US$'])
+        .withMessage('Currency symbol must be CA$ or US$'), 
+
+    // DATE FORMAT VALIDATION
+    body('date_format')
+        .notEmpty()
+        .withMessage('Date format is required')
+        .isIn(['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'])
+        .withMessage('Date format must be MM/DD/YYYY, DD/MM/YYYY, or YYYY-MM-DD'), 
+
+    // LOW INVENTORY THRESHOLD VALIDATION
+    body('low_inventory_threshold')
+        .notEmpty()
+        .withMessage('Low inventory alert threshold is required')
+        .isInt({ min: 1, max: 1000 })
+        .withMessage('Low inventory threshold must be between 1 and 1,000 units'), 
+
+    // CAPACITY WARNING LEVEL VALDIATION
+    body('capacity_warning_percent')
+        .notEmpty()
+        .withMessage('Capacity warning level is required')
+        .isInt({ min: 1, max: 100 })
+        .withMessage('Capacity warning level must be between 1 and 100 percent')
+
+        // Custom validation: Should be 50-100%
+        // Will allow 1-100%, but warn if it's unusually low
+        .custom((warningPercent) => {
+            const percent = parseInt(warningPercent);
+
+            // Warn if threshold is very low (but still allow it)
+            if (percent < 50) {
+                // Doesn't reject, just adds a warning
+            }
+
+            if (percent >= 95) {
+                // Warning: Alerts will come very late (almost full)
+            }
+
+            return true;
+        })
+];
+
 // ============================================
 // EXPORT ALL VALIDATORS
 // ============================================
@@ -1344,5 +2112,21 @@ module.exports = {
 
     // Shift validators
     validateAddShift, 
-    validateEditShift
+    validateEditShift, 
+
+    // Inventory validators
+    validateAddProduct, 
+    validateEditProduct, 
+    validateCreateReorder, 
+    validateUpdateStock, 
+    validateRejectRequest, 
+    validateReceiveReorder, 
+    validateAddVendor, 
+    validateEditVendor, 
+
+    // Location validators
+    validateEditLocation, 
+
+    // Settings validators
+    validateUpdateSettings
 };

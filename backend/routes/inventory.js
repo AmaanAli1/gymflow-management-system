@@ -11,6 +11,19 @@ const router = express.Router();
 // Import database
 const db = require('../config/database');
 
+// Import validators
+const {
+    validateAddProduct, 
+    validateEditProduct, 
+    validateCreateReorder, 
+    validateUpdateStock, 
+    validateRejectRequest, 
+    validateReceiveReorder, 
+    validateAddVendor, 
+    validateEditVendor, 
+    handleValidationErrors
+} = require('../middleware/validation');
+
 // ============================================
 // CATEGORY PREFIX MAPPING
 // Maps category IDs to SKU prefixes
@@ -299,7 +312,7 @@ router.get('/products/:id', (req, res) => {
    Create new product
    ============================================ */
 
-router.post('/products', (req, res) => {
+router.post('/products', validateAddProduct, handleValidationErrors, (req, res) => {
     const {
         name, 
         description, 
@@ -414,7 +427,7 @@ router.post('/products', (req, res) => {
    Update product details
    ============================================ */
 
-router.put('/products/:id', (req, res) => {
+router.put('/products/:id', validateEditProduct, handleValidationErrors, (req, res) => {
     const productId = req.params.id;
     const {
         name, 
@@ -644,7 +657,7 @@ router.get('/chart/stock-by-category', (req, res) => {
    Create a reorder request
    ============================================ */
 
-router.post('/reorders', (req, res) => {
+router.post('/reorders', validateCreateReorder, handleValidationErrors, (req, res) => {
 
     const {
         product_id, 
@@ -1049,10 +1062,10 @@ router.put('/reorders/:id/approve', (req, res) => {
 
 /* ============================================
    PUT /api/inventory/reorders/:id/reject
-   Reject a pending reorder request
+   Reject a pending reorder request /
    ============================================ */
 
-router.put('/reorders/:id/reject', (req, res) => {
+router.put('/reorders/:id/reject', validateRejectRequest, handleValidationErrors, (req, res) => {
     const requestId = req.params.id;
     const {
         rejected_by, 
@@ -1105,7 +1118,7 @@ router.put('/reorders/:id/reject', (req, res) => {
    Updates inventory stock when items arrive
    ============================================ */
 
-router.put('/reorders/:id/receive', (req, res) => {
+router.put('/reorders/:id/receive', validateReceiveReorder, handleValidationErrors, (req, res) => {
     const requestId = req.params.id;
     const { quantity_received } = req.body;
 
@@ -1508,7 +1521,7 @@ router.get('/vendors/:id/orders', (req, res) => {
    Create a new vendor
    ============================================ */
 
-router.post('/vendors', (req, res) => {
+router.post('/vendors', validateAddVendor, handleValidationErrors, (req, res) => {
     // Extract vendor data from request body
     const {
         vendor_name, 
@@ -1591,7 +1604,7 @@ router.post('/vendors', (req, res) => {
    Update an existing vendor
    ============================================ */
 
-router.put('/vendors/:id', (req, res) => {
+router.put('/vendors/:id', validateEditVendor, handleValidationErrors, (req, res) => {
     const vendorId = req.params.id;
 
     const {
