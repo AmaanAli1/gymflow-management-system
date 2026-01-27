@@ -1,0 +1,352 @@
+/* ============================================
+   SETTINGS PAGE STYLES
+   Simple configuration page with form sections
+   ============================================ */
+
+/* ========================================
+   PAGE LAYOUT
+   Main container for settings page
+   ======================================== */
+
+.settings-page {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-xl);
+
+    /* Sizing */
+    min-height: calc(100vh - 80px);
+    
+    /* Spacing */
+    padding: var(--space-4xl);
+}
+
+/* ========================================
+   SETTINGS CARD
+   Main container for settings form
+   ======================================== */
+
+.settings-card {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-xl);
+    
+    /* Sizing */
+    width: 100%;
+    flex: 1;
+    padding: var(--space-4xl);
+    
+    /* Styling */
+    background: var(--color-bg-sidebar);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border-light);
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
+}
+
+/* ========================================
+   SETTINGS HEADER
+   Title and subtitle section
+   ======================================== */
+
+.settings-header {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-sm);
+    
+    /* Spacing */
+    padding-bottom: var(--space-2xl);
+    
+    /* Styling */
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.settings-title {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: var(--gap-md);
+}
+
+.settings-title i {
+    /* Typography */
+    font-size: var(--font-size-lg);
+    color: var(--color-primary);
+}
+
+.settings-title h2 {
+    /* Typography */
+    font-family: var(--font-heading);
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.settings-subtitle {
+    /* Typography */
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin: 0;
+}
+
+/* ========================================
+   ERROR & SUCCESS MESSAGES
+   Alert boxes for feedback
+   ======================================== */
+
+.settings-error,
+.settings-success {
+    /* Sizing */
+    padding: var(--space-lg) var(--space-2xl);
+    
+    /* Styling */
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: var(--gap-md);
+}
+
+.settings-error {
+    /* Styling */
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+
+.settings-success {
+    /* Styling */
+    background: rgba(36, 192, 99, 0.1);
+    border: 1px solid rgba(36, 192, 99, 0.3);
+    color: var(--color-success);
+}
+
+.settings-error::before {
+    /* Icon */
+    content: '\f06a';  /* FontAwesome exclamation-circle */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: var(--font-size-lg);
+}
+
+.settings-success::before {
+    /* Icon */
+    content: '\f058';  /* FontAwesome check-circle */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: var(--font-size-lg);
+}
+
+/* ========================================
+   SETTINGS FORM
+   Main form container
+   ======================================== */
+
+.settings-form {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5xl);
+}
+
+/* ========================================
+   SETTINGS SECTIONS
+   Grouped form fields
+   ======================================== */
+
+.settings-section {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-lg);
+}
+
+.section-title {
+    /* Typography */
+    font-family: var(--font-heading);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-sm) 0;
+    
+    /* Spacing */
+    padding-bottom: var(--space-md);
+    
+    /* Styling */
+    border-bottom: 1px solid var(--color-border-base);
+}
+
+/* ========================================
+   SETTINGS GRID
+   Two-column layout for form fields
+   ======================================== */
+
+.settings-grid {
+    /* Layout */
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gap-xl);
+}
+
+/* ========================================
+   FORM FIELDS
+   Input styling (inherits from modals.css)
+   Additional customization for settings page
+   ======================================== */
+
+.settings-form .field {
+    /* Override default field styles for better spacing */
+    gap: var(--gap-sm);
+}
+
+.settings-form .field label {
+    /* Typography */
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.settings-form .field small {
+    /* Typography */
+    font-size: var(--font-size-xs);
+    color: var(--color-text-dim);
+    margin-top: var(--space-xs);
+}
+
+.field-required {
+    /* Styling */
+    color: var(--color-danger);
+    margin-left: var(--space-xs);
+}
+
+/* Input focus states - enhanced for settings */
+.settings-form input:focus,
+.settings-form select:focus {
+    /* Styling */
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+}
+
+/* ========================================
+   SETTINGS FOOTER
+   Save button container
+   ======================================== */
+
+.settings-footer {
+    /* Layout */
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--gap-md);
+    
+    /* Spacing */
+    padding-top: var(--space-2xl);
+    margin-top: var(--space-lg);
+    
+    /* Styling */
+    border-top: 1px solid var(--color-border-light);
+}
+
+.settings-footer .btn {
+    /* Sizing */
+    min-width: 160px;
+}
+
+/* ========================================
+   LOADING STATE
+   When saving settings
+   ======================================== */
+
+.settings-form.loading {
+    /* Styling */
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.settings-form.loading .btn {
+    /* Styling */
+    cursor: not-allowed;
+}
+
+/* ========================================
+   RESPONSIVE - TABLET
+   ======================================== */
+
+@media (max-width: 768px) {
+    .settings-page {
+        /* Spacing - reduce padding */
+        padding: var(--space-2xl);
+    }
+    
+    .settings-card {
+        /* Spacing - reduce padding */
+        padding: var(--space-3xl) var(--space-2xl);
+    }
+    
+    .settings-grid {
+        /* Layout - single column on tablets */
+        grid-template-columns: 1fr;
+    }
+    
+    .settings-footer {
+        /* Layout - full width button */
+        justify-content: stretch;
+    }
+    
+    .settings-footer .btn {
+        /* Sizing - full width */
+        width: 100%;
+    }
+}
+
+/* ========================================
+   RESPONSIVE - MOBILE
+   ======================================== */
+
+@media (max-width: 480px) {
+    .settings-page {
+        /* Spacing - minimal padding */
+        padding: var(--space-xl);
+    }
+    
+    .settings-card {
+        /* Spacing - minimal padding */
+        padding: var(--space-2xl) var(--space-xl);
+    }
+    
+    .settings-title h2 {
+        /* Typography - smaller on mobile */
+        font-size: var(--font-size-lg);
+    }
+    
+    .section-title {
+        /* Typography - smaller on mobile */
+        font-size: var(--font-size-base);
+    }
+}
+
+/* ========================================
+   ANIMATION - SAVE SUCCESS
+   ======================================== */
+
+@keyframes successPulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.settings-success.show {
+    /* Animation */
+    animation: successPulse 0.3s ease;
+}

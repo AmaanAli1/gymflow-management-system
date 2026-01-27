@@ -95,6 +95,7 @@ const locationsRoutes = require('./routes/locations');
 const shiftsRoutes = require('./routes/shifts');
 const adminRoutes = require('./routes/admin');
 const inventoryRoutes = require('./routes/inventory');
+const settingsRoutes = require('./routes/settings');
 
 // Mount member routes at /api/members
 app.use('/api/members', memberRoutes);
@@ -116,6 +117,9 @@ app.use('/api/admin', adminRoutes);
 
 // Mount inventory routes at api/location
 app.use('/api/inventory', inventoryRoutes);
+
+// Mount settings routes at api/settings
+app.use('/api/settings', settingsRoutes);
 
 
 // ============================================

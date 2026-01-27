@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Reorder Requests - GymFlow</title>
+        <title>Settings - GymFlow</title>
 
         <!-- Font Awesome Icons -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -30,12 +30,9 @@
         <link rel="stylesheet" href="../css/components/buttons.css">
         <link rel="stylesheet" href="../css/components/cards.css">
         <link rel="stylesheet" href="../css/components/modals.css">
-        <link rel="stylesheet" href="../css/components/tables.css">
-        <link rel="stylesheet" href="../css/components/slide-panel.css">
 
         <!-- Page-Specific Styles -->
-         <link rel="stylesheet" href="../css/pages/inventory-reorders.css">
-        
+        <link rel="stylesheet" href="../css/pages/settings.css">
         
     </head>
     <body>
@@ -97,7 +94,7 @@
 
                 <!-- Inventory -->
                 <div class="nav-group">
-                    <a href="#" class="nav-item has-sub open" aria-expanded="true">
+                    <a href="#" class="nav-item has-sub" aria-expanded="false">
                         <i class="fa-solid fa-box"></i>
                         <span>Inventory</span>
                         <i class="fa-solid fa-chevron-down caret"></i>
@@ -145,7 +142,7 @@
                 TOPBAR
                 ============================================ -->
             <header class="topbar">
-                <h1>Reorder Requests</h1>
+                <h1>Settings</h1>
                 <div class="topbar-actions">
                     <button class="topbar-icon-btn" aria-label="Notifications">
                         <i class="fa-regular fa-bell"></i>
@@ -154,390 +151,117 @@
                 </div>
             </header>
 
-            <!-- ============================================ 
-                 REORDER REQUESTS PAGE CONTENT
+            <!-- ============================================
+                 SETTINGS PAGE CONTENT
                  ============================================ -->
 
-            <section class="reorders-page">
+            <section class="settings-page">
 
-                <!-- ============================================ 
-                     KPI CARDS ROW
+                <!-- ============================================
+                     SYSTEM PREFERENCES CARD
                      ============================================ -->
 
-                <div class="reorders-kpi-row">
-                    <!-- Pending Requests -->
-                    <div class="kpi-card small">
-                        <div class="kpi-icon warning">
-                            <i class="fa-solid fa-clock"></i>
+                <div class="settings-card">
+                    <div class="settings-header">
+                        <div class="settings-title">
+                            <i class="fa-solid fa-gear"></i>
+                            <h2>Systems Preferences</h2>
                         </div>
-                        <p class="kpi-label">Pending Requests</p>
-                        <p class="kpi-value" data-stat="pendingCount">---</p>
-                        <p class="kpi-sub">Awaiting approval</p>
+                        <p class="settings-subtitle">Configure application-wide settings and preferences</p>
                     </div>
 
-                    <!-- Pending Value -->
-                    <div class="kpi-card small">
-                        <div class="kpi-icon info">
-                            <i class="fa-solid fa-dollar-sign"></i>
-                        </div>
-                        <p class="kpi-label">Pending Value</p>
-                        <p class="kpi-value" data-stat="pendingValue">---</p>
-                        <p class="kpi-sub">Total cost pending</p>
-                    </div>
+                    <!-- Error message container (hidden by default) -->
+                    <div id="settingsError" class="settings-error" style="display: none;"></div>
 
-                    <!-- Completed This Week -->
-                    <div class="kpi-card small">
-                        <div class="kpi-icon success">
-                            <i class="fa-solid fa-check-circle"></i>
-                        </div>
-                        <p class="kpi-label">Completed This Week</p>
-                        <p class="kpi-value" data-stat="completedWeek">---</p>
-                        <p class="kpi-sub">Last 7 days</p>
-                    </div>
+                    <!-- Success message container (hidden by default) -->
+                    <div id="settingsSuccess" class="settings-success" style="display: none;"></div>
 
-                    <!-- Total Requests -->
-                    <div class="kpi-card small">
-                        <div class="kpi-icon primary">
-                            <i class="fa-solid fa-rotate"></i>
-                        </div>
-                        <p class="kpi-label">Total Requests</p>
-                        <p class="kpi-value" data-stat="totalRequests">---</p>
-                        <p class="kpi-sub">All time</p>
-                    </div>
-                </div>
+                    <form id="settingsForm" class="settings-form">
 
-                <!-- ============================================ 
-                     CHARTS ROW
-                     ============================================ -->
+                        <!-- Display Settings Section -->
+                        <div class="settings-section">
+                            <h3 class="section-title">Display Settings</h3>
 
-                <div class="charts-row">
-                    <!-- Status Breakdown Doughnut Chart -->
-                    <div class="chart-card">
-                        <div class="chart-card-header">
-                            <div>
-                                <h3 class="chart-card-title">Status Breakdown</h3>
-                                <p class="chart-card-subtitle">Distribution by status</p>
+                            <div class="settings-grid">
+                                <!-- Currency Symbol -->
+                                <div class="field">
+                                    <label for="currencySymbol">Currency Symbol</label>
+                                    <select id="currencySymbol" name="currency_symbol" required>
+                                        <option value="$">CA$ - Canadian Dollar</option>
+                                        <option value="€">€ - Euro</option>
+                                        <option value="£">£ - British Pound</option>
+                                        <option value="¥">¥ - Japanese Yen</option>
+                                        <option value="₹">₹ - Indian Rupee</option>
+                                        <option value="US$">US$ - US Dollar</option>
+                                    </select>
+                                </div>
+
+                                <!-- Date Format -->
+                                <div class="field">
+                                    <label for="dateFormat">Date Format</label>
+                                    <select id="dateFormat" name="date_format" required>
+                                        <option value="MM/DD/YYYY">MM/DD/YYYY (CAN)</option>
+                                        <option value="DD/MM/YYYY">DD/MM/YYYY (UK)</option>
+                                        <option value="YYYY-MM-DD">YYYY-MM-DD (ISO)</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                        <div class="chart-container doughnut">
-                            <canvas id="statusBreakdownChart"></canvas>
-                        </div>
-                    </div>
 
-                    <!-- Trends Line Chart -->
-                    <div class="chart-card">
-                        <div class="chart-card-header">
-                            <div>
-                                <h3 class="chart-card-title">Request Trends</h3>
-                                <p class="chart-card-subtitle">Last 7 days activity</p>
+                        <!-- Alert Threshold Section -->
+                        <div class="settings-section">
+                            <h3 class="section-title">Alert Threshold</h3>
+
+                            <div class="settings-grid">
+                                <!-- Low Inventory Alert -->
+                                <div class="field">
+                                    <label for="lowInventoryThreshold">
+                                        Low Inventory Alert
+                                        <span class="field-required">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="lowInventoryThreshold"
+                                        name="low_inventory_threshold"
+                                        min="1"
+                                        step="1"
+                                        placeholder="e.g., 10"
+                                        required>
+                                    <small>Alert when inventory drops below this number of units</small>
+                                </div>
+
+                                <!-- Capacity warning -->
+                                <div class="field">
+                                    <label for="capacityWarning">
+                                        Capacity Warning Level (%)
+                                        <span class="field-required">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="capacityWarning"
+                                        name="capacity_warning_percent"
+                                        min="1"
+                                        max="100"
+                                        step="1"
+                                        placeholder="e.g., 85"
+                                        required>
+                                    <small>Alert when location reaches this percentage of capacity</small>
+                                </div>
                             </div>
                         </div>
-                        <div class="chart-container">
-                            <canvas id="trendsChart"></canvas>
+
+                        <!-- Save Button -->
+                        <div class="settings-footer">
+                            <button type="submit" class="btn primary" id="saveSettingsBtn">
+                                <i class="fa-solid fa-save"></i>
+                                Save Changes
+                            </button>
                         </div>
-                    </div>
-                </div>
 
-                <!-- ============================================ 
-                     STATUS TABS + FILTERS
-                     ============================================ -->
-
-                <div class="reorders-controls">
-                    <!-- Status Tabs -->
-                    <div class="status-tabs">
-                        <button class="status-tab active" data-status="all">
-                            All
-                        </button>
-                        <button class="status-tab" data-status="pending">
-                            Pending
-                        </button>
-                        <button class="status-tab" data-status="approved">
-                            Approved
-                        </button>
-                        <button class="status-tab" data-status="received">
-                            Received
-                        </button>
-                        <button class="status-tab" data-status="rejected">
-                            Rejected
-                        </button>
-                    </div>
-
-                    <!-- Filters + Search -->
-                    <div class="reorders-actions">
-                        <!-- Location Filter -->
-                        <select id="filterLocation" aria-label="Filter by Location">
-                            <option value="all">All Locations</option>
-                            <!-- Populated by JavaScript -->
-                        </select>
-
-                        <!-- Search -->
-                        <div class="reorders-search">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text"
-                                   id="searchRequests"
-                                   placeholder="Search requests..."
-                                   aria-label="Search requests">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ============================================ 
-                     REQUEST TABLE
-                     ============================================ -->
-
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th class="sortable" data-sort="request_number">
-                                    Request #
-                                    <i class="fa-solid fa-sort"></i>
-                                </th>
-                                <th class="sortable" data-sort="requested_at">
-                                    Date
-                                    <i class="fa-solid fa-sort"></i>
-                                </th>
-                                <th class="sortable" data-sort="product_name">
-                                    Product
-                                    <i class="fa-solid fa-sort"></i>
-                                </th>
-                                <th class="sortable" data-sort="category_name">
-                                    Category
-                                    <i class="fa-solid fa-sort"></i>
-                                </th>
-                                <th class="sortable" data-sort="location_name">
-                                    Location
-                                    <i class="fa-solid fa-sort"></i>
-                                </th>
-                                <th class="sortable" data-sort="quantity_requested">
-                                    Quantity
-                                    <i class="fa-solid fa-sort"></i>
-                                </th>
-                                <th class="sortable" data-sort="total_cost">
-                                    Total Cost
-                                    <i class="fa-solid fa-sort"></i>
-                                </th>
-                                <th class="sortable" data-sort="status">
-                                    Status
-                                    <i class="fa-solid fa-sort"></i>
-                                </th>
-                                <th class="sortable" data-sort="requested_by">
-                                    Requested By
-                                    <i class="fa-solid fa-sort"></i>
-                                </th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="reordersTableBody">
-                            <!-- Populated by JavaScript -->
-                             <tr>
-                                <td colspan="10" style="text-align: center; padding: 3rem;">
-                                    <i class="fa-solid fa-spinner fa-spin"></i>
-                                    <p style="margin-top: 1rem; color: var(--color-text-muted);">Loading requests...</p>
-                                </td>
-                             </tr>
-                        </tbody>
-                    </table>
+                    </form>
                 </div>
 
             </section>
-        </div>
-
-        <!-- ============================================ 
-             ACTION MODALS
-             ============================================ -->
-
-        <!-- View Details Modal -->
-        <div class="modal-overlay" id="viewDetailsModal" aria-hidden="true">
-            <div class="modal-card">
-                <div class="modal-header">
-                    <h2>Request Details</h2>
-                    <button class="modal-close" data-close-modal>&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="detail-grid">
-                        <div class="detail-item">
-                            <label>Request Number:</label>
-                            <span id="detail-request-number">---</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Status:</label>
-                            <span id="detail-status">---</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Product:</label>
-                            <span id="detail-product">---</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>SKU:</label>
-                            <span id="detail-sku">---</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Category:</label>
-                            <span id="detail-category">---</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Location:</label>
-                            <span id="detail-location">---</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Quantity Requested:</label>
-                            <span id="detail-quantity">---</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Unit Cost:</label>
-                            <span id="detail-unit-cost">---</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Total Cost:</label>
-                            <span id="detail-total-cost">---</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Requested By:</label>
-                            <span id="detail-requested-by">---</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Requested At:</label>
-                            <span id="detail-requested-at">---</span>
-                        </div>
-                        <div class="detail-item" id="approved-by-section" style="display: none;">
-                            <label>Approved By:</label>
-                            <span id="detail-approved-by">---</span>
-                        </div>
-                        <div class="detail-item" id="approved-at-section" style="display: none;">
-                            <label>Approved At:</label>
-                            <span id="detail-approved-at">---</span>
-                        </div>
-                        <div class="detail-item full-width" id="notes-section" style="display: none;">
-                            <label>Notes:</label>
-                            <p id="detail-notes">---</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn ghost" data-close-modal>Close</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Approve Modal -->
-        <div class="modal-overlay" id="approveModal" aria-hidden="true">
-            <div class="modal-card">
-                <div class="modal-header">
-                    <h2>Approve Reorder Request</h2>
-                    <button class="modal-close" data-close-modal>&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to approve this reorder request?</p>
-                    <div class="detail-grid" style="margin-top: 1rem;">
-                        <div class="detail-item">
-                            <label>Request Number:</label>
-                            <span id="approve-request-number">---</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Product:</label>
-                            <span id="approve-product">---</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Quantity:</label>
-                            <span id="approve-quantity">---</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Total Cost:</label>
-                            <span id="approve-total-cost">---</span>
-                        </div>
-                    </div>
-                    <!-- Hidden field to store request ID -->
-                    <input type="hidden" id="approve-request-id">
-                </div>
-                <div class="modal-footer">
-                    <button class="btn ghost" data-close-modal>Cancel</button>
-                    <button class="btn primary" id="confirmApproveBtn">Approve Request</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Reject Modal -->
-        <div class="modal-overlay" id="rejectModal" aria-hidden="true">
-            <div class="modal-card">
-                <div class="modal-header">
-                    <h2>Reject Reorder Request</h2>
-                    <button class="modal-close" data-close-modal>&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p>Please provide a reason for rejecting this request:</p>
-                    <div class="detail-grid" style="margin-top: 1rem; margin-bottom: 1rem;">
-                        <div class="detail-item">
-                            <label>Request Number:</label>
-                            <span id="reject-request-number">---</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Product:</label>
-                            <span id="reject-product">---</span>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="rejectionReason">Rejection Reason</label>
-                        <textarea 
-                            id="rejectionReason" 
-                            rows="4" 
-                            placeholder="Enter reason for rejection..."
-                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--color-border-light); border-radius: var(--radius-md); background: var(--color-bg-input); color: var(--color-text-secondary); font-family: inherit; resize: vertical;">
-                        </textarea>
-                    </div>
-                    <!-- Hidden field to store request ID -->
-                    <input type="hidden" id="reject-request-id">
-                </div>
-                <div class="modal-footer">
-                    <button class="btn ghost" data-close-modal>Cancel</button>
-                    <button class="btn danger" id="confirmRejectBtn">Reject Request</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Receive Modal -->
-        <div class="modal-overlay" id="receiveModal" aria-hidden="true">
-            <div class="modal-card">
-                <div class="modal-header">
-                    <h2>Mark as Received</h2>
-                    <button class="modal-close" data-close-modal>&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p>Enter the quantity received to update inventory:</p>
-                    <div class="detail-grid" style="margin-top: 1rem; margin-bottom: 1rem;">
-                        <div class="detail-item">
-                            <label>Request Number:</label>
-                            <span id="receive-request-number">---</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Product:</label>
-                            <span id="receive-product">---</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Quantity Requested:</label>
-                            <span id="receive-quantity-requested">---</span>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="quantityReceived">Quantity Received <span style="color: var(--color-danger);">*</span></label>
-                        <input 
-                            type="number" 
-                            id="quantityReceived" 
-                            min="1" 
-                            placeholder="Enter quantity..."
-                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--color-border-light); border-radius: var(--radius-md); background: var(--color-bg-input); color: var(--color-text-secondary); font-family: inherit;">
-                        <span class="error-message" id="receiveError" style="display: none; color: var(--color-danger); font-size: 0.75rem; margin-top: 0.25rem;">Please enter a valid quantity</span>
-                    </div>
-                    <!-- Hidden field to store request ID -->
-                    <input type="hidden" id="receive-request-id">
-                </div>
-                <div class="modal-footer">
-                    <button class="btn ghost" data-close-modal>Cancel</button>
-                    <button class="btn primary" id="confirmReceiveBtn">Mark as Received</button>
-                </div>
-            </div>
-        </div>
-
 
         <!-- ============================================ 
              SHARED MODALS
@@ -898,7 +622,7 @@
         <script src="../js/shared.js"></script>
 
         <!-- Inventory-specific JS: Fetch and display inventory data -->
-        <script src="../js/pages/inventory-reorders.js"></script>
+        <script src="../js/pages/settings.js"></script>
         
     </body>
 </html>
