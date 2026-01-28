@@ -178,9 +178,9 @@ const path = require('path');
 // Serve static files from the parent directory (frontend)
 app.use(express.static(path.join(__dirname, '..')));
 
-// Serve admin pages
-app.get('/admin/:path*', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', req.path + '.html'));
+// Root redirect to dashboard
+app.get('/', (req, res) => {
+    res.redirect('/admin/dashboard.html');
 });
 
 // Root redirect to dashboard
