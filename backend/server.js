@@ -179,7 +179,7 @@ const path = require('path');
 app.use(express.static(path.join(__dirname, '..')));
 
 // Serve admin pages
-app.get('/admin/*', (req, res) => {
+app.get('/admin/:path*', (req, res) => {
     res.sendFile(path.join(__dirname, '..', req.path + '.html'));
 });
 
