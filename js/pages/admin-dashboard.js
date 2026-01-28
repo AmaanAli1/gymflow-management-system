@@ -4,6 +4,14 @@
    ============================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
+
+    /* ========================================
+       API CALL
+       ======================================== */
+
+    const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+        ? 'http://127.0.0.1:5000/api' 
+        : '/api';
     
     /* ========================================
        MINIMAL MOCK DATA
@@ -390,7 +398,7 @@ async function fetchDashboardData() {
         document.body.style.cursor = 'wait';
 
         // Fetch data from backend API
-        const response = await fetch('http://127.0.0.1:5000/api/dashboard');
+        const response = await fetch(`${API_BASE_URL}/dashboard`);
 
         // Check if request was successful
         if (!response.ok) {
