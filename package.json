@@ -1,0 +1,11 @@
+{
+  "name": "gymflow",
+  "version": "1.0.0",
+  "description": "GymFlow Management System",
+  "scripts": {
+    "start": "cd backend && npm install && npm start"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
