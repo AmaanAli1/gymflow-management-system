@@ -250,7 +250,7 @@ router.post('/', validateAddStaff, handleValidationErrors, (req, res) => {
 
             // Step 2: Insert new staff member
             const insertQuery = `
-                INSERT INTO STAFF (
+                INSERT INTO staff (
                     staff_id, name, email, phone, emergency_contact,
                     emergency_phone, role, location_id, hire_date,
                     hourly_rate, notes, status
@@ -549,7 +549,7 @@ router.post('/trainers', validateAddTrainer, handleValidationErrors, (req, res) 
     // STEP 1: Generate trainer ID (T-0001 format)
     const getMaxIdQuery = `
         SELECT MAX(CAST(SUBSTRING(staff_id, 3) AS UNSIGNED)) as max_num
-        FROM STAFF
+        FROM staff
         WHERE staff_id LIKE 'T-%'
     `;
 
