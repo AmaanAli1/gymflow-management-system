@@ -33,8 +33,8 @@ const apiLimiter = rateLimit({
     // This is generous for normal use, strict enough to stop attacks
 
     // Development: 500 requests (generous for testing)
-    // Production: 100 requests (strict for security)
-    max: isDevelopment ? 500 : 100, 
+    // Production: 1000 requests (strict for security)
+    max: isDevelopment ? 500 : 1000, 
 
     // message: What to tell the user when they're blocked
     // This appears in the API response
@@ -51,6 +51,9 @@ const apiLimiter = rateLimit({
     // legacyHeaders: Don't use old header format (X-RateLimit-*)
     // Modern apps use the new standard
     legacyHeaders: false, 
+
+    // Trust Railway's proxy headers
+    trustProxy: true
 
     // Use default behavior for when limit exceeded (return 429 with message)
 });
@@ -69,7 +72,7 @@ const authLimiter = rateLimit({
     // - Login only happens once per session
     // - 5 attempts = typos are okay, brute force isn't
     // - After 5 fails, likely malicious
-    max: 5, 
+    max: isDevelopment ? 100 : 20, 
 
     // More urgent message for auth failures
     message: {
@@ -86,6 +89,9 @@ const authLimiter = rateLimit({
     // false = Count all attempts (more strict)
     // We'll use false (count everything) to prevent account enumeration
     skipSuccessfulRequests: false,
+
+    // Trust Railway's proxy headers
+    trustProxy: true
 });
 
     // WHY separate rate limiters?
@@ -101,13 +107,16 @@ const authLimiter = rateLimit({
 
 const paymentLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,   // 1 hour
-    max: 10,    // Only 10 payment attempts per hour
+    max: isDevelopment ? 500 : 100, 
     message: {
         error: 'Too many payment attempts. Please contact support if you need assistance.', 
         retryAfter: '1 hour'
     }, 
     standardHeaders: true, 
     legacyHeaders: false,
+
+    // Trust Railway's proxy headers
+    trustProxy: true
 });
 
 // WHY so strict on payments?
@@ -123,13 +132,16 @@ const paymentLimiter = rateLimit({
 
 const checkInLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,   // 15 minutes
-    max: 50,    // 50 check-ins per 15 minutes (generous for front desk staff)
+    max: isDevelopment ? 1000 : 500, 
     message: {
         error: 'Too many check-in attempts. Please wait before trying again.', 
         retryAfter: '15 minutes'
     }, 
     standardHeaders: true, 
     legacyHeaders: false,
+
+    // Trust Railway's proxy headers
+    trustProxy: true
 });
 
 // Log which environment is being used

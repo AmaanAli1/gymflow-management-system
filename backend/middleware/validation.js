@@ -1549,7 +1549,7 @@ const validateCreateReorder = [
         }), 
 
     // DESTINATION LOCATION VALIDATION
-    body('destination_location')
+    body('location_id')
         .notEmpty()
         .withMessage('Destination location is required')
 
