@@ -50,10 +50,7 @@ const apiLimiter = rateLimit({
 
     // legacyHeaders: Don't use old header format (X-RateLimit-*)
     // Modern apps use the new standard
-    legacyHeaders: false, 
-
-    // Trust Railway's proxy headers
-    trustProxy: true
+    legacyHeaders: false
 
     // Use default behavior for when limit exceeded (return 429 with message)
 });
@@ -88,10 +85,7 @@ const authLimiter = rateLimit({
     // true = Only count failed attempts (more forgiving)
     // false = Count all attempts (more strict)
     // We'll use false (count everything) to prevent account enumeration
-    skipSuccessfulRequests: false,
-
-    // Trust Railway's proxy headers
-    trustProxy: true
+    skipSuccessfulRequests: false
 });
 
     // WHY separate rate limiters?
@@ -113,10 +107,7 @@ const paymentLimiter = rateLimit({
         retryAfter: '1 hour'
     }, 
     standardHeaders: true, 
-    legacyHeaders: false,
-
-    // Trust Railway's proxy headers
-    trustProxy: true
+    legacyHeaders: false
 });
 
 // WHY so strict on payments?
@@ -138,10 +129,7 @@ const checkInLimiter = rateLimit({
         retryAfter: '15 minutes'
     }, 
     standardHeaders: true, 
-    legacyHeaders: false,
-
-    // Trust Railway's proxy headers
-    trustProxy: true
+    legacyHeaders: false
 });
 
 // Log which environment is being used

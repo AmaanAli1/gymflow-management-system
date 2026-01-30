@@ -54,6 +54,10 @@ app.use(cors());
 // PARSE JSON in request body - so we can receive data from frontend
 app.use(express.json());
 
+// Trust Railway's proxy for rateLimiting
+// Railway adds X-Forwarded-For headers
+app.set('trust proxy', true);
+
 // ============================================
 // AUTO-RESET SCHEDULER (DEMO MODE)
 // Resets database daily at 3:00 AM EST
@@ -177,11 +181,6 @@ const path = require('path');
 
 // Serve static files from the parent directory (frontend)
 app.use(express.static(path.join(__dirname, '..')));
-
-// Root redirect to dashboard
-app.get('/', (req, res) => {
-    res.redirect('/admin/dashboard.html');
-});
 
 // Root redirect to dashboard
 app.get('/', (req, res) => {
