@@ -1338,7 +1338,7 @@ const validateAddProduct = [
         // Prevents duplicate inventory entries
         .custom(async (productName) => {
             return new Promise((resolve, reject) => {
-                const query = 'SELECT id FROM inventory_products WHERE product_name = ?';
+                const query = 'SELECT id FROM products WHERE product_name = ?';
 
                 db.query(query, [productName], (err, results) => {
                     if (err) {
@@ -1445,7 +1445,7 @@ const validateEditProduct = [
         .custom(async (productName, { req }) => {
             return new Promise((resolve, reject) => {
                 // Check if product name exists for a DIFFERENT product
-                const query = 'SELECT id FROM inventory_products WHERE product_name = ? AND id != ?';
+                const query = 'SELECT id FROM products WHERE product_name = ? AND id != ?';
                 db.query(query, [productName, req.params.id], (err, results) => {
                     if (err) {
                         return reject(new Error('Database error'));
@@ -1533,7 +1533,7 @@ const validateCreateReorder = [
         // Custom validation: Product must exist
         .custom(async (productId) => {
             return new Promise((resolve, reject) => {
-                const query = 'SELECT id FROM inventory_products WHERE id = ?';
+                const query = 'SELECT id FROM products WHERE id = ?';
                 db.query(query, [productId], (err, results) => {
                     if (err) {
                         return reject(new Error('Database error'));
